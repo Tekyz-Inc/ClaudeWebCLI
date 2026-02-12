@@ -1,6 +1,6 @@
 # ClaudeWebCLI
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 **Forked from:** [The Vibe Companion](https://github.com/The-Vibe-Company/companion) v0.14.1
 
 Claude Code in your browser. We reverse-engineered the undocumented WebSocket protocol hidden inside the CLI and built a web UI on top of it. No API key needed — it runs on your existing Claude Code subscription.
@@ -20,7 +20,7 @@ Open [localhost:3456](http://localhost:3456). That's it.
 - **Permission control.** Four modes: Agent (auto-approve), Accept Edits, Plan, and Manual.
 - **Session persistence.** Sessions save to disk and auto-recover with `--resume` after server restarts or CLI crashes.
 - **Environment profiles.** Store API keys and config per-project in `~/.companion/envs/`.
-- **Voice dictation.** Push-to-talk via Web Speech API — speak your prompts instead of typing.
+- **Smart voice dictation.** Push-to-talk with AI-powered formatting — spoken text is contextually punctuated and capitalized using Claude ("school period" stays as words, "head home period" becomes "."). Ghost text appears muted while processing, then solidifies.
 - **Prompt history.** Up/Down arrow keys navigate through previous prompts, like a terminal.
 - **Drag-and-drop images.** Drop image files onto the composer to attach them.
 - **Project detection.** Auto-detects project type (Node, Python, Rust) from working directory.

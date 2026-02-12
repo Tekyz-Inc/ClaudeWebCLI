@@ -2,6 +2,7 @@ import { useStore } from "../store.js";
 import type { TaskItem } from "../types.js";
 
 const EMPTY_TASKS: TaskItem[] = [];
+const COMPACT_THRESHOLD = 95;
 
 export function TaskPanel({ sessionId }: { sessionId: string }) {
   const tasks = useStore((s) => s.sessionTasks.get(sessionId) || EMPTY_TASKS);
@@ -13,6 +14,8 @@ export function TaskPanel({ sessionId }: { sessionId: string }) {
 
   const completedCount = tasks.filter((t) => t.status === "completed").length;
   const contextPct = session?.context_used_percent ?? 0;
+  const contextRemaining = contextPct > 0 ? 100 - contextPct : 0;
+  const isCompacting = session?.is_compacting ?? false;
 
   return (
     <aside className="w-[280px] h-full flex flex-col bg-cc-card border-l border-cc-border">
@@ -29,46 +32,10 @@ export function TaskPanel({ sessionId }: { sessionId: string }) {
         </button>
       </div>
 
-      {/* Session stats */}
+      {/* Context meter */}
       {session && (
-        <div className="shrink-0 px-4 py-3 border-b border-cc-border space-y-2.5">
-          {/* Cost */}
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] text-cc-muted uppercase tracking-wider">Cost</span>
-            <span className="text-[13px] font-medium text-cc-fg tabular-nums">
-              ${session.total_cost_usd.toFixed(4)}
-            </span>
-          </div>
-
-          {/* Context usage */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] text-cc-muted uppercase tracking-wider">Context</span>
-              <span className="text-[11px] text-cc-muted tabular-nums">
-                {contextPct > 0 ? `${contextPct}%` : "--"}
-              </span>
-            </div>
-            <div className="w-full h-1.5 rounded-full bg-cc-hover overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${
-                  contextPct > 80
-                    ? "bg-cc-error"
-                    : contextPct > 60
-                    ? "bg-cc-warning"
-                    : "bg-cc-primary"
-                }`}
-                style={{ width: `${Math.min(contextPct, 100)}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Turns */}
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] text-cc-muted uppercase tracking-wider">Turns</span>
-            <span className="text-[13px] font-medium text-cc-fg tabular-nums">
-              {session.num_turns}
-            </span>
-          </div>
+        <div className="shrink-0 px-4 py-3 border-b border-cc-border">
+          <ContextMeter contextPct={contextPct} contextRemaining={contextRemaining} isCompacting={isCompacting} />
         </div>
       )}
 
@@ -98,18 +65,58 @@ export function TaskPanel({ sessionId }: { sessionId: string }) {
   );
 }
 
+function ContextMeter({ contextPct, contextRemaining, isCompacting }: {
+  contextPct: number;
+  contextRemaining: number;
+  isCompacting: boolean;
+}) {
+  const hasData = contextPct > 0;
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] text-cc-muted uppercase tracking-wider">Context</span>
+        {isCompacting && (
+          <span className="text-[10px] text-cc-warning font-medium animate-pulse">Compacting...</span>
+        )}
+      </div>
+      {/* Progress bar with compaction threshold marker */}
+      <div className="relative w-full h-2 rounded-full bg-cc-hover overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${
+            contextPct > 80 ? "bg-cc-error" : contextPct > 60 ? "bg-cc-warning" : "bg-cc-primary"
+          }`}
+          style={{ width: `${Math.min(contextPct, 100)}%` }}
+        />
+        {/* Compaction threshold marker */}
+        <div
+          className="absolute top-0 h-full w-px bg-cc-muted/40"
+          style={{ left: `${COMPACT_THRESHOLD}%` }}
+          title={`Auto-compact at ~${COMPACT_THRESHOLD}%`}
+        />
+      </div>
+      {/* Labels row */}
+      <div className="flex items-center justify-between text-[10px] tabular-nums">
+        <span className="text-cc-muted">
+          Used: <span className="text-cc-fg font-medium">{hasData ? `${contextPct}%` : "--"}</span>
+        </span>
+        <span className="text-cc-muted">
+          Remaining: <span className="text-cc-fg font-medium">{hasData ? `${contextRemaining}%` : "--"}</span>
+        </span>
+      </div>
+      <div className="text-[10px] text-cc-muted">
+        Compacts at ~{COMPACT_THRESHOLD}%
+      </div>
+    </div>
+  );
+}
+
 function TaskRow({ task }: { task: TaskItem }) {
   const isCompleted = task.status === "completed";
   const isInProgress = task.status === "in_progress";
 
   return (
-    <div
-      className={`px-2.5 py-2 rounded-lg ${
-        isCompleted ? "opacity-50" : ""
-      }`}
-    >
+    <div className={`px-2.5 py-2 rounded-lg ${isCompleted ? "opacity-50" : ""}`}>
       <div className="flex items-start gap-2">
-        {/* Status icon */}
         <span className="shrink-0 flex items-center justify-center w-4 h-4 mt-px">
           {isInProgress ? (
             <svg className="w-4 h-4 text-cc-primary animate-spin" viewBox="0 0 16 16" fill="none">
@@ -125,23 +132,13 @@ function TaskRow({ task }: { task: TaskItem }) {
             </svg>
           )}
         </span>
-
-        {/* Subject — allow wrapping */}
-        <span className={`text-[13px] leading-snug flex-1 ${
-          isCompleted ? "text-cc-muted line-through" : "text-cc-fg"
-        }`}>
+        <span className={`text-[13px] leading-snug flex-1 ${isCompleted ? "text-cc-muted line-through" : "text-cc-fg"}`}>
           {task.subject}
         </span>
       </div>
-
-      {/* Active form text (in_progress only) */}
       {isInProgress && task.activeForm && (
-        <p className="mt-1 ml-6 text-[11px] text-cc-muted italic truncate">
-          {task.activeForm}
-        </p>
+        <p className="mt-1 ml-6 text-[11px] text-cc-muted italic truncate">{task.activeForm}</p>
       )}
-
-      {/* Blocked by */}
       {task.blockedBy && task.blockedBy.length > 0 && (
         <p className="mt-1 ml-6 text-[11px] text-cc-muted flex items-center gap-1">
           <svg viewBox="0 0 16 16" fill="none" className="w-3 h-3 shrink-0">

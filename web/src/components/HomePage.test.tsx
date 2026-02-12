@@ -22,10 +22,6 @@ vi.mock("../api.js", () => ({
   },
 }));
 
-vi.mock("../utils/names.js", () => ({
-  generateUniqueSessionName: vi.fn(() => "Test Session"),
-}));
-
 vi.mock("../utils/recent-dirs.js", () => ({
   getRecentDirs: vi.fn(() => ["/test/project"]),
   addRecentDir: vi.fn(),
@@ -72,45 +68,29 @@ beforeEach(() => {
 // ─── Permission modes ────────────────────────────────────────────────────────
 
 describe("HomePage permission modes", () => {
-  it("renders the default mode label (Agent)", () => {
+  it("renders the default mode label (Bypass Permissions)", () => {
     render(<HomePage />);
-    // The mode dropdown button should show "Agent" by default
-    expect(screen.getByText("Agent")).toBeTruthy();
+    expect(screen.getByText("Bypass Permissions")).toBeTruthy();
   });
 
-  it("shows all 4 modes in the dropdown", () => {
+  it("cycles through modes on click", () => {
     render(<HomePage />);
-    // Click the mode button to open dropdown
-    const modeBtn = screen.getByText("Agent");
-    fireEvent.click(modeBtn);
+    const modeBtn = screen.getByText("Bypass Permissions");
 
-    // "Agent" appears in both the button and dropdown
-    expect(screen.getAllByText("Agent").length).toBeGreaterThanOrEqual(2);
+    // Click to cycle to Accept Edits
+    fireEvent.click(modeBtn);
     expect(screen.getByText("Accept Edits")).toBeTruthy();
+
+    // Click to cycle to Plan
+    fireEvent.click(screen.getByText("Accept Edits"));
     expect(screen.getByText("Plan")).toBeTruthy();
+
+    // Click to cycle to Manual
+    fireEvent.click(screen.getByText("Plan"));
     expect(screen.getByText("Manual")).toBeTruthy();
-  });
 
-  it("shows descriptions for each mode", () => {
-    render(<HomePage />);
-    const modeBtn = screen.getByText("Agent");
-    fireEvent.click(modeBtn);
-
-    expect(screen.getByText("Auto-approve all tool calls")).toBeTruthy();
-    expect(screen.getByText("Approve file changes only")).toBeTruthy();
-    expect(screen.getByText("Plan before making changes")).toBeTruthy();
-    expect(screen.getByText("Approve every tool call")).toBeTruthy();
-  });
-
-  it("can select Accept Edits mode", () => {
-    render(<HomePage />);
-    const modeBtn = screen.getByText("Agent");
-    fireEvent.click(modeBtn);
-
-    const acceptEditsBtn = screen.getByText("Accept Edits");
-    fireEvent.click(acceptEditsBtn);
-
-    // After selection, the button should show the new mode
-    expect(screen.getByText("Accept Edits")).toBeTruthy();
+    // Click to cycle back to Bypass Permissions
+    fireEvent.click(screen.getByText("Manual"));
+    expect(screen.getByText("Bypass Permissions")).toBeTruthy();
   });
 });

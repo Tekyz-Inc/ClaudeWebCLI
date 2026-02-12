@@ -139,8 +139,8 @@ Items to plan for but not urgent.
 - **Impact**: Tests fail on Windows. Worktree features may not work correctly on Windows.
 - **Remediation**: Use `path.sep` or `path.join()` consistently. Fix test assertions to normalize paths.
 - **Effort**: small
-- **Milestone candidate**: NO — quick fix
-- **Promoted**: [ ]
+- **Milestone candidate**: YES — promoted
+- **Promoted**: [x] — Milestone 2.1: Fix Windows Path Test Failures
 
 ### TD-012: No React Error Boundary
 - **Category**: quality
