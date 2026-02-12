@@ -7,6 +7,7 @@ import { generateUniqueSessionName } from "../utils/names.js";
 import { getRecentDirs, addRecentDir } from "../utils/recent-dirs.js";
 import { EnvManager } from "./EnvManager.js";
 import { FolderPicker } from "./FolderPicker.js";
+import { detectProject, type ProjectInfo } from "../utils/project-detector.js";
 
 interface ImageAttachment {
   name: string;
@@ -34,8 +35,10 @@ const MODELS = [
 ];
 
 const MODES = [
-  { value: "bypassPermissions", label: "Agent" },
-  { value: "plan", label: "Plan" },
+  { value: "bypassPermissions", label: "Agent", desc: "Auto-approve all tool calls" },
+  { value: "acceptEdits", label: "Accept Edits", desc: "Approve file changes only" },
+  { value: "plan", label: "Plan", desc: "Plan before making changes" },
+  { value: "default", label: "Manual", desc: "Approve every tool call" },
 ];
 
 let idCounter = 0;
@@ -61,6 +64,9 @@ export function HomePage() {
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [showModeDropdown, setShowModeDropdown] = useState(false);
   const [showFolderPicker, setShowFolderPicker] = useState(false);
+
+  // Project detection
+  const [projectInfo, setProjectInfo] = useState<ProjectInfo | null>(null);
 
   // Worktree state
   const [gitRepoInfo, setGitRepoInfo] = useState<GitRepoInfo | null>(null);
@@ -114,6 +120,18 @@ export function HomePage() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  // Detect project when cwd changes
+  useEffect(() => {
+    if (!cwd) {
+      setProjectInfo(null);
+      return;
+    }
+    api.listDirs(cwd).then((result) => {
+      const names = result.dirs.map((e) => e.name);
+      setProjectInfo(detectProject(names, cwd));
+    }).catch(() => setProjectInfo(null));
+  }, [cwd]);
 
   // Detect git repo when cwd changes
   useEffect(() => {
@@ -188,7 +206,8 @@ export function HomePage() {
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Tab" && e.shiftKey) {
       e.preventDefault();
-      setMode(mode === "plan" ? "bypassPermissions" : "plan");
+      const idx = MODES.findIndex((m) => m.value === mode);
+      setMode(MODES[(idx + 1) % MODES.length].value);
       return;
     }
     if (e.key === "Enter" && !e.shiftKey) {
@@ -340,16 +359,17 @@ export function HomePage() {
                 </svg>
               </button>
               {showModeDropdown && (
-                <div className="absolute left-0 bottom-full mb-1 w-40 bg-cc-card border border-cc-border rounded-[10px] shadow-lg z-10 py-1 overflow-hidden">
+                <div className="absolute left-0 bottom-full mb-1 w-52 bg-cc-card border border-cc-border rounded-[10px] shadow-lg z-10 py-1 overflow-hidden">
                   {MODES.map((m) => (
                     <button
                       key={m.value}
                       onClick={() => { setMode(m.value); setShowModeDropdown(false); }}
-                      className={`w-full px-3 py-2 text-xs text-left hover:bg-cc-hover transition-colors cursor-pointer ${
+                      className={`w-full px-3 py-2 text-left hover:bg-cc-hover transition-colors cursor-pointer ${
                         m.value === mode ? "text-cc-primary font-medium" : "text-cc-fg"
                       }`}
                     >
-                      {m.label}
+                      <span className="text-xs">{m.label}</span>
+                      <span className="block text-[10px] text-cc-muted">{m.desc}</span>
                     </button>
                   ))}
                 </div>
@@ -412,6 +432,19 @@ export function HomePage() {
                 onSelect={(path) => { setCwd(path); }}
                 onClose={() => setShowFolderPicker(false)}
               />
+            )}
+            {projectInfo && (
+              <div className="flex items-center gap-1.5 mt-1 px-2">
+                <span className="text-[10px] font-medium text-cc-primary bg-cc-primary/10 px-1.5 py-0.5 rounded">
+                  {projectInfo.type}
+                </span>
+                <span className="text-[10px] text-cc-muted truncate max-w-[140px]">{projectInfo.name}</span>
+                {projectInfo.markers.map((m) => (
+                  <span key={m} className="text-[9px] text-cc-muted bg-cc-hover px-1 py-0.5 rounded">
+                    {m}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
 

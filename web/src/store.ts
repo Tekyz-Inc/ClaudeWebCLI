@@ -98,6 +98,10 @@ interface AppState {
   setCliConnected: (sessionId: string, connected: boolean) => void;
   setSessionStatus: (sessionId: string, status: "idle" | "running" | "compacting" | null) => void;
 
+  // Prompt history per session
+  promptHistory: Map<string, string[]>;
+  addPromptToHistory: (sessionId: string, prompt: string) => void;
+
   // Editor actions
   setActiveTab: (tab: "chat" | "editor") => void;
   setEditorOpenFile: (sessionId: string, filePath: string | null) => void;
@@ -119,6 +123,15 @@ function getInitialSessionNames(): Map<string, string> {
 function getInitialSessionId(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("cc-current-session") || null;
+}
+
+function getInitialPromptHistory(): Map<string, string[]> {
+  if (typeof window === "undefined") return new Map();
+  try {
+    return new Map(JSON.parse(localStorage.getItem("cc-prompt-history") || "[]"));
+  } catch {
+    return new Map();
+  }
 }
 
 function getInitialDarkMode(): boolean {
@@ -143,6 +156,7 @@ export const useStore = create<AppState>((set) => ({
   previousPermissionMode: new Map(),
   sessionTasks: new Map(),
   changedFiles: new Map(),
+  promptHistory: getInitialPromptHistory(),
   sessionNames: getInitialSessionNames(),
   recentlyRenamed: new Set(),
   darkMode: getInitialDarkMode(),
@@ -403,6 +417,17 @@ export const useStore = create<AppState>((set) => ({
       return { recentlyRenamed };
     }),
 
+  addPromptToHistory: (sessionId, prompt) =>
+    set((s) => {
+      const promptHistory = new Map(s.promptHistory);
+      const history = [...(promptHistory.get(sessionId) || []), prompt];
+      // Cap at 50 entries per session
+      if (history.length > 50) history.splice(0, history.length - 50);
+      promptHistory.set(sessionId, history);
+      localStorage.setItem("cc-prompt-history", JSON.stringify(Array.from(promptHistory.entries())));
+      return { promptHistory };
+    }),
+
   setPreviousPermissionMode: (sessionId, mode) =>
     set((s) => {
       const previousPermissionMode = new Map(s.previousPermissionMode);
@@ -474,6 +499,7 @@ export const useStore = create<AppState>((set) => ({
       previousPermissionMode: new Map(),
       sessionTasks: new Map(),
       changedFiles: new Map(),
+      promptHistory: new Map(),
       sessionNames: new Map(),
       recentlyRenamed: new Set(),
       activeTab: "chat" as const,

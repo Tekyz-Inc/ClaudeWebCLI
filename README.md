@@ -1,18 +1,9 @@
-<p align="center">
-  <img src="screenshot.png" alt="The Vibe Companion" width="100%" />
-</p>
+# ClaudeWebCLI
 
-<h1 align="center">The Vibe Companion</h1>
+**Version:** 0.2.0
+**Forked from:** [The Vibe Companion](https://github.com/The-Vibe-Company/companion) v0.14.1
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/the-vibe-companion"><img src="https://img.shields.io/npm/v/the-vibe-companion.svg" alt="npm version" /></a>
-  <a href="https://www.npmjs.com/package/the-vibe-companion"><img src="https://img.shields.io/npm/dm/the-vibe-companion.svg" alt="npm downloads" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License" /></a>
-</p>
-
-<br />
-
-Claude Code in your browser. We reverse-engineered the undocumented WebSocket protocol hidden inside the CLI and built a web UI on top of it. No API key needed, it runs on your existing Claude Code subscription.
+Claude Code in your browser. We reverse-engineered the undocumented WebSocket protocol hidden inside the CLI and built a web UI on top of it. No API key needed — it runs on your existing Claude Code subscription.
 
 ```bash
 bunx the-vibe-companion
@@ -20,31 +11,31 @@ bunx the-vibe-companion
 
 Open [localhost:3456](http://localhost:3456). That's it.
 
-## Why
-
-Claude Code is powerful but stuck in a terminal. You can't easily run multiple sessions, there's no visual feedback on tool calls, and if the process dies your context is gone.
-
-The Vibe Companion fixes that. It spawns Claude Code processes, streams their output to your browser in real-time, and lets you approve or deny tool calls from a proper UI.
-
-## What you get
+## Features
 
 - **Multiple sessions.** Run several Claude Code instances side by side. Each gets its own process, model, and permission settings.
 - **Streaming.** Responses render token by token. You see what the agent is writing as it writes it.
-- **Tool call visibility.** Every Bash command, file read, edit, grep, visible in collapsible blocks with syntax highlighting.
-- **Subagent nesting.** When an agent spawns sub-agents, their work renders hierarchically so you can follow the full chain.
-- **Permission control.** Four modes, from auto-approve everything down to manual approval for each tool call.
+- **Tool call visibility.** Every Bash command, file read, edit, grep — visible in collapsible blocks with syntax highlighting.
+- **Subagent nesting.** When an agent spawns sub-agents, their work renders hierarchically.
+- **Permission control.** Four modes: Agent (auto-approve), Accept Edits, Plan, and Manual.
 - **Session persistence.** Sessions save to disk and auto-recover with `--resume` after server restarts or CLI crashes.
-- **Environment profiles.** Store API keys and config per-project in `~/.companion/envs/` without touching your shell.
+- **Environment profiles.** Store API keys and config per-project in `~/.companion/envs/`.
+- **Voice dictation.** Push-to-talk via Web Speech API — speak your prompts instead of typing.
+- **Prompt history.** Up/Down arrow keys navigate through previous prompts, like a terminal.
+- **Drag-and-drop images.** Drop image files onto the composer to attach them.
+- **Project detection.** Auto-detects project type (Node, Python, Rust) from working directory.
+- **Desktop notifications.** Get notified when sessions complete or need permission while the tab is in the background.
+- **Context meter.** Visual indicator of context window usage with color-coded thresholds.
 
 ## How it works
 
 The Claude Code CLI has a hidden `--sdk-url` flag. When set, it connects to a WebSocket server instead of running in a terminal. The protocol is NDJSON (newline-delimited JSON).
 
 ```
-┌──────────────┐    WebSocket (NDJSON)    ┌─────────────────┐    WebSocket (JSON)    ┌─────────────┐
-│  Claude Code │ ◄───────────────────────► │   Bun + Hono    │ ◄───────────────────► │   Browser   │
-│     CLI      │  /ws/cli/:session        │     Server      │  /ws/browser/:session │   (React)   │
-└──────────────┘                          └─────────────────┘                       └─────────────┘
++--------------+    WebSocket (NDJSON)    +-----------------+    WebSocket (JSON)    +-------------+
+| Claude Code  | <---------------------> |   Bun + Hono    | <-------------------> |   Browser   |
+|     CLI      |  /ws/cli/:session       |     Server      |  /ws/browser/:session |   (React)   |
++--------------+                         +-----------------+                       +-------------+
 ```
 
 1. You type a prompt in the browser
@@ -53,13 +44,13 @@ The Claude Code CLI has a hidden `--sdk-url` flag. When set, it connects to a We
 4. Messages flow both ways: your prompts to the CLI, streaming responses back
 5. Tool calls show up as approval prompts in the browser
 
-We documented the full protocol (13 control subtypes, permission flow, reconnection logic, session lifecycle) in [`WEBSOCKET_PROTOCOL_REVERSED.md`](WEBSOCKET_PROTOCOL_REVERSED.md).
+Full protocol documentation: [`WEBSOCKET_PROTOCOL_REVERSED.md`](WEBSOCKET_PROTOCOL_REVERSED.md).
 
 ## Development
 
 ```bash
-git clone https://github.com/The-Vibe-Company/companion.git
-cd companion/web
+git clone https://github.com/Tekyz-Inc/ClaudeWebCLI.git
+cd ClaudeWebCLI/web
 bun install
 bun run dev       # backend + Vite HMR on :5174
 ```
@@ -70,9 +61,21 @@ Production: `bun run build && bun run start` serves everything on `:3456`.
 
 Bun runtime, Hono server, React 19, Zustand, Tailwind v4, Vite.
 
-## Contributing
+## Testing
 
-Check [open issues](https://github.com/The-Vibe-Company/companion/issues), fork, branch, PR. For protocol-level work, read the [WebSocket spec](WEBSOCKET_PROTOCOL_REVERSED.md) first.
+```bash
+cd web
+bun run test          # Run all tests
+bun run test:watch    # Watch mode
+bun run typecheck     # TypeScript strict mode check
+```
+
+## Documentation
+
+- [Requirements](docs/requirements.md)
+- [Architecture](docs/architecture.md)
+- [Workflows](docs/workflows.md)
+- [Infrastructure](docs/infrastructure.md)
 
 ## License
 

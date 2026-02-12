@@ -1,6 +1,7 @@
 import { useStore } from "./store.js";
 import type { BrowserIncomingMessage, BrowserOutgoingMessage, ContentBlock, ChatMessage, TaskItem } from "./types.js";
 import { generateUniqueSessionName } from "./utils/names.js";
+import { sendNotification } from "./utils/notifications.js";
 
 const sockets = new Map<string, WebSocket>();
 const reconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -225,6 +226,11 @@ function handleMessage(sessionId: string, event: MessageEvent) {
       store.setStreaming(sessionId, null);
       store.setStreamingStats(sessionId, null);
       store.setSessionStatus(sessionId, "idle");
+      const sessionName = store.sessionNames.get(sessionId) || "Session";
+      sendNotification(`${sessionName} — Complete`, {
+        body: `Cost: $${r.total_cost_usd.toFixed(4)} · ${r.num_turns} turns`,
+        sessionId,
+      });
       if (r.is_error && r.errors?.length) {
         store.appendMessage(sessionId, {
           id: nextId(),
@@ -238,6 +244,11 @@ function handleMessage(sessionId: string, event: MessageEvent) {
 
     case "permission_request": {
       store.addPermission(sessionId, data.request);
+      const permSessionName = store.sessionNames.get(sessionId) || "Session";
+      sendNotification(`${permSessionName} — Permission Needed`, {
+        body: `${data.request.tool_name}: approve or deny`,
+        sessionId,
+      });
       // Also extract tasks and changed files from permission requests
       const req = data.request;
       if (req.tool_name && req.input) {

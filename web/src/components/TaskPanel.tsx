@@ -53,7 +53,7 @@ export function TaskPanel({ sessionId }: { sessionId: string }) {
                 className={`h-full rounded-full transition-all duration-500 ${
                   contextPct > 80
                     ? "bg-cc-error"
-                    : contextPct > 50
+                    : contextPct > 60
                     ? "bg-cc-warning"
                     : "bg-cc-primary"
                 }`}

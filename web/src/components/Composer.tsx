@@ -2,6 +2,9 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useStore } from "../store.js";
 import { sendToSession } from "../ws.js";
 import { api } from "../api.js";
+import { usePromptHistory } from "../hooks/use-prompt-history.js";
+import { useVoiceInput } from "../hooks/use-voice-input.js";
+import { requestNotificationPermission } from "../utils/notifications.js";
 
 let idCounter = 0;
 
@@ -34,12 +37,23 @@ export function Composer({ sessionId }: { sessionId: string }) {
   const [images, setImages] = useState<ImageAttachment[]>([]);
   const [slashMenuOpen, setSlashMenuOpen] = useState(false);
   const [slashMenuIndex, setSlashMenuIndex] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounterRef = useRef(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const cliConnected = useStore((s) => s.cliConnected);
   const sessionData = useStore((s) => s.sessions.get(sessionId));
   const previousMode = useStore((s) => s.previousPermissionMode.get(sessionId) || "acceptEdits");
+
+  const { navigateUp, navigateDown, addToHistory, resetNavigation, saveDraft } =
+    usePromptHistory(sessionId);
+
+  const handleVoiceTranscript = useCallback((transcript: string) => {
+    setText((prev) => (prev ? prev + " " + transcript : transcript));
+  }, []);
+  const { isSupported: voiceSupported, isListening, start: startVoice, stop: stopVoice } =
+    useVoiceInput(handleVoiceTranscript);
 
   const isConnected = cliConnected.get(sessionId) ?? false;
   const currentMode = sessionData?.permissionMode || "acceptEdits";
@@ -125,6 +139,8 @@ export function Composer({ sessionId }: { sessionId: string }) {
       timestamp: Date.now(),
     });
 
+    addToHistory(msg);
+    requestNotificationPermission();
     setText("");
     setImages([]);
     setSlashMenuOpen(false);
@@ -161,6 +177,31 @@ export function Composer({ sessionId }: { sessionId: string }) {
       if (e.key === "Escape") {
         e.preventDefault();
         setSlashMenuOpen(false);
+        return;
+      }
+    }
+
+    // Prompt history navigation (Up/Down arrows)
+    if (e.key === "ArrowUp" && !slashMenuOpen) {
+      const ta = textareaRef.current;
+      if (ta && ta.selectionStart === 0) {
+        saveDraft(text);
+        const prev = navigateUp();
+        if (prev !== null) {
+          e.preventDefault();
+          setText(prev);
+        }
+        return;
+      }
+    }
+    if (e.key === "ArrowDown" && !slashMenuOpen) {
+      const ta = textareaRef.current;
+      if (ta && ta.selectionStart === ta.value.length) {
+        const next = navigateDown();
+        if (next !== null) {
+          e.preventDefault();
+          setText(next);
+        }
         return;
       }
     }
@@ -221,6 +262,39 @@ export function Composer({ sessionId }: { sessionId: string }) {
     }
   }
 
+  function handleDragEnter(e: React.DragEvent) {
+    e.preventDefault();
+    dragCounterRef.current++;
+    if (dragCounterRef.current === 1) setIsDragging(true);
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    e.preventDefault();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) setIsDragging(false);
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+  }
+
+  async function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    dragCounterRef.current = 0;
+    setIsDragging(false);
+    const files = e.dataTransfer?.files;
+    if (!files) return;
+    const newImages: ImageAttachment[] = [];
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith("image/")) continue;
+      const { base64, mediaType } = await readFileAsBase64(file);
+      newImages.push({ name: file.name, base64, mediaType });
+    }
+    if (newImages.length > 0) {
+      setImages((prev) => [...prev, ...newImages]);
+    }
+  }
+
   function toggleMode() {
     if (!isConnected) return;
     const store = useStore.getState();
@@ -240,7 +314,18 @@ export function Composer({ sessionId }: { sessionId: string }) {
   const canSend = text.trim().length > 0 && isConnected;
 
   return (
-    <div className="shrink-0 border-t border-cc-border bg-cc-card px-2 sm:px-4 py-2 sm:py-3">
+    <div
+      className="shrink-0 border-t border-cc-border bg-cc-card px-2 sm:px-4 py-2 sm:py-3 relative"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {isDragging && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-cc-card/80 border-2 border-dashed border-cc-primary rounded-lg pointer-events-none">
+          <span className="text-sm font-medium text-cc-primary">Drop files here</span>
+        </div>
+      )}
       <div className="max-w-3xl mx-auto">
         {/* Image thumbnails */}
         {images.length > 0 && (
@@ -405,8 +490,40 @@ export function Composer({ sessionId }: { sessionId: string }) {
               <span>{isPlan ? "plan mode" : "accept edits"}</span>
             </button>
 
-            {/* Right: image + send/stop */}
+            {/* Right: voice + image + send/stop */}
             <div className="flex items-center gap-1">
+              {voiceSupported && (
+                <button
+                  onClick={isListening ? stopVoice : startVoice}
+                  disabled={!isConnected}
+                  className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
+                    !isConnected
+                      ? "text-cc-muted opacity-30 cursor-not-allowed"
+                      : isListening
+                      ? "text-cc-error hover:bg-cc-error/10 cursor-pointer"
+                      : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover cursor-pointer"
+                  }`}
+                  title={isListening ? "Stop recording" : "Voice input"}
+                >
+                  {isListening ? (
+                    <span className="relative flex items-center justify-center w-4 h-4">
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-cc-error opacity-30 animate-ping" />
+                      <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4 relative">
+                        <rect x="5" y="2" width="6" height="8" rx="3" />
+                        <path d="M3 7v1a5 5 0 0010 0V7" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                        <line x1="8" y1="13" x2="8" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                    </span>
+                  ) : (
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4">
+                      <rect x="5" y="2" width="6" height="8" rx="3" />
+                      <path d="M3 7v1a5 5 0 0010 0V7" strokeLinecap="round" />
+                      <line x1="8" y1="13" x2="8" y2="15" strokeLinecap="round" />
+                    </svg>
+                  )}
+                </button>
+              )}
+
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={!isConnected}
