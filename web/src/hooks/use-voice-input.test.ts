@@ -213,6 +213,42 @@ describe("useVoiceInput", () => {
     expect(onTranscript).toHaveBeenCalledWith(raw);
   });
 
+  it("skips duplicate final results at the same index", () => {
+    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
+    const onTranscript = vi.fn();
+    const { result } = renderHook(() => useVoiceInput(onTranscript));
+
+    act(() => result.current.start());
+
+    const instance = mockInstances[0];
+    const makeResult = (idx: number, text: string, isFinal: boolean) => ({
+      resultIndex: idx,
+      results: {
+        length: idx + 1,
+        item: () => null,
+        [idx]: {
+          isFinal,
+          length: 1,
+          item: () => ({ transcript: text, confidence: 0.9 }),
+          0: { transcript: text, confidence: 0.9 },
+        },
+      },
+    });
+
+    // First final result at index 0
+    act(() => instance.onresult?.(makeResult(0, "hello world", true)));
+    expect(onTranscript).toHaveBeenCalledTimes(1);
+
+    // Duplicate fire of same final result at index 0
+    act(() => instance.onresult?.(makeResult(0, "hello world", true)));
+    expect(onTranscript).toHaveBeenCalledTimes(1); // NOT called again
+
+    // New result at index 1 should work
+    act(() => instance.onresult?.(makeResult(1, "second phrase", true)));
+    expect(onTranscript).toHaveBeenCalledTimes(2);
+    expect(onTranscript).toHaveBeenLastCalledWith("second phrase");
+  });
+
   it("sets error on recognition error", () => {
     vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
     const { result } = renderHook(() => useVoiceInput(vi.fn()));

@@ -47,13 +47,20 @@ export function useVoiceInput(onTranscript: (text: string) => void) {
     recognition.interimResults = true;
     recognition.lang = "en-US";
 
+    // Track last processed final result index to prevent duplicates
+    // (some browsers re-fire onresult for already-finalized results)
+    let lastFinalIndex = -1;
+
     recognition.onresult = (e: SpeechRecognitionEvent) => {
       let final_ = "";
       let interim = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const text = e.results[i][0].transcript;
         if (e.results[i].isFinal) {
-          final_ += text;
+          if (i > lastFinalIndex) {
+            final_ += text;
+            lastFinalIndex = i;
+          }
         } else {
           interim += text;
         }

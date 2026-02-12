@@ -121,8 +121,9 @@
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
-/* Ghost text: lighter color while voice dictation is being formatted */
+/* Ghost text: lighter color + italic while voice dictation is being formatted */
 .voice-ghost {
   color: var(--color-cc-muted);
-  transition: color 200ms ease-in;
+  font-style: italic;
+  transition: color 200ms ease-in, font-style 200ms ease-in;
 }

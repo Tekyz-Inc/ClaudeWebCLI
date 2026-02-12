@@ -117,6 +117,68 @@ describe("useDictationFormatter", () => {
     expect(result.current.state.ghostText).toBe("");
   });
 
+  it("flush immediately formats ghost text and returns result", async () => {
+    mockFormatDictation.mockResolvedValue({
+      formatted: "Hello world.",
+      changed: true,
+    });
+
+    const { result } = renderHook(() => useDictationFormatter());
+
+    act(() => result.current.addRawText("hello world period"));
+
+    let flushed = "";
+    await act(async () => {
+      flushed = await result.current.flush();
+    });
+
+    expect(flushed).toBe("Hello world.");
+    expect(result.current.state.solidText).toBe("Hello world.");
+    expect(result.current.state.ghostText).toBe("");
+  });
+
+  it("flush returns solidText when no ghost text pending", async () => {
+    mockFormatDictation.mockResolvedValue({
+      formatted: "Hello.",
+      changed: true,
+    });
+
+    const { result } = renderHook(() => useDictationFormatter());
+
+    // Format some text first
+    act(() => result.current.addRawText("hello period"));
+    await act(async () => {
+      vi.advanceTimersByTime(350);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    // Flush with no pending ghost text
+    let flushed = "";
+    await act(async () => {
+      flushed = await result.current.flush();
+    });
+
+    expect(flushed).toBe("Hello.");
+  });
+
+  it("flush preserves raw text on API failure", async () => {
+    mockFormatDictation.mockRejectedValue(new Error("timeout"));
+
+    const { result } = renderHook(() => useDictationFormatter());
+
+    act(() => result.current.addRawText("hello world"));
+
+    let flushed = "";
+    await act(async () => {
+      flushed = await result.current.flush();
+    });
+
+    expect(flushed).toBe("hello world");
+    expect(result.current.state.solidText).toBe("hello world");
+    expect(result.current.state.ghostText).toBe("");
+  });
+
   it("display text combines solid and ghost", async () => {
     mockFormatDictation.mockResolvedValue({
       formatted: "Hello.",

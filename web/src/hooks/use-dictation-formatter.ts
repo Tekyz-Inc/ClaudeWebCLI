@@ -16,6 +16,9 @@ export function useDictationFormatter() {
     isFormatting: false,
   });
 
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestIdRef = useRef(0);
 
@@ -76,11 +79,38 @@ export function useDictationFormatter() {
     return parts.join(" ");
   }, [state.solidText, state.ghostText]);
 
+  /** Immediately format any pending ghostText and return all text. */
+  const flush = useCallback(async (): Promise<string> => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    const current = stateRef.current;
+    const ghost = current.ghostText.trim();
+    if (!ghost) return current.solidText;
+
+    const reqId = ++requestIdRef.current;
+    try {
+      const result = await api.formatDictation(ghost);
+      if (reqId !== requestIdRef.current) return stateRef.current.solidText;
+      const formatted = result.formatted;
+      const newSolid = current.solidText
+        ? current.solidText + " " + formatted
+        : formatted;
+      setState({ solidText: newSolid, ghostText: "", isFormatting: false });
+      return newSolid;
+    } catch {
+      const newSolid = current.solidText
+        ? current.solidText + " " + ghost
+        : ghost;
+      setState({ solidText: newSolid, ghostText: "", isFormatting: false });
+      return newSolid;
+    }
+  }, []);
+
   const reset = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     requestIdRef.current++;
     setState({ ghostText: "", solidText: "", isFormatting: false });
   }, []);
 
-  return { state, addRawText, getDisplayText, reset };
+  return { state, addRawText, getDisplayText, flush, reset };
 }

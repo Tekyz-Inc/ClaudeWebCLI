@@ -71,14 +71,14 @@ export function HomePage() {
   const { isSupported: voiceSupported, isListening, interimText, start: startVoice, stop: stopVoice } =
     useVoiceInput(handleVoiceTranscript);
 
-  // Commit pending voice text when stopping
-  const handleStopVoice = useCallback(() => {
-    const pending = formatter.getDisplayText();
-    if (pending) {
-      setText((prev) => (prev ? prev + " " + pending : pending));
-      formatter.reset();
-    }
+  // Stop voice, flush formatting, then commit formatted text
+  const handleStopVoice = useCallback(async () => {
     stopVoice();
+    const formatted = await formatter.flush();
+    if (formatted) {
+      setText((prev) => (prev ? prev + " " + formatted : formatted));
+    }
+    formatter.reset();
   }, [stopVoice, formatter]);
 
   // Show typed text + formatter voice text + interim speech
@@ -370,7 +370,7 @@ export function HomePage() {
             onPaste={handlePaste}
             placeholder="Fix a bug, build a feature, refactor code..."
             rows={4}
-            className={`w-full px-4 pt-4 pb-2 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted${formatter.state.ghostText ? " voice-ghost" : ""}`}
+            className={`w-full px-4 pt-4 pb-2 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted${(formatter.state.ghostText || interimText) ? " voice-ghost" : ""}`}
             style={{ minHeight: "100px", maxHeight: "300px" }}
           />
 
