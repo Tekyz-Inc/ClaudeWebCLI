@@ -3,7 +3,23 @@
 ## Project: ClaudeWebCLI
 ## Version: 0.2.0
 ## Current Milestone
-None — ready for next milestone
+**Milestone 2: Smart Voice Dictation** — Phase: EXECUTED (all tasks complete)
+
+## Domains
+| Domain | Status | Tasks | Completed |
+|--------|--------|-------|-----------|
+| server-formatter | complete | 2 | 2 |
+| client-formatter | complete | 3 | 3 |
+| ghost-ux | complete | 3 | 3 |
+
+## Contracts
+- [x] api-contract.md — POST /api/format-dictation
+- [x] component-contract.md — useVoiceInput (modified), useDictationFormatter (new), ghost UX
+- [x] integration-points-m2.md — linear dependency chain: server → client → UX
+
+## Integration Checkpoints
+- [x] server-formatter complete → unblocks client-formatter — PASSED
+- [x] client-formatter complete → unblocks ghost-ux — PASSED
 
 ## Completed Milestones
 | # | Milestone | Version | Completed | Tag |
@@ -19,3 +35,7 @@ None — ready for next milestone
 - 2026-02-11: Milestone 1 executed — all 7 tasks complete. 558/563 tests pass (5 pre-existing Windows path failures in git-utils.test.ts). TypeScript typecheck clean.
 - 2026-02-11: Integration complete. Contract audit: all 3 contracts satisfied with 3 minor additive deviations (useVoiceInput callback pattern, usePromptHistory extra saveDraft, detectProject extra dirPath param). One integration gap fixed: notification permission request wired into Composer handleSend. Full test suite: 558/563 pass, typecheck clean. TD-005 updated with new file sizes (Composer 575, HomePage 728). Recommend: proceed to verify phase.
 - 2026-02-11: Milestone 1 verified — 33/33 acceptance criteria PASS, security review clean, 3 code quality warnings remediated. Version bumped 0.1.0 → 0.2.0 (minor, feature milestone).
+- 2026-02-11: [quick] Unified HomePage and Composer interfaces — mode/model dropdowns replaced with cycle buttons, voice mic added to HomePage, session naming changed to "Pending" until auto-named.
+- 2026-02-11: [quick] Fixed voice streaming duplication — separated interim results (live preview) from final results (committed text). Hook now returns `interimText` for display, only calls `onTranscript` on finalized speech. Textarea auto-expands on content change.
+- 2026-02-11: [quick] Added subscription usage tracking — TaskPanel now shows enhanced context meter (used %, remaining %, compaction threshold marker), plus localStorage-backed aggregate usage (Today/Week/Month cost and turns) via usage-tracker.ts.
+- 2026-02-12: Feature "Smart Voice Dictation" defined, partitioned into 3 domains, and planned with 8 tasks. All 8 tasks executed successfully. server-formatter: dictation-formatter.ts (one-shot Claude CLI) + POST /api/format-dictation endpoint. client-formatter: stripped regex from use-voice-input, added api.formatDictation wrapper, created use-dictation-formatter hook with debounced ghost→solid state. ghost-ux: wired formatter into Composer.tsx and HomePage.tsx, added voice-ghost CSS class. 571/576 tests pass (5 pre-existing Windows path failures). Typecheck clean. Linear dependency: server-formatter (2) → client-formatter (3) → ghost-ux (3). Solo sequential execution recommended — only 8 tasks, heavily interdependent. client-formatter Task 1 (strip regex) is independent and can start immediately alongside server-formatter. Brainstorm identified regex punctuation as fundamentally wrong — replaced with two-tier AI formatting. Tier 2 (Milestone 2): Claude CLI one-shot formatter via auto-namer pattern, ghost→solid text UX. Tier 1 (Milestone 3, future): WebLLM in-browser local AI. Both tiers free under Max subscription. Impact: 8 files across 3 domains, no breaking contract changes.

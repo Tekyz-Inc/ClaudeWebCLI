@@ -10,6 +10,7 @@ import type { WorktreeTracker } from "./worktree-tracker.js";
 import * as envManager from "./env-manager.js";
 import * as gitUtils from "./git-utils.js";
 import * as sessionNames from "./session-names.js";
+import { formatDictation } from "./dictation-formatter.js";
 
 export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionStore: SessionStore, worktreeTracker: WorktreeTracker) {
   const api = new Hono();
@@ -438,6 +439,21 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
     }
     return { cleaned: result.removed, path: mapping.worktreePath };
   }
+
+  // ─── Dictation Formatting ─────────────────────────────────────────
+
+  api.post("/format-dictation", async (c) => {
+    const body = await c.req.json().catch(() => ({}));
+    const text = body.text as string | undefined;
+    if (!text || !text.trim()) {
+      return c.json({ error: "text is required", formatted: null, changed: false }, 400);
+    }
+    const result = await formatDictation(text, body.model);
+    if (!result) {
+      return c.json({ error: "Formatting failed", formatted: null, changed: false }, 500);
+    }
+    return c.json(result);
+  });
 
   return api;
 }

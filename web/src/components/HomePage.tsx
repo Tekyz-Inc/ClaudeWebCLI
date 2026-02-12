@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useStore } from "../store.js";
 import { api, type CompanionEnv, type GitRepoInfo, type GitBranchInfo } from "../api.js";
 import { connectSession, waitForConnection, sendToSession } from "../ws.js";
 import { disconnectSession } from "../ws.js";
-import { generateUniqueSessionName } from "../utils/names.js";
+import { useVoiceInput } from "../hooks/use-voice-input.js";
+import { useDictationFormatter } from "../hooks/use-dictation-formatter.js";
 import { getRecentDirs, addRecentDir } from "../utils/recent-dirs.js";
 import { EnvManager } from "./EnvManager.js";
 import { FolderPicker } from "./FolderPicker.js";
@@ -35,7 +36,7 @@ const MODELS = [
 ];
 
 const MODES = [
-  { value: "bypassPermissions", label: "Agent", desc: "Auto-approve all tool calls" },
+  { value: "bypassPermissions", label: "Bypass Permissions", desc: "Auto-approve all tool calls" },
   { value: "acceptEdits", label: "Accept Edits", desc: "Approve file changes only" },
   { value: "plan", label: "Plan", desc: "Plan before making changes" },
   { value: "default", label: "Manual", desc: "Approve every tool call" },
@@ -60,9 +61,32 @@ export function HomePage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Voice input with AI formatting
+  const formatter = useDictationFormatter();
+
+  const handleVoiceTranscript = useCallback((transcript: string) => {
+    formatter.addRawText(transcript);
+  }, [formatter.addRawText]);
+
+  const { isSupported: voiceSupported, isListening, interimText, start: startVoice, stop: stopVoice } =
+    useVoiceInput(handleVoiceTranscript);
+
+  // Commit pending voice text when stopping
+  const handleStopVoice = useCallback(() => {
+    const pending = formatter.getDisplayText();
+    if (pending) {
+      setText((prev) => (prev ? prev + " " + pending : pending));
+      formatter.reset();
+    }
+    stopVoice();
+  }, [stopVoice, formatter]);
+
+  // Show typed text + formatter voice text + interim speech
+  const voiceDisplay = formatter.getDisplayText();
+  const displayText = [text, voiceDisplay, isListening ? interimText : ""]
+    .filter(Boolean).join(" ");
+
   // Dropdown states
-  const [showModelDropdown, setShowModelDropdown] = useState(false);
-  const [showModeDropdown, setShowModeDropdown] = useState(false);
   const [showFolderPicker, setShowFolderPicker] = useState(false);
 
   // Project detection
@@ -78,8 +102,6 @@ export function HomePage() {
   const [isNewBranch, setIsNewBranch] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const modelDropdownRef = useRef<HTMLDivElement>(null);
-  const modeDropdownRef = useRef<HTMLDivElement>(null);
   const envDropdownRef = useRef<HTMLDivElement>(null);
   const branchDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -104,12 +126,6 @@ export function HomePage() {
   // Close dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (modelDropdownRef.current && !modelDropdownRef.current.contains(e.target as Node)) {
-        setShowModelDropdown(false);
-      }
-      if (modeDropdownRef.current && !modeDropdownRef.current.contains(e.target as Node)) {
-        setShowModeDropdown(false);
-      }
       if (envDropdownRef.current && !envDropdownRef.current.contains(e.target as Node)) {
         setShowEnvDropdown(false);
       }
@@ -162,6 +178,16 @@ export function HomePage() {
   const selectedMode = MODES.find((m) => m.value === mode) || MODES[0];
   const dirLabel = cwd ? cwd.split("/").pop() || cwd : "Select folder";
 
+  function cycleMode() {
+    const idx = MODES.findIndex((m) => m.value === mode);
+    setMode(MODES[(idx + 1) % MODES.length].value);
+  }
+
+  function cycleModel() {
+    const idx = MODELS.findIndex((m) => m.value === model);
+    setModel(MODELS[(idx + 1) % MODELS.length].value);
+  }
+
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files) return;
@@ -196,11 +222,16 @@ export function HomePage() {
     }
   }
 
-  function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setText(e.target.value);
-    const ta = e.target;
+  // Auto-resize textarea when content changes (voice, text, etc.)
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
     ta.style.height = "auto";
     ta.style.height = Math.min(ta.scrollHeight, 300) + "px";
+  }, [displayText]);
+
+  function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setText(e.target.value);
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -217,7 +248,8 @@ export function HomePage() {
   }
 
   async function handleSend() {
-    const msg = text.trim();
+    const voiceText = formatter.getDisplayText();
+    const msg = [text, voiceText].filter(Boolean).join(" ").trim();
     if (!msg || sending) return;
 
     setSending(true);
@@ -242,10 +274,8 @@ export function HomePage() {
       });
       const sessionId = result.sessionId;
 
-      // Assign a random session name
-      const existingNames = new Set(useStore.getState().sessionNames.values());
-      const sessionName = generateUniqueSessionName(existingNames);
-      useStore.getState().setSessionName(sessionId, sessionName);
+      // Assign "Pending" name until auto-namer renames it
+      useStore.getState().setSessionName(sessionId, "Pending");
 
       // Save cwd to recent dirs
       if (cwd) addRecentDir(cwd);
@@ -276,22 +306,24 @@ export function HomePage() {
         images: images.length > 0 ? images.map((img) => ({ media_type: img.mediaType, data: img.base64 })) : undefined,
         timestamp: Date.now(),
       });
+
+      formatter.reset();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
       setSending(false);
     }
   }
 
-  const canSend = text.trim().length > 0 && !sending;
+  const canSend = (text.trim().length > 0 || formatter.getDisplayText().length > 0) && !sending;
 
   return (
     <div className="flex-1 h-full flex items-center justify-center px-3 sm:px-4">
       <div className="w-full max-w-2xl">
         {/* Logo + Title */}
         <div className="flex flex-col items-center justify-center mb-4 sm:mb-6">
-          <img src="/logo.svg" alt="The Vibe Companion" className="w-24 h-24 sm:w-32 sm:h-32 mb-3" />
+          <img src="/logo.svg" alt="Claude Web CLI" className="w-24 h-24 sm:w-32 sm:h-32 mb-3" />
           <h1 className="text-xl sm:text-2xl font-semibold text-cc-fg">
-            The Vibe Companion
+            Claude Web CLI
           </h1>
         </div>
 
@@ -332,66 +364,66 @@ export function HomePage() {
         <div className="bg-cc-card border border-cc-border rounded-[14px] shadow-sm overflow-hidden">
           <textarea
             ref={textareaRef}
-            value={text}
+            value={displayText}
             onChange={handleInput}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             placeholder="Fix a bug, build a feature, refactor code..."
             rows={4}
-            className="w-full px-4 pt-4 pb-2 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted"
+            className={`w-full px-4 pt-4 pb-2 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted${formatter.state.ghostText ? " voice-ghost" : ""}`}
             style={{ minHeight: "100px", maxHeight: "300px" }}
           />
 
-          {/* Bottom toolbar */}
+          {/* Bottom toolbar — matches Composer layout */}
           <div className="flex items-center justify-between px-3 pb-3">
-            {/* Left: mode dropdown */}
-            <div className="relative" ref={modeDropdownRef}>
+            {/* Left: mode + model cycle buttons */}
+            <div className="flex items-center gap-1">
               <button
-                onClick={() => setShowModeDropdown(!showModeDropdown)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-cc-muted hover:text-cc-fg rounded-lg hover:bg-cc-hover transition-colors cursor-pointer"
+                onClick={cycleMode}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[12px] font-medium text-cc-muted hover:text-cc-fg hover:bg-cc-hover transition-all cursor-pointer select-none"
+                title="Cycle permission mode (Shift+Tab)"
               >
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
-                  <path d="M2 4h12M2 8h8M2 12h10" strokeLinecap="round" />
+                <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+                  <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
                 </svg>
-                {selectedMode.label}
-                <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 opacity-50">
-                  <path d="M4 6l4 4 4-4" />
-                </svg>
+                <span>{selectedMode.label}</span>
               </button>
-              {showModeDropdown && (
-                <div className="absolute left-0 bottom-full mb-1 w-52 bg-cc-card border border-cc-border rounded-[10px] shadow-lg z-10 py-1 overflow-hidden">
-                  {MODES.map((m) => (
-                    <button
-                      key={m.value}
-                      onClick={() => { setMode(m.value); setShowModeDropdown(false); }}
-                      className={`w-full px-3 py-2 text-left hover:bg-cc-hover transition-colors cursor-pointer ${
-                        m.value === mode ? "text-cc-primary font-medium" : "text-cc-fg"
-                      }`}
-                    >
-                      <span className="text-xs">{m.label}</span>
-                      <span className="block text-[10px] text-cc-muted">{m.desc}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+              <button
+                onClick={cycleModel}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[12px] font-medium text-cc-muted hover:text-cc-fg hover:bg-cc-hover transition-all cursor-pointer select-none"
+                title="Cycle model"
+              >
+                <span>{selectedModel.icon}</span>
+                <span>{selectedModel.label}</span>
+              </button>
             </div>
 
-            {/* Right: image placeholder + send */}
-            <div className="flex items-center gap-1.5">
-              {/* Image upload */}
+            {/* Right: voice + image + send */}
+            <div className="flex items-center gap-1">
+              {voiceSupported && (
+                <button
+                  onClick={isListening ? handleStopVoice : startVoice}
+                  className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
+                    isListening
+                      ? "text-cc-error hover:bg-cc-error/10 cursor-pointer"
+                      : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover cursor-pointer"
+                  }`}
+                  title={isListening ? "Stop recording" : "Voice input"}
+                >
+                  <svg viewBox="0 0 16 16" fill="currentColor" className={`w-4 h-4 ${isListening ? "animate-pulse" : ""}`}>
+                    <path d="M8 1a2.5 2.5 0 00-2.5 2.5v4a2.5 2.5 0 005 0v-4A2.5 2.5 0 008 1zM5 7a.5.5 0 00-1 0 4 4 0 003.5 3.969V13H6a.5.5 0 000 1h4a.5.5 0 000-1H8.5v-2.031A4 4 0 0012 7a.5.5 0 00-1 0 3 3 0 01-6 0z" />
+                  </svg>
+                </button>
+              )}
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="flex items-center justify-center w-8 h-8 rounded-lg text-cc-muted hover:text-cc-fg hover:bg-cc-hover transition-colors cursor-pointer"
-                title="Upload image"
+                title="Attach file"
               >
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4">
-                  <rect x="2" y="2" width="12" height="12" rx="2" />
-                  <circle cx="5.5" cy="5.5" r="1" fill="currentColor" stroke="none" />
-                  <path d="M2 11l3-3 2 2 3-4 4 5" strokeLinecap="round" strokeLinejoin="round" />
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                  <path d="M8 3v10M3 8h10" strokeLinecap="round" />
                 </svg>
               </button>
-
-              {/* Send button */}
               <button
                 onClick={handleSend}
                 disabled={!canSend}
@@ -672,35 +704,7 @@ export function HomePage() {
             )}
           </div>
 
-          {/* Model selector */}
-          <div className="relative" ref={modelDropdownRef}>
-            <button
-              onClick={() => setShowModelDropdown(!showModelDropdown)}
-              className="flex items-center gap-1.5 px-2 py-1 text-xs text-cc-muted hover:text-cc-fg rounded-md hover:bg-cc-hover transition-colors cursor-pointer"
-            >
-              <span>{selectedModel.icon}</span>
-              <span>{selectedModel.label}</span>
-              <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 opacity-50">
-                <path d="M4 6l4 4 4-4" />
-              </svg>
-            </button>
-            {showModelDropdown && (
-              <div className="absolute left-0 bottom-full mb-1 w-44 bg-cc-card border border-cc-border rounded-[10px] shadow-lg z-10 py-1 overflow-hidden">
-                {MODELS.map((m) => (
-                  <button
-                    key={m.value}
-                    onClick={() => { setModel(m.value); setShowModelDropdown(false); }}
-                    className={`w-full px-3 py-2 text-xs text-left hover:bg-cc-hover transition-colors cursor-pointer flex items-center gap-2 ${
-                      m.value === model ? "text-cc-primary font-medium" : "text-cc-fg"
-                    }`}
-                  >
-                    <span>{m.icon}</span>
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Model moved to toolbar as cycle button */}
         </div>
 
         {/* Error message */}

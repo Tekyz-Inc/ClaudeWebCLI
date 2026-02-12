@@ -109,6 +109,110 @@ describe("useVoiceInput", () => {
     expect(onTranscript).toHaveBeenCalledWith("hello world");
   });
 
+  it("sets interimText for non-final results without calling onTranscript", () => {
+    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
+    const onTranscript = vi.fn();
+    const { result } = renderHook(() => useVoiceInput(onTranscript));
+
+    act(() => result.current.start());
+
+    const instance = mockInstances[0];
+    act(() => {
+      instance.onresult?.({
+        resultIndex: 0,
+        results: {
+          length: 1,
+          item: () => null,
+          0: {
+            isFinal: false,
+            length: 1,
+            item: () => ({ transcript: "hello", confidence: 0.5 }),
+            0: { transcript: "hello", confidence: 0.5 },
+          },
+        },
+      });
+    });
+
+    expect(onTranscript).not.toHaveBeenCalled();
+    expect(result.current.interimText).toBe("hello");
+  });
+
+  it("clears interimText when final result arrives", () => {
+    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
+    const onTranscript = vi.fn();
+    const { result } = renderHook(() => useVoiceInput(onTranscript));
+
+    act(() => result.current.start());
+
+    const instance = mockInstances[0];
+    // Send interim first
+    act(() => {
+      instance.onresult?.({
+        resultIndex: 0,
+        results: {
+          length: 1,
+          item: () => null,
+          0: {
+            isFinal: false,
+            length: 1,
+            item: () => ({ transcript: "hello world", confidence: 0.5 }),
+            0: { transcript: "hello world", confidence: 0.5 },
+          },
+        },
+      });
+    });
+    expect(result.current.interimText).toBe("hello world");
+
+    // Then final
+    act(() => {
+      instance.onresult?.({
+        resultIndex: 0,
+        results: {
+          length: 1,
+          item: () => null,
+          0: {
+            isFinal: true,
+            length: 1,
+            item: () => ({ transcript: "hello world", confidence: 0.9 }),
+            0: { transcript: "hello world", confidence: 0.9 },
+          },
+        },
+      });
+    });
+
+    expect(onTranscript).toHaveBeenCalledWith("hello world");
+    expect(result.current.interimText).toBe("");
+  });
+
+  it("passes raw text through without any processing", () => {
+    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
+    const onTranscript = vi.fn();
+    const { result } = renderHook(() => useVoiceInput(onTranscript));
+
+    act(() => result.current.start());
+
+    const instance = mockInstances[0];
+    const raw = "hello world period how are you question mark";
+    act(() => {
+      instance.onresult?.({
+        resultIndex: 0,
+        results: {
+          length: 1,
+          item: () => null,
+          0: {
+            isFinal: true,
+            length: 1,
+            item: () => ({ transcript: raw, confidence: 0.9 }),
+            0: { transcript: raw, confidence: 0.9 },
+          },
+        },
+      });
+    });
+
+    // Raw text should pass through unchanged — no punctuation processing
+    expect(onTranscript).toHaveBeenCalledWith(raw);
+  });
+
   it("sets error on recognition error", () => {
     vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
     const { result } = renderHook(() => useVoiceInput(vi.fn()));

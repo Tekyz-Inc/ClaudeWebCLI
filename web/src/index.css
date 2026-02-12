@@ -120,3 +120,9 @@
 .font-mono-code {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
+
+/* Ghost text: lighter color while voice dictation is being formatted */
+.voice-ghost {
+  color: var(--color-cc-muted);
+  transition: color 200ms ease-in;
+}

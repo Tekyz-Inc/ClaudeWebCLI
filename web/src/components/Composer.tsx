@@ -4,6 +4,7 @@ import { sendToSession } from "../ws.js";
 import { api } from "../api.js";
 import { usePromptHistory } from "../hooks/use-prompt-history.js";
 import { useVoiceInput } from "../hooks/use-voice-input.js";
+import { useDictationFormatter } from "../hooks/use-dictation-formatter.js";
 import { requestNotificationPermission } from "../utils/notifications.js";
 
 let idCounter = 0;
@@ -46,14 +47,39 @@ export function Composer({ sessionId }: { sessionId: string }) {
   const sessionData = useStore((s) => s.sessions.get(sessionId));
   const previousMode = useStore((s) => s.previousPermissionMode.get(sessionId) || "acceptEdits");
 
+  const COMPOSER_MODES = [
+    { value: "bypassPermissions", label: "Bypass" },
+    { value: "acceptEdits", label: "Accept Edits" },
+    { value: "plan", label: "Plan" },
+    { value: "default", label: "Manual" },
+  ] as const;
+
   const { navigateUp, navigateDown, addToHistory, resetNavigation, saveDraft } =
     usePromptHistory(sessionId);
 
+  const formatter = useDictationFormatter();
+
   const handleVoiceTranscript = useCallback((transcript: string) => {
-    setText((prev) => (prev ? prev + " " + transcript : transcript));
-  }, []);
-  const { isSupported: voiceSupported, isListening, start: startVoice, stop: stopVoice } =
+    formatter.addRawText(transcript);
+  }, [formatter.addRawText]);
+
+  const { isSupported: voiceSupported, isListening, interimText, start: startVoice, stop: stopVoice } =
     useVoiceInput(handleVoiceTranscript);
+
+  // Commit pending voice text when stopping
+  const handleStopVoice = useCallback(() => {
+    const pending = formatter.getDisplayText();
+    if (pending) {
+      setText((prev) => (prev ? prev + " " + pending : pending));
+      formatter.reset();
+    }
+    stopVoice();
+  }, [stopVoice, formatter]);
+
+  // Show typed text + formatter voice text + interim speech
+  const voiceDisplay = formatter.getDisplayText();
+  const displayText = [text, voiceDisplay, isListening ? interimText : ""]
+    .filter(Boolean).join(" ");
 
   const isConnected = cliConnected.get(sessionId) ?? false;
   const currentMode = sessionData?.permissionMode || "acceptEdits";
@@ -121,7 +147,8 @@ export function Composer({ sessionId }: { sessionId: string }) {
   }, []);
 
   function handleSend() {
-    const msg = text.trim();
+    const voiceText = formatter.getDisplayText();
+    const msg = [text, voiceText].filter(Boolean).join(" ").trim();
     if (!msg || !isConnected) return;
 
     sendToSession(sessionId, {
@@ -142,6 +169,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
     addToHistory(msg);
     requestNotificationPermission();
     setText("");
+    formatter.reset();
     setImages([]);
     setSlashMenuOpen(false);
 
@@ -208,7 +236,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
 
     if (e.key === "Tab" && e.shiftKey) {
       e.preventDefault();
-      toggleMode();
+      cycleMode();
       return;
     }
     if (e.key === "Enter" && !e.shiftKey) {
@@ -217,11 +245,16 @@ export function Composer({ sessionId }: { sessionId: string }) {
     }
   }
 
-  function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setText(e.target.value);
-    const ta = e.target;
+  // Auto-resize textarea when content changes (voice, text, etc.)
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
     ta.style.height = "auto";
     ta.style.height = Math.min(ta.scrollHeight, 200) + "px";
+  }, [displayText]);
+
+  function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setText(e.target.value);
   }
 
   function handleInterrupt() {
@@ -295,23 +328,17 @@ export function Composer({ sessionId }: { sessionId: string }) {
     }
   }
 
-  function toggleMode() {
+  function cycleMode() {
     if (!isConnected) return;
-    const store = useStore.getState();
-    if (!isPlan) {
-      store.setPreviousPermissionMode(sessionId, currentMode);
-      sendToSession(sessionId, { type: "set_permission_mode", mode: "plan" });
-      store.updateSession(sessionId, { permissionMode: "plan" });
-    } else {
-      const restoreMode = previousMode || "acceptEdits";
-      sendToSession(sessionId, { type: "set_permission_mode", mode: restoreMode });
-      store.updateSession(sessionId, { permissionMode: restoreMode });
-    }
+    const idx = COMPOSER_MODES.findIndex((m) => m.value === currentMode);
+    const next = COMPOSER_MODES[(idx + 1) % COMPOSER_MODES.length];
+    sendToSession(sessionId, { type: "set_permission_mode", mode: next.value });
+    useStore.getState().updateSession(sessionId, { permissionMode: next.value });
   }
 
   const sessionStatus = useStore((s) => s.sessionStatus);
   const isRunning = sessionStatus.get(sessionId) === "running";
-  const canSend = text.trim().length > 0 && isConnected;
+  const canSend = (text.trim().length > 0 || formatter.getDisplayText().length > 0) && isConnected;
 
   return (
     <div
@@ -405,14 +432,14 @@ export function Composer({ sessionId }: { sessionId: string }) {
 
           <textarea
             ref={textareaRef}
-            value={text}
+            value={displayText}
             onChange={handleInput}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             placeholder={isConnected ? "Type a message... (/ for commands)" : "Waiting for CLI connection..."}
             disabled={!isConnected}
             rows={1}
-            className="w-full px-4 pt-3 pb-1 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted disabled:opacity-50"
+            className={`w-full px-4 pt-3 pb-1 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted disabled:opacity-50${formatter.state.ghostText ? " voice-ghost" : ""}`}
             style={{ minHeight: "36px", maxHeight: "200px" }}
           />
 
@@ -465,36 +492,26 @@ export function Composer({ sessionId }: { sessionId: string }) {
           <div className="flex items-center justify-between px-2.5 pb-2.5">
             {/* Left: mode indicator */}
             <button
-              onClick={toggleMode}
+              onClick={cycleMode}
               disabled={!isConnected}
               className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[12px] font-medium transition-all cursor-pointer select-none ${
                 !isConnected
                   ? "opacity-30 cursor-not-allowed text-cc-muted"
-                  : isPlan
-                  ? "text-cc-primary hover:bg-cc-primary/10"
                   : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover"
               }`}
-              title="Toggle mode (Shift+Tab)"
+              title="Cycle permission mode (Shift+Tab)"
             >
-              {isPlan ? (
-                <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
-                  <rect x="3" y="3" width="3.5" height="10" rx="0.75" />
-                  <rect x="9.5" y="3" width="3.5" height="10" rx="0.75" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
-                  <path d="M2.5 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                  <path d="M8.5 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                </svg>
-              )}
-              <span>{isPlan ? "plan mode" : "accept edits"}</span>
+              <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+                <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+              </svg>
+              <span>{COMPOSER_MODES.find((m) => m.value === currentMode)?.label || "Bypass"}</span>
             </button>
 
             {/* Right: voice + image + send/stop */}
             <div className="flex items-center gap-1">
               {voiceSupported && (
                 <button
-                  onClick={isListening ? stopVoice : startVoice}
+                  onClick={isListening ? handleStopVoice : startVoice}
                   disabled={!isConnected}
                   className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
                     !isConnected
@@ -532,12 +549,10 @@ export function Composer({ sessionId }: { sessionId: string }) {
                     ? "text-cc-muted hover:text-cc-fg hover:bg-cc-hover cursor-pointer"
                     : "text-cc-muted opacity-30 cursor-not-allowed"
                 }`}
-                title="Upload image"
+                title="Attach file"
               >
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4">
-                  <rect x="2" y="2" width="12" height="12" rx="2" />
-                  <circle cx="5.5" cy="5.5" r="1" fill="currentColor" stroke="none" />
-                  <path d="M2 11l3-3 2 2 3-4 4 5" strokeLinecap="round" strokeLinejoin="round" />
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                  <path d="M8 3v10M3 8h10" strokeLinecap="round" />
                 </svg>
               </button>
 

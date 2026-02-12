@@ -31,6 +31,7 @@ function getSpeechRecognition(): SpeechRecognitionConstructor | null {
 
 export function useVoiceInput(onTranscript: (text: string) => void) {
   const [isListening, setIsListening] = useState(false);
+  const [interimText, setInterimText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const isSupported = getSpeechRecognition() !== null;
@@ -40,31 +41,41 @@ export function useVoiceInput(onTranscript: (text: string) => void) {
     if (!SR) return;
 
     setError(null);
+    setInterimText("");
     const recognition = new SR();
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.lang = "en-US";
 
     recognition.onresult = (e: SpeechRecognitionEvent) => {
-      let transcript = "";
+      let final_ = "";
+      let interim = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
+        const text = e.results[i][0].transcript;
         if (e.results[i].isFinal) {
-          transcript += e.results[i][0].transcript;
+          final_ += text;
+        } else {
+          interim += text;
         }
       }
-      if (transcript) {
-        onTranscript(transcript);
+      if (final_) {
+        onTranscript(final_);
+        setInterimText("");
+      } else if (interim) {
+        setInterimText(interim);
       }
     };
 
     recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
       setError(e.error);
       setIsListening(false);
+      setInterimText("");
       recognitionRef.current = null;
     };
 
     recognition.onend = () => {
       setIsListening(false);
+      setInterimText("");
       recognitionRef.current = null;
     };
 
@@ -79,6 +90,7 @@ export function useVoiceInput(onTranscript: (text: string) => void) {
       recognitionRef.current = null;
     }
     setIsListening(false);
+    setInterimText("");
   }, []);
 
   useEffect(() => {
@@ -90,5 +102,5 @@ export function useVoiceInput(onTranscript: (text: string) => void) {
     };
   }, []);
 
-  return { isSupported, isListening, error, start, stop };
+  return { isSupported, isListening, interimText, error, start, stop };
 }
