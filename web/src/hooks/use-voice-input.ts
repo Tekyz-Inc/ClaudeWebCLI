@@ -101,29 +101,43 @@ export function useVoiceInput(): UseVoiceReturn {
         accumulatedRef.current = accumulatedRef.current
           ? accumulatedRef.current + " " + final_.trim()
           : final_.trim();
-        setInterimText("");
+        setInterimText(accumulatedRef.current);
       } else if (interim) {
-        setInterimText(interim);
+        setInterimText(
+          accumulatedRef.current
+            ? accumulatedRef.current + " " + interim
+            : interim,
+        );
       }
     };
 
     recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
-      // In hybrid mode, Speech API errors are non-fatal — Whisper is primary
       if (activeBackendRef.current === "speech") {
         setError(e.error);
         setIsListening(false);
         activeBackendRef.current = null;
+        recognitionRef.current = null;
       }
-      recognitionRef.current = null;
+      // In whisper mode, Speech API errors are non-fatal — just log
     };
 
     recognition.onend = () => {
       if (activeBackendRef.current === "speech") {
         setIsListening(false);
         activeBackendRef.current = null;
+        setInterimText("");
+        recognitionRef.current = null;
+      } else if (activeBackendRef.current === "whisper") {
+        // Speech API preview ended while Whisper still recording — restart
+        try {
+          recognition.start();
+        } catch {
+          recognitionRef.current = null;
+        }
+      } else {
+        setInterimText("");
+        recognitionRef.current = null;
       }
-      setInterimText("");
-      recognitionRef.current = null;
     };
 
     recognitionRef.current = recognition;
