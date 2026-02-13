@@ -149,11 +149,11 @@ export function useVoiceInput(): UseVoiceReturn {
     setIsListening(true);
     activeBackendRef.current = "whisper";
 
-    // Start Whisper audio capture
-    await whisper.startRecording();
-
-    // Also start Speech API for live streaming text preview
+    // Start Speech API first for immediate streaming text preview
     startSpeechPreview();
+
+    // Then start Whisper audio capture (may await mic permission)
+    await whisper.startRecording();
   }, [whisper, startSpeechPreview]);
 
   const stopWhisper = useCallback(async (): Promise<string> => {

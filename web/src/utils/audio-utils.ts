@@ -4,33 +4,42 @@ export interface RawCapture {
   audioCtx: AudioContext;
   stream: MediaStream;
   samples: Float32Array[];
+  /** Must retain reference to prevent GC from stopping audio processing */
+  _processor: ScriptProcessorNode;
 }
 
 /**
  * Start capturing raw PCM audio from the microphone.
  * Uses ScriptProcessorNode to capture Float32Array samples directly,
- * bypassing MediaRecorder encode/decode which corrupts audio on some systems.
+ * bypassing MediaRecorder encode/decode which corrupts audio.
  */
 export async function startRawCapture(): Promise<RawCapture> {
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: { channelCount: 1 },
   });
   const audioCtx = new AudioContext();
+
+  // Chrome may suspend AudioContext — must resume within user gesture
+  if (audioCtx.state === "suspended") {
+    await audioCtx.resume();
+  }
+
   const source = audioCtx.createMediaStreamSource(stream);
   const samples: Float32Array[] = [];
 
-  // ScriptProcessorNode captures raw PCM — deprecated but reliable
   const processor = audioCtx.createScriptProcessor(4096, 1, 1);
   processor.onaudioprocess = (e) => {
-    // Must copy — the buffer is reused by the browser
     samples.push(new Float32Array(e.inputBuffer.getChannelData(0)));
   };
 
+  // Connect through a silent gain node so mic audio doesn't play back
+  const silencer = audioCtx.createGain();
+  silencer.gain.value = 0;
   source.connect(processor);
-  // ScriptProcessor requires connection to destination to fire events
-  processor.connect(audioCtx.destination);
+  processor.connect(silencer);
+  silencer.connect(audioCtx.destination);
 
-  return { audioCtx, stream, samples };
+  return { audioCtx, stream, samples, _processor: processor };
 }
 
 /**
@@ -39,7 +48,10 @@ export async function startRawCapture(): Promise<RawCapture> {
 export async function stopRawCapture(
   capture: RawCapture,
 ): Promise<Float32Array> {
-  const { audioCtx, stream, samples } = capture;
+  const { audioCtx, stream, samples, _processor } = capture;
+
+  // Disconnect processor first to stop capturing
+  try { _processor.disconnect(); } catch { /* already disconnected */ }
 
   // Stop microphone
   for (const track of stream.getTracks()) {
@@ -63,12 +75,11 @@ export async function stopRawCapture(
   const nativeSr = audioCtx.sampleRate;
   await audioCtx.close();
 
-  // Already at target rate
   if (nativeSr === TARGET_SAMPLE_RATE) {
     return fullAudio;
   }
 
-  // Resample to 16kHz using OfflineAudioContext (proper sinc interpolation)
+  // Resample to 16kHz using OfflineAudioContext
   const duration = fullAudio.length / nativeSr;
   const outLength = Math.round(duration * TARGET_SAMPLE_RATE);
   const offline = new OfflineAudioContext(1, outLength, TARGET_SAMPLE_RATE);
