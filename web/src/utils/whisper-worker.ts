@@ -3,7 +3,7 @@ import { pipeline, env } from "@huggingface/transformers";
 // Disable local model check — always use remote/cached
 env.allowLocalModels = false;
 
-const MODEL_ID = "onnx-community/whisper-small";
+const MODEL_ID = "onnx-community/whisper-tiny";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let whisperPipeline: any = null;
@@ -72,8 +72,6 @@ async function transcribe(audio: Float32Array): Promise<void> {
     const result = await whisperPipeline(audio, {
       language: "en",
       task: "transcribe",
-      chunk_length_s: 30,
-      stride_length_s: 5,
     });
     // Result can be string or object with .text
     const text = typeof result === "string"
