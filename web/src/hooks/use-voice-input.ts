@@ -159,10 +159,17 @@ export function useVoiceInput(): UseVoiceReturn {
   const start = useCallback(() => {
     if (activeWhisper) {
       startWhisper();
-    } else {
+      return;
+    }
+    // Auto-load Whisper model on first mic click
+    if (canUseWhisper && !whisper.state.isModelLoaded && !whisper.state.isModelLoading) {
+      whisper.loadModel();
+    }
+    // Use Web Speech API as interim while Whisper loads
+    if (hasSpeechApi) {
       startSpeechApi();
     }
-  }, [activeWhisper, startWhisper, startSpeechApi]);
+  }, [activeWhisper, canUseWhisper, hasSpeechApi, whisper, startWhisper, startSpeechApi]);
 
   const stop = useCallback(async (): Promise<string> => {
     if (activeWhisper) {
