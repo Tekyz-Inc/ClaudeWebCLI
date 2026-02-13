@@ -1,15 +1,14 @@
 # GSD-T Progress
 
 ## Project: ClaudeWebCLI
-## Version: 0.3.0
+## Version: 0.4.0
 ## Current Milestone
-| # | Milestone | Status | Domains |
-|---|-----------|--------|---------|
-| 3 | Browser-Side Whisper Voice | VERIFIED | whisper-engine, voice-hook, ui-cleanup |
+None — ready for next milestone.
 
 ## Completed Milestones
 | # | Milestone | Version | Completed | Tag |
 |---|-----------|---------|-----------|-----|
+| 3 | Browser-Side Whisper Voice | 0.4.0 | 2026-02-13 | v0.4.0 |
 | 2 | Smart Voice Dictation | 0.3.0 | 2026-02-12 | v0.3.0 |
 | 1 | Foundation — Daily Workflow + Voice + Files | 0.2.0 | 2026-02-11 | v0.2.0 |
 
@@ -30,3 +29,4 @@
 - 2026-02-12: [debug] Fixed voice formatting failures: Windows binary resolution prefers .exe, CLI runs from tmpdir to avoid 37K-token project context, removed auto-debounce (format on flush only), increased timeout to 30s, added content-based dedup in SpeechRecognition.
 - 2026-02-12: [quick] Moved reconnection/disconnection banners from ChatView (row insertion) to TopBar inline status to prevent disorienting layout shifts.
 - 2026-02-12: Milestone 3 "Browser-Side Whisper Voice" defined. Replace Web Speech API + Claude CLI formatting with in-browser Whisper (whisper-small, quantized ~530MB) via @huggingface/transformers + WebGPU. Single-step transcription with built-in punctuation/capitalization. Fallback to Web Speech API for non-WebGPU browsers.
+- 2026-02-13: Milestone 3 completed. 3 domains, 9 tasks, all verified. Whisper engine (Web Worker + audio capture), unified voice hook (Whisper primary + Web Speech fallback), UI cleanup (Composer/HomePage integration, 4 legacy files deleted, server route removed). Version 0.3.0 → 0.4.0.
