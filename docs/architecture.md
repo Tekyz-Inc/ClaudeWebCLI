@@ -111,13 +111,16 @@ ClaudeWebCLI/
     │   │
     │   ├── hooks/
     │   │   ├── use-prompt-history.ts # Terminal-like Up/Down prompt history navigation
-    │   │   └── use-voice-input.ts   # Web Speech API hook for voice dictation
+    │   │   ├── use-voice-input.ts   # Unified voice hook: Whisper primary + Web Speech API fallback
+    │   │   └── use-whisper.ts       # Whisper pipeline management: Web Worker lifecycle, audio capture
     │   │
     │   └── utils/
+    │       ├── audio-utils.ts      # Audio capture (getUserMedia) + PCM conversion (16kHz Float32)
     │       ├── names.ts            # Random adjective+noun session name generator
     │       ├── notifications.ts    # Desktop notification API (permission, send, click-to-focus)
     │       ├── project-detector.ts # Detect project type from directory listing
-    │       └── recent-dirs.ts      # localStorage recent directories (max 5)
+    │       ├── recent-dirs.ts      # localStorage recent directories (max 5)
+    │       └── whisper-worker.ts   # Web Worker: Whisper model loading + inference (@huggingface/transformers)
     │
     └── dist/                       # Vite build output (client assets)
 ```

@@ -3,7 +3,9 @@
 ## Project: ClaudeWebCLI
 ## Version: 0.3.0
 ## Current Milestone
-None — ready for next milestone
+| # | Milestone | Status | Domains |
+|---|-----------|--------|---------|
+| 3 | Browser-Side Whisper Voice | VERIFIED | whisper-engine, voice-hook, ui-cleanup |
 
 ## Completed Milestones
 | # | Milestone | Version | Completed | Tag |
@@ -15,7 +17,6 @@ None — ready for next milestone
 | # | Milestone | Priority | Source |
 |---|-----------|----------|--------|
 | 2.1 | Fix Windows Path Test Failures | MEDIUM | TD-011 |
-| 3 | Local AI Voice — WebLLM In-Browser | future | roadmap |
 
 ## Decision Log
 - 2026-02-10: Project initialized with GSD-T workflow
@@ -28,3 +29,4 @@ None — ready for next milestone
 - 2026-02-12: [debug] Fixed 3 voice dictation bugs: (1) Switched model from Sonnet to Haiku for faster formatting, embedded instructions in prompt instead of --system-prompt flag, fixed `which`→`where` on Windows. (2) Increased timeout 5s→15s. (3) Fixed text duplication on keypress by blocking textarea onChange during active voice/formatter state.
 - 2026-02-12: [debug] Fixed voice formatting failures: Windows binary resolution prefers .exe, CLI runs from tmpdir to avoid 37K-token project context, removed auto-debounce (format on flush only), increased timeout to 30s, added content-based dedup in SpeechRecognition.
 - 2026-02-12: [quick] Moved reconnection/disconnection banners from ChatView (row insertion) to TopBar inline status to prevent disorienting layout shifts.
+- 2026-02-12: Milestone 3 "Browser-Side Whisper Voice" defined. Replace Web Speech API + Claude CLI formatting with in-browser Whisper (whisper-small, quantized ~530MB) via @huggingface/transformers + WebGPU. Single-step transcription with built-in punctuation/capitalization. Fallback to Web Speech API for non-WebGPU browsers.

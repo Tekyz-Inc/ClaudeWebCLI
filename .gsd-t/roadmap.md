@@ -26,20 +26,34 @@
 **Estimated effort**: small (< 1 hour)
 **Priority**: MEDIUM — next available slot
 
-### Milestone 3 (future): Local AI Voice — WebLLM In-Browser Formatting
-**Goal**: Add in-browser WebLLM as Tier 1 for instant local formatting before server fallback
+### Milestone 3: Browser-Side Whisper Voice [ACTIVE]
+**Goal**: Replace Web Speech API + Claude CLI formatting with in-browser Whisper via @huggingface/transformers + WebGPU. Single-step transcription produces properly punctuated, capitalized text with no server round-trip.
 **Scope**:
-- WebLLM integration with small model (Qwen 2.5 0.5B or similar)
-- Model loading with progress indicator, IndexedDB caching
-- WebGPU detection with graceful fallback to Tier 2
-- Tier 1→Tier 2 fallback chain in formatter hook
+- In-browser Whisper (whisper-small, quantized ~530MB) via @huggingface/transformers
+- WebGPU acceleration with WASM fallback
+- Audio capture via MediaRecorder/Web Audio API → Whisper inference
+- Model download with progress indicator, IndexedDB caching (automatic)
+- Graceful fallback to Web Speech API for browsers without WebGPU/WASM support
+- Remove Claude CLI dictation formatter and server endpoint
+- Remove use-dictation-formatter hook (formatting built into transcription)
+**NOT in scope**:
+- Multilingual support (English-only model for smaller download)
+- Real-time word-by-word streaming (Whisper processes in chunks)
+- Model size selection UI (hardcoded to whisper-small)
+**Known risks**:
+- WebGPU memory leak (transformers.js Issue #860) — needs manual tensor cleanup
+- ~530MB first-time download — must have progress indicator and be cached
+- Whisper processes chunks, not real-time — UX is "speak → pause → text appears"
 **Impact on existing**:
-- Modifies `use-dictation-formatter.ts` (add WebLLM tier)
-- New dependency: `@mlc-ai/web-llm`
-- No server changes
+- Replaces `use-voice-input.ts` (Web Speech API → Whisper)
+- Removes `use-dictation-formatter.ts` + server `dictation-formatter.ts` + `/api/format-dictation` route
+- Modifies `Composer.tsx` voice integration
+- New dependency: `@huggingface/transformers`
 **Success criteria**:
-- [ ] WebGPU-capable browsers use local model for ~50ms formatting
-- [ ] Non-WebGPU browsers gracefully fall back to server formatter
-- [ ] Model downloads once, cached in IndexedDB
-- [ ] Loading indicator during first model download
-- [ ] Formatting quality comparable to server tier
+- [ ] Voice transcription produces punctuated, capitalized text without server call
+- [ ] Transcription completes in <3s for typical dictation (10-30 words)
+- [ ] Model downloads once, cached in IndexedDB, instant on subsequent loads
+- [ ] Progress indicator during first model download
+- [ ] Graceful fallback to Web Speech API when WebGPU/WASM unavailable
+- [ ] No memory leaks after repeated transcription sessions
+- [ ] All existing voice-related tests updated and passing

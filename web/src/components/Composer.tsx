@@ -4,7 +4,6 @@ import { sendToSession } from "../ws.js";
 import { api } from "../api.js";
 import { usePromptHistory } from "../hooks/use-prompt-history.js";
 import { useVoiceInput } from "../hooks/use-voice-input.js";
-import { useDictationFormatter } from "../hooks/use-dictation-formatter.js";
 import { requestNotificationPermission } from "../utils/notifications.js";
 
 let idCounter = 0;
@@ -57,31 +56,18 @@ export function Composer({ sessionId }: { sessionId: string }) {
   const { navigateUp, navigateDown, addToHistory, resetNavigation, saveDraft } =
     usePromptHistory(sessionId);
 
-  const formatter = useDictationFormatter();
+  const voice = useVoiceInput();
 
-  const handleVoiceTranscript = useCallback((transcript: string) => {
-    formatter.addRawText(transcript);
-  }, [formatter.addRawText]);
-
-  const { isSupported: voiceSupported, isListening, interimText, start: startVoice, stop: stopVoice } =
-    useVoiceInput(handleVoiceTranscript);
-
-  // Stop voice, flush formatting, then commit formatted text
+  // Stop voice, get transcribed text, append to composer
   const handleStopVoice = useCallback(async () => {
-    stopVoice();
-    const formatted = await formatter.flush();
-    // Replace text with combined pre-voice text + formatted voice text
-    // (avoids duplication from prior sessions accumulating in text state)
-    const combined = [text, formatted].filter(Boolean).join(" ");
-    setText(combined);
-    formatter.reset();
-  }, [stopVoice, formatter, text]);
+    const transcribed = await voice.stop();
+    if (transcribed) {
+      setText((prev) => [prev, transcribed].filter(Boolean).join(" "));
+    }
+  }, [voice]);
 
-  // Voice content and typed text are mutually exclusive in the display
-  // to prevent duplication when both contain overlapping content
-  const hasVoiceContent = !!(formatter.state.solidText || formatter.state.ghostText || (isListening && interimText));
-  const displayText = hasVoiceContent
-    ? [formatter.getDisplayText(), isListening ? interimText : ""].filter(Boolean).join(" ")
+  const displayText = voice.isListening && voice.interimText
+    ? [text, voice.interimText].filter(Boolean).join(" ")
     : text;
 
   const isConnected = cliConnected.get(sessionId) ?? false;
@@ -150,8 +136,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
   }, []);
 
   function handleSend() {
-    const voiceText = formatter.getDisplayText();
-    const msg = [text, voiceText].filter(Boolean).join(" ").trim();
+    const msg = text.trim();
     if (!msg || !isConnected) return;
 
     sendToSession(sessionId, {
@@ -172,7 +157,6 @@ export function Composer({ sessionId }: { sessionId: string }) {
     addToHistory(msg);
     requestNotificationPermission();
     setText("");
-    formatter.reset();
     setImages([]);
     setSlashMenuOpen(false);
 
@@ -257,10 +241,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
   }, [displayText]);
 
   function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    // When voice/formatter content is active, the textarea value includes
-    // voice text. Allowing onChange would capture voice text into `text`,
-    // causing duplication on every keystroke.
-    if (formatter.state.ghostText || formatter.state.solidText || isListening) return;
+    if (voice.isListening) return;
     setText(e.target.value);
   }
 
@@ -345,7 +326,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
 
   const sessionStatus = useStore((s) => s.sessionStatus);
   const isRunning = sessionStatus.get(sessionId) === "running";
-  const canSend = (text.trim().length > 0 || formatter.getDisplayText().length > 0) && isConnected;
+  const canSend = text.trim().length > 0 && isConnected;
 
   return (
     <div
@@ -446,7 +427,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
             placeholder={isConnected ? "Type a message... (/ for commands)" : "Waiting for CLI connection..."}
             disabled={!isConnected}
             rows={1}
-            className={`w-full px-4 pt-3 pb-1 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted disabled:opacity-50${(formatter.state.ghostText || interimText) ? " voice-ghost" : ""}`}
+            className={`w-full px-4 pt-3 pb-1 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted disabled:opacity-50${voice.isListening ? " voice-ghost" : ""}`}
             style={{ minHeight: "36px", maxHeight: "200px" }}
           />
 
@@ -516,20 +497,31 @@ export function Composer({ sessionId }: { sessionId: string }) {
 
             {/* Right: voice + image + send/stop */}
             <div className="flex items-center gap-1">
-              {voiceSupported && (
+              {voice.isSupported && (
                 <button
-                  onClick={isListening ? handleStopVoice : startVoice}
-                  disabled={!isConnected}
+                  onClick={voice.isListening ? handleStopVoice : voice.isProcessing ? undefined : voice.start}
+                  disabled={!isConnected || voice.isProcessing || voice.isModelLoading}
                   className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
-                    !isConnected
+                    !isConnected || voice.isModelLoading
                       ? "text-cc-muted opacity-30 cursor-not-allowed"
-                      : isListening
+                      : voice.isProcessing
+                      ? "text-cc-primary opacity-60 cursor-wait"
+                      : voice.isListening
                       ? "text-cc-error hover:bg-cc-error/10 cursor-pointer"
                       : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover cursor-pointer"
                   }`}
-                  title={isListening ? "Stop recording" : "Voice input"}
+                  title={
+                    voice.isModelLoading ? `Loading voice model (${Math.round(voice.loadProgress)}%)`
+                    : voice.isProcessing ? "Transcribing..."
+                    : voice.isListening ? "Stop recording"
+                    : "Voice input"
+                  }
                 >
-                  {isListening ? (
+                  {voice.isProcessing ? (
+                    <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 animate-spin">
+                      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" strokeDasharray="28" strokeDashoffset="8" strokeLinecap="round" />
+                    </svg>
+                  ) : voice.isListening ? (
                     <span className="relative flex items-center justify-center w-4 h-4">
                       <span className="absolute inline-flex h-full w-full rounded-full bg-cc-error opacity-30 animate-ping" />
                       <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4 relative">

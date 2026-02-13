@@ -116,10 +116,7 @@ export interface DirEntry {
   path: string;
 }
 
-export interface FormatDictationResult {
-  formatted: string;
-  changed: boolean;
-}
+
 
 export interface DirListResult {
   path: string;
@@ -205,7 +202,4 @@ export const api = {
   getFileDiff: (path: string) =>
     get<{ path: string; diff: string }>(`/fs/diff?path=${encodeURIComponent(path)}`),
 
-  // Dictation formatting
-  formatDictation: (text: string, model?: string) =>
-    post<FormatDictationResult>("/format-dictation", { text, model }),
 };

@@ -1,4 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useWhisper } from "./use-whisper.js";
+
+/* ─── Web Speech API types ──────────────────────────────── */
 
 interface SpeechRecognitionEvent {
   results: SpeechRecognitionResultList;
@@ -21,34 +24,78 @@ interface SpeechRecognitionInstance {
   abort: () => void;
 }
 
-type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
+type SpeechRecognitionCtor = new () => SpeechRecognitionInstance;
 
-function getSpeechRecognition(): SpeechRecognitionConstructor | null {
+function getSpeechRecognition(): SpeechRecognitionCtor | null {
   const w = window as unknown as Record<string, unknown>;
   return (w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null) as
-    SpeechRecognitionConstructor | null;
+    SpeechRecognitionCtor | null;
 }
 
-export function useVoiceInput(onTranscript: (text: string) => void) {
+/* ─── Unified voice hook ────────────────────────────────── */
+
+export interface UseVoiceReturn {
+  isSupported: boolean;
+  isListening: boolean;
+  isProcessing: boolean;
+  interimText: string;
+  error: string | null;
+  isModelLoaded: boolean;
+  isModelLoading: boolean;
+  loadProgress: number;
+  useWhisper: boolean;
+  start: () => void;
+  stop: () => Promise<string>;
+}
+
+export function useVoiceInput(): UseVoiceReturn {
+  const whisper = useWhisper();
+
   const [isListening, setIsListening] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [interimText, setInterimText] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  const isSupported = getSpeechRecognition() !== null;
 
-  const start = useCallback(() => {
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const accumulatedRef = useRef<string>("");
+
+  const hasSpeechApi = getSpeechRecognition() !== null;
+  const canUseWhisper = whisper.state.isSupported;
+  const isSupported = canUseWhisper || hasSpeechApi;
+  const activeWhisper = canUseWhisper && whisper.state.isModelLoaded;
+
+  /* ─── Whisper path ──────────────────────────────────── */
+
+  const startWhisper = useCallback(async () => {
+    setError(null);
+    setInterimText("");
+    setIsListening(true);
+    await whisper.startRecording();
+  }, [whisper]);
+
+  const stopWhisper = useCallback(async (): Promise<string> => {
+    setIsListening(false);
+    setIsProcessing(true);
+    const text = await whisper.stopRecording();
+    setIsProcessing(false);
+    return text;
+  }, [whisper]);
+
+  /* ─── Web Speech API fallback ───────────────────────── */
+
+  const startSpeechApi = useCallback(() => {
     const SR = getSpeechRecognition();
     if (!SR) return;
 
     setError(null);
     setInterimText("");
+    accumulatedRef.current = "";
+
     const recognition = new SR();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = "en-US";
 
-    // Track last processed final result index to prevent duplicates
-    // (some browsers re-fire onresult for already-finalized results)
     let lastFinalIndex = -1;
     let lastFinalText = "";
 
@@ -56,22 +103,21 @@ export function useVoiceInput(onTranscript: (text: string) => void) {
       let final_ = "";
       let interim = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
-        const text = e.results[i][0].transcript;
+        const t = e.results[i][0].transcript;
         if (e.results[i].isFinal) {
           if (i > lastFinalIndex) {
-            final_ += text;
+            final_ += t;
             lastFinalIndex = i;
           }
         } else {
-          interim += text;
+          interim += t;
         }
       }
-      if (final_) {
-        // Content-based dedup: skip if identical to last finalized transcript
-        if (final_.trim() !== lastFinalText) {
-          lastFinalText = final_.trim();
-          onTranscript(final_);
-        }
+      if (final_ && final_.trim() !== lastFinalText) {
+        lastFinalText = final_.trim();
+        accumulatedRef.current = accumulatedRef.current
+          ? accumulatedRef.current + " " + final_.trim()
+          : final_.trim();
         setInterimText("");
       } else if (interim) {
         setInterimText(interim);
@@ -94,25 +140,59 @@ export function useVoiceInput(onTranscript: (text: string) => void) {
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
-  }, [onTranscript]);
+  }, []);
 
-  const stop = useCallback(() => {
+  const stopSpeechApi = useCallback(async (): Promise<string> => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
     }
     setIsListening(false);
     setInterimText("");
+    const result = accumulatedRef.current;
+    accumulatedRef.current = "";
+    return result;
   }, []);
 
+  /* ─── Unified interface ─────────────────────────────── */
+
+  const start = useCallback(() => {
+    if (activeWhisper) {
+      startWhisper();
+    } else {
+      startSpeechApi();
+    }
+  }, [activeWhisper, startWhisper, startSpeechApi]);
+
+  const stop = useCallback(async (): Promise<string> => {
+    if (activeWhisper) {
+      return stopWhisper();
+    }
+    return stopSpeechApi();
+  }, [activeWhisper, stopWhisper, stopSpeechApi]);
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.abort();
         recognitionRef.current = null;
       }
+      whisper.cancelRecording();
     };
-  }, []);
+  }, [whisper]);
 
-  return { isSupported, isListening, interimText, error, start, stop };
+  return {
+    isSupported,
+    isListening,
+    isProcessing: isProcessing || whisper.state.isTranscribing,
+    interimText,
+    error: error || whisper.state.error,
+    isModelLoaded: whisper.state.isModelLoaded,
+    isModelLoading: whisper.state.isModelLoading,
+    loadProgress: whisper.state.loadProgress,
+    useWhisper: activeWhisper,
+    start,
+    stop,
+  };
 }

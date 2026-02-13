@@ -4,7 +4,6 @@ import { api, type CompanionEnv, type GitRepoInfo, type GitBranchInfo } from "..
 import { connectSession, waitForConnection, sendToSession } from "../ws.js";
 import { disconnectSession } from "../ws.js";
 import { useVoiceInput } from "../hooks/use-voice-input.js";
-import { useDictationFormatter } from "../hooks/use-dictation-formatter.js";
 import { getRecentDirs, addRecentDir } from "../utils/recent-dirs.js";
 import { EnvManager } from "./EnvManager.js";
 import { FolderPicker } from "./FolderPicker.js";
@@ -61,30 +60,19 @@ export function HomePage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Voice input with AI formatting
-  const formatter = useDictationFormatter();
+  // Voice input
+  const voice = useVoiceInput();
 
-  const handleVoiceTranscript = useCallback((transcript: string) => {
-    formatter.addRawText(transcript);
-  }, [formatter.addRawText]);
-
-  const { isSupported: voiceSupported, isListening, interimText, start: startVoice, stop: stopVoice } =
-    useVoiceInput(handleVoiceTranscript);
-
-  // Stop voice, flush formatting, then commit formatted text
   const handleStopVoice = useCallback(async () => {
-    stopVoice();
-    const formatted = await formatter.flush();
-    if (formatted) {
-      setText((prev) => (prev ? prev + " " + formatted : formatted));
+    const transcribed = await voice.stop();
+    if (transcribed) {
+      setText((prev) => [prev, transcribed].filter(Boolean).join(" "));
     }
-    formatter.reset();
-  }, [stopVoice, formatter]);
+  }, [voice]);
 
-  // Show typed text + formatter voice text + interim speech
-  const voiceDisplay = formatter.getDisplayText();
-  const displayText = [text, voiceDisplay, isListening ? interimText : ""]
-    .filter(Boolean).join(" ");
+  const displayText = voice.isListening && voice.interimText
+    ? [text, voice.interimText].filter(Boolean).join(" ")
+    : text;
 
   // Dropdown states
   const [showFolderPicker, setShowFolderPicker] = useState(false);
@@ -248,8 +236,7 @@ export function HomePage() {
   }
 
   async function handleSend() {
-    const voiceText = formatter.getDisplayText();
-    const msg = [text, voiceText].filter(Boolean).join(" ").trim();
+    const msg = text.trim();
     if (!msg || sending) return;
 
     setSending(true);
@@ -307,14 +294,13 @@ export function HomePage() {
         timestamp: Date.now(),
       });
 
-      formatter.reset();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
       setSending(false);
     }
   }
 
-  const canSend = (text.trim().length > 0 || formatter.getDisplayText().length > 0) && !sending;
+  const canSend = text.trim().length > 0 && !sending;
 
   return (
     <div className="flex-1 h-full flex items-center justify-center px-3 sm:px-4">
@@ -370,7 +356,7 @@ export function HomePage() {
             onPaste={handlePaste}
             placeholder="Fix a bug, build a feature, refactor code..."
             rows={4}
-            className={`w-full px-4 pt-4 pb-2 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted${(formatter.state.ghostText || interimText) ? " voice-ghost" : ""}`}
+            className={`w-full px-4 pt-4 pb-2 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted${voice.isListening ? " voice-ghost" : ""}`}
             style={{ minHeight: "100px", maxHeight: "300px" }}
           />
 
@@ -400,17 +386,27 @@ export function HomePage() {
 
             {/* Right: voice + image + send */}
             <div className="flex items-center gap-1">
-              {voiceSupported && (
+              {voice.isSupported && (
                 <button
-                  onClick={isListening ? handleStopVoice : startVoice}
+                  onClick={voice.isListening ? handleStopVoice : voice.isProcessing ? undefined : voice.start}
+                  disabled={voice.isProcessing || voice.isModelLoading}
                   className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
-                    isListening
+                    voice.isModelLoading
+                      ? "text-cc-muted opacity-30 cursor-not-allowed"
+                      : voice.isProcessing
+                      ? "text-cc-primary opacity-60 cursor-wait"
+                      : voice.isListening
                       ? "text-cc-error hover:bg-cc-error/10 cursor-pointer"
                       : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover cursor-pointer"
                   }`}
-                  title={isListening ? "Stop recording" : "Voice input"}
+                  title={
+                    voice.isModelLoading ? `Loading voice model (${Math.round(voice.loadProgress)}%)`
+                    : voice.isProcessing ? "Transcribing..."
+                    : voice.isListening ? "Stop recording"
+                    : "Voice input"
+                  }
                 >
-                  <svg viewBox="0 0 16 16" fill="currentColor" className={`w-4 h-4 ${isListening ? "animate-pulse" : ""}`}>
+                  <svg viewBox="0 0 16 16" fill="currentColor" className={`w-4 h-4 ${voice.isListening ? "animate-pulse" : ""}`}>
                     <path d="M8 1a2.5 2.5 0 00-2.5 2.5v4a2.5 2.5 0 005 0v-4A2.5 2.5 0 008 1zM5 7a.5.5 0 00-1 0 4 4 0 003.5 3.969V13H6a.5.5 0 000 1h4a.5.5 0 000-1H8.5v-2.031A4 4 0 0012 7a.5.5 0 00-1 0 3 3 0 01-6 0z" />
                   </svg>
                 </button>

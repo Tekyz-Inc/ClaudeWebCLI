@@ -1,6 +1,25 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+
+// Mock use-whisper to avoid loading transformers.js in tests
+vi.mock("./use-whisper.js", () => ({
+  useWhisper: () => ({
+    state: {
+      isModelLoaded: false,
+      isModelLoading: false,
+      loadProgress: 0,
+      isSupported: false,
+      isTranscribing: false,
+      error: null,
+    },
+    loadModel: vi.fn(),
+    startRecording: vi.fn(),
+    stopRecording: vi.fn().mockResolvedValue(""),
+    cancelRecording: vi.fn(),
+  }),
+}));
+
 import { useVoiceInput } from "./use-voice-input.js";
 
 let mockInstances: MockSpeechRecognition[] = [];
@@ -32,27 +51,27 @@ afterEach(() => {
 });
 
 describe("useVoiceInput", () => {
-  it("reports unsupported when SpeechRecognition is absent", () => {
-    const { result } = renderHook(() => useVoiceInput(vi.fn()));
+  it("reports unsupported when SpeechRecognition is absent and Whisper unavailable", () => {
+    const { result } = renderHook(() => useVoiceInput());
     expect(result.current.isSupported).toBe(false);
     expect(result.current.isListening).toBe(false);
   });
 
   it("reports supported when SpeechRecognition exists", () => {
     vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const { result } = renderHook(() => useVoiceInput(vi.fn()));
+    const { result } = renderHook(() => useVoiceInput());
     expect(result.current.isSupported).toBe(true);
   });
 
   it("reports supported with webkit prefix", () => {
     vi.stubGlobal("webkitSpeechRecognition", MockSpeechRecognition);
-    const { result } = renderHook(() => useVoiceInput(vi.fn()));
+    const { result } = renderHook(() => useVoiceInput());
     expect(result.current.isSupported).toBe(true);
   });
 
   it("start creates recognition instance and begins listening", () => {
     vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const { result } = renderHook(() => useVoiceInput(vi.fn()));
+    const { result } = renderHook(() => useVoiceInput());
 
     act(() => result.current.start());
 
@@ -63,7 +82,7 @@ describe("useVoiceInput", () => {
   });
 
   it("start does nothing when unsupported", () => {
-    const { result } = renderHook(() => useVoiceInput(vi.fn()));
+    const { result } = renderHook(() => useVoiceInput());
 
     act(() => result.current.start());
 
@@ -71,21 +90,9 @@ describe("useVoiceInput", () => {
     expect(mockInstances).toHaveLength(0);
   });
 
-  it("stop calls recognition.stop and resets state", () => {
+  it("stop returns accumulated transcript text", async () => {
     vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const { result } = renderHook(() => useVoiceInput(vi.fn()));
-
-    act(() => result.current.start());
-    act(() => result.current.stop());
-
-    expect(result.current.isListening).toBe(false);
-    expect(mockInstances[0].stop).toHaveBeenCalled();
-  });
-
-  it("calls onTranscript with final transcript text", () => {
-    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const onTranscript = vi.fn();
-    const { result } = renderHook(() => useVoiceInput(onTranscript));
+    const { result } = renderHook(() => useVoiceInput());
 
     act(() => result.current.start());
 
@@ -106,13 +113,18 @@ describe("useVoiceInput", () => {
       });
     });
 
-    expect(onTranscript).toHaveBeenCalledWith("hello world");
+    let text = "";
+    await act(async () => {
+      text = await result.current.stop();
+    });
+
+    expect(text).toBe("hello world");
+    expect(result.current.isListening).toBe(false);
   });
 
-  it("sets interimText for non-final results without calling onTranscript", () => {
+  it("sets interimText for non-final results", () => {
     vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const onTranscript = vi.fn();
-    const { result } = renderHook(() => useVoiceInput(onTranscript));
+    const { result } = renderHook(() => useVoiceInput());
 
     act(() => result.current.start());
 
@@ -133,37 +145,16 @@ describe("useVoiceInput", () => {
       });
     });
 
-    expect(onTranscript).not.toHaveBeenCalled();
     expect(result.current.interimText).toBe("hello");
   });
 
-  it("clears interimText when final result arrives", () => {
+  it("accumulates multiple final results", async () => {
     vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const onTranscript = vi.fn();
-    const { result } = renderHook(() => useVoiceInput(onTranscript));
+    const { result } = renderHook(() => useVoiceInput());
 
     act(() => result.current.start());
 
     const instance = mockInstances[0];
-    // Send interim first
-    act(() => {
-      instance.onresult?.({
-        resultIndex: 0,
-        results: {
-          length: 1,
-          item: () => null,
-          0: {
-            isFinal: false,
-            length: 1,
-            item: () => ({ transcript: "hello world", confidence: 0.5 }),
-            0: { transcript: "hello world", confidence: 0.5 },
-          },
-        },
-      });
-    });
-    expect(result.current.interimText).toBe("hello world");
-
-    // Then final
     act(() => {
       instance.onresult?.({
         resultIndex: 0,
@@ -173,85 +164,39 @@ describe("useVoiceInput", () => {
           0: {
             isFinal: true,
             length: 1,
-            item: () => ({ transcript: "hello world", confidence: 0.9 }),
-            0: { transcript: "hello world", confidence: 0.9 },
+            item: () => ({ transcript: "hello", confidence: 0.9 }),
+            0: { transcript: "hello", confidence: 0.9 },
           },
         },
       });
     });
-
-    expect(onTranscript).toHaveBeenCalledWith("hello world");
-    expect(result.current.interimText).toBe("");
-  });
-
-  it("passes raw text through without any processing", () => {
-    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const onTranscript = vi.fn();
-    const { result } = renderHook(() => useVoiceInput(onTranscript));
-
-    act(() => result.current.start());
-
-    const instance = mockInstances[0];
-    const raw = "hello world period how are you question mark";
     act(() => {
       instance.onresult?.({
-        resultIndex: 0,
+        resultIndex: 1,
         results: {
-          length: 1,
+          length: 2,
           item: () => null,
-          0: {
+          1: {
             isFinal: true,
             length: 1,
-            item: () => ({ transcript: raw, confidence: 0.9 }),
-            0: { transcript: raw, confidence: 0.9 },
+            item: () => ({ transcript: "world", confidence: 0.9 }),
+            0: { transcript: "world", confidence: 0.9 },
           },
         },
       });
     });
 
-    // Raw text should pass through unchanged — no punctuation processing
-    expect(onTranscript).toHaveBeenCalledWith(raw);
-  });
-
-  it("skips duplicate final results at the same index", () => {
-    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const onTranscript = vi.fn();
-    const { result } = renderHook(() => useVoiceInput(onTranscript));
-
-    act(() => result.current.start());
-
-    const instance = mockInstances[0];
-    const makeResult = (idx: number, text: string, isFinal: boolean) => ({
-      resultIndex: idx,
-      results: {
-        length: idx + 1,
-        item: () => null,
-        [idx]: {
-          isFinal,
-          length: 1,
-          item: () => ({ transcript: text, confidence: 0.9 }),
-          0: { transcript: text, confidence: 0.9 },
-        },
-      },
+    let text = "";
+    await act(async () => {
+      text = await result.current.stop();
     });
 
-    // First final result at index 0
-    act(() => instance.onresult?.(makeResult(0, "hello world", true)));
-    expect(onTranscript).toHaveBeenCalledTimes(1);
-
-    // Duplicate fire of same final result at index 0
-    act(() => instance.onresult?.(makeResult(0, "hello world", true)));
-    expect(onTranscript).toHaveBeenCalledTimes(1); // NOT called again
-
-    // New result at index 1 should work
-    act(() => instance.onresult?.(makeResult(1, "second phrase", true)));
-    expect(onTranscript).toHaveBeenCalledTimes(2);
-    expect(onTranscript).toHaveBeenLastCalledWith("second phrase");
+    expect(text).toBe("hello world");
   });
 
   it("sets error on recognition error", () => {
     vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const { result } = renderHook(() => useVoiceInput(vi.fn()));
+    const { result } = renderHook(() => useVoiceInput());
 
     act(() => result.current.start());
 
@@ -266,7 +211,7 @@ describe("useVoiceInput", () => {
 
   it("resets isListening when recognition ends", () => {
     vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const { result } = renderHook(() => useVoiceInput(vi.fn()));
+    const { result } = renderHook(() => useVoiceInput());
 
     act(() => result.current.start());
     expect(result.current.isListening).toBe(true);
@@ -276,5 +221,14 @@ describe("useVoiceInput", () => {
     });
 
     expect(result.current.isListening).toBe(false);
+  });
+
+  it("exposes Whisper state properties", () => {
+    const { result } = renderHook(() => useVoiceInput());
+    expect(result.current.isModelLoaded).toBe(false);
+    expect(result.current.isModelLoading).toBe(false);
+    expect(result.current.loadProgress).toBe(0);
+    expect(result.current.useWhisper).toBe(false);
+    expect(result.current.isProcessing).toBe(false);
   });
 });

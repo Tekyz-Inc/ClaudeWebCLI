@@ -212,8 +212,10 @@
 |----|-------------|--------|-------|
 | FR-15.1 | Prompt history: store sent prompts per session with Up/Down arrow navigation | [DONE] | `use-prompt-history.ts` hook + `promptHistory` store slice. 50-entry cap, localStorage persistence. |
 | FR-15.2 | Prompt history: slash menu takes priority over history navigation | [DONE] | Keyboard handler ordering in `Composer.tsx` |
-| FR-15.3 | Voice dictation via Web Speech API with mic button in Composer toolbar | [DONE] | `use-voice-input.ts` hook. Hidden when API unsupported. Callback pattern for transcript. |
-| FR-15.4 | Voice dictation: toggle between idle and recording states with visual indicator | [DONE] | Pulsing red indicator on mic button during recording |
+| FR-15.3 | Voice input via in-browser Whisper (whisper-small, quantized) with Web Speech API fallback | [DONE] | `use-voice-input.ts` unified hook → `use-whisper.ts` → `whisper-worker.ts` Web Worker. `@huggingface/transformers` v3.8.1. WebGPU primary, WASM fallback. ~530MB model cached in IndexedDB. |
+| FR-15.4 | Voice input: toggle between idle, recording, and transcribing states with visual indicator | [DONE] | Pulsing red indicator during recording, spinner during transcription |
+| FR-15.6 | Voice input: model download progress indicator during first use | [DONE] | `isModelLoading` + `loadProgress` (0-100%) shown on mic button title |
+| FR-15.7 | Voice input: transcribed text includes punctuation and capitalization natively | [DONE] | Whisper outputs properly formatted text — no server-side post-processing needed |
 | FR-15.5 | File drag-and-drop: drop zone overlay on Composer with image attachment | [DONE] | Drag handlers on wrapper div. Images via `readFileAsBase64`. Non-images ignored. |
 
 ### FR-16: Foundation — Session Configuration (Milestone 1)
