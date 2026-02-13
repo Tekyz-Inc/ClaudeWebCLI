@@ -48,6 +48,8 @@ export interface UseVoiceReturn {
   stop: () => Promise<string>;
 }
 
+type ActiveBackend = "whisper" | "speech" | null;
+
 export function useVoiceInput(): UseVoiceReturn {
   const whisper = useWhisper();
 
@@ -58,6 +60,7 @@ export function useVoiceInput(): UseVoiceReturn {
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const accumulatedRef = useRef<string>("");
+  const activeBackendRef = useRef<ActiveBackend>(null);
 
   const hasSpeechApi = getSpeechRecognition() !== null;
   const canUseWhisper = whisper.state.isSupported;
@@ -70,6 +73,7 @@ export function useVoiceInput(): UseVoiceReturn {
     setError(null);
     setInterimText("");
     setIsListening(true);
+    activeBackendRef.current = "whisper";
     await whisper.startRecording();
   }, [whisper]);
 
@@ -78,6 +82,7 @@ export function useVoiceInput(): UseVoiceReturn {
     setIsProcessing(true);
     const text = await whisper.stopRecording();
     setIsProcessing(false);
+    activeBackendRef.current = null;
     return text;
   }, [whisper]);
 
@@ -90,6 +95,7 @@ export function useVoiceInput(): UseVoiceReturn {
     setError(null);
     setInterimText("");
     accumulatedRef.current = "";
+    activeBackendRef.current = "speech";
 
     const recognition = new SR();
     recognition.continuous = true;
@@ -129,12 +135,14 @@ export function useVoiceInput(): UseVoiceReturn {
       setIsListening(false);
       setInterimText("");
       recognitionRef.current = null;
+      activeBackendRef.current = null;
     };
 
     recognition.onend = () => {
       setIsListening(false);
       setInterimText("");
       recognitionRef.current = null;
+      activeBackendRef.current = null;
     };
 
     recognitionRef.current = recognition;
@@ -149,6 +157,7 @@ export function useVoiceInput(): UseVoiceReturn {
     }
     setIsListening(false);
     setInterimText("");
+    activeBackendRef.current = null;
     const result = accumulatedRef.current;
     accumulatedRef.current = "";
     return result;
@@ -165,18 +174,21 @@ export function useVoiceInput(): UseVoiceReturn {
     if (canUseWhisper && !whisper.state.isModelLoaded && !whisper.state.isModelLoading) {
       whisper.loadModel();
     }
-    // Use Web Speech API as interim while Whisper loads
+    // Use Web Speech API while Whisper loads
     if (hasSpeechApi) {
       startSpeechApi();
     }
   }, [activeWhisper, canUseWhisper, hasSpeechApi, whisper, startWhisper, startSpeechApi]);
 
   const stop = useCallback(async (): Promise<string> => {
-    if (activeWhisper) {
+    // Always use the same backend that was started — prevents race condition
+    // where model loads between start/stop and we call the wrong stopper
+    const backend = activeBackendRef.current;
+    if (backend === "whisper") {
       return stopWhisper();
     }
     return stopSpeechApi();
-  }, [activeWhisper, stopWhisper, stopSpeechApi]);
+  }, [stopWhisper, stopSpeechApi]);
 
   // Cleanup on unmount
   useEffect(() => {

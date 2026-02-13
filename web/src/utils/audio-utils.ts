@@ -2,7 +2,8 @@ const TARGET_SAMPLE_RATE = 16_000;
 
 /**
  * Start capturing audio from the microphone.
- * Returns a MediaRecorder and the underlying stream.
+ * Captures at the device's native sample rate (NOT 16kHz)
+ * to avoid browser constraint issues. Resampling happens in stopAndConvert.
  */
 export async function startAudioCapture(): Promise<{
   recorder: MediaRecorder;
@@ -10,23 +11,20 @@ export async function startAudioCapture(): Promise<{
   chunks: Blob[];
 }> {
   const stream = await navigator.mediaDevices.getUserMedia({
-    audio: {
-      channelCount: 1,
-      sampleRate: TARGET_SAMPLE_RATE,
-    },
+    audio: { channelCount: 1 },
   });
   const chunks: Blob[] = [];
   const recorder = new MediaRecorder(stream);
   recorder.ondataavailable = (e) => {
     if (e.data.size > 0) chunks.push(e.data);
   };
-  recorder.start(250); // Collect chunks every 250ms
+  recorder.start(250);
   return { recorder, stream, chunks };
 }
 
 /**
  * Stop recording and convert captured audio to Float32Array at 16kHz.
- * This is the format Whisper expects.
+ * Uses OfflineAudioContext for proper resampling from native rate.
  */
 export async function stopAndConvert(
   recorder: MediaRecorder,
@@ -44,27 +42,29 @@ export async function stopAndConvert(
     track.stop();
   }
 
-  // Decode audio blob to AudioBuffer
+  // Decode audio blob at native sample rate
   const blob = new Blob(chunks, { type: recorder.mimeType });
   const arrayBuffer = await blob.arrayBuffer();
-  const audioCtx = new AudioContext({ sampleRate: TARGET_SAMPLE_RATE });
-  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+  const decodeCtx = new AudioContext();
+  const audioBuffer = await decodeCtx.decodeAudioData(arrayBuffer);
+  await decodeCtx.close();
 
-  // Extract mono PCM Float32 data
-  const pcm = audioBuffer.getChannelData(0);
+  const nativeSr = audioBuffer.sampleRate;
+  const mono = audioBuffer.getChannelData(0);
 
-  // Resample if AudioContext didn't honor our sampleRate request
-  if (audioBuffer.sampleRate !== TARGET_SAMPLE_RATE) {
-    const ratio = audioBuffer.sampleRate / TARGET_SAMPLE_RATE;
-    const newLength = Math.round(pcm.length / ratio);
-    const resampled = new Float32Array(newLength);
-    for (let i = 0; i < newLength; i++) {
-      resampled[i] = pcm[Math.round(i * ratio)] ?? 0;
-    }
-    await audioCtx.close();
-    return resampled;
+  // Already at target rate — return directly
+  if (nativeSr === TARGET_SAMPLE_RATE) {
+    return mono;
   }
 
-  await audioCtx.close();
-  return pcm;
+  // Resample to 16kHz using OfflineAudioContext (proper sinc interpolation)
+  const duration = mono.length / nativeSr;
+  const outLength = Math.round(duration * TARGET_SAMPLE_RATE);
+  const offline = new OfflineAudioContext(1, outLength, TARGET_SAMPLE_RATE);
+  const src = offline.createBufferSource();
+  src.buffer = audioBuffer;
+  src.connect(offline.destination);
+  src.start(0);
+  const resampled = await offline.startRendering();
+  return resampled.getChannelData(0);
 }
