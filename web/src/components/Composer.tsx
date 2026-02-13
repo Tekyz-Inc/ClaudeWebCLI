@@ -70,16 +70,19 @@ export function Composer({ sessionId }: { sessionId: string }) {
   const handleStopVoice = useCallback(async () => {
     stopVoice();
     const formatted = await formatter.flush();
-    if (formatted) {
-      setText((prev) => (prev ? prev + " " + formatted : formatted));
-    }
+    // Replace text with combined pre-voice text + formatted voice text
+    // (avoids duplication from prior sessions accumulating in text state)
+    const combined = [text, formatted].filter(Boolean).join(" ");
+    setText(combined);
     formatter.reset();
-  }, [stopVoice, formatter]);
+  }, [stopVoice, formatter, text]);
 
-  // Show typed text + formatter voice text + interim speech
-  const voiceDisplay = formatter.getDisplayText();
-  const displayText = [text, voiceDisplay, isListening ? interimText : ""]
-    .filter(Boolean).join(" ");
+  // Voice content and typed text are mutually exclusive in the display
+  // to prevent duplication when both contain overlapping content
+  const hasVoiceContent = !!(formatter.state.solidText || formatter.state.ghostText || (isListening && interimText));
+  const displayText = hasVoiceContent
+    ? [formatter.getDisplayText(), isListening ? interimText : ""].filter(Boolean).join(" ")
+    : text;
 
   const isConnected = cliConnected.get(sessionId) ?? false;
   const currentMode = sessionData?.permissionMode || "acceptEdits";
@@ -254,6 +257,10 @@ export function Composer({ sessionId }: { sessionId: string }) {
   }, [displayText]);
 
   function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    // When voice/formatter content is active, the textarea value includes
+    // voice text. Allowing onChange would capture voice text into `text`,
+    // causing duplication on every keystroke.
+    if (formatter.state.ghostText || formatter.state.solidText || isListening) return;
     setText(e.target.value);
   }
 

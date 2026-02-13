@@ -14,12 +14,7 @@ import { api } from "../api.js";
 const mockFormatDictation = api.formatDictation as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
-  vi.useFakeTimers();
   mockFormatDictation.mockReset();
-});
-
-afterEach(() => {
-  vi.useRealTimers();
 });
 
 describe("useDictationFormatter", () => {
@@ -53,7 +48,7 @@ describe("useDictationFormatter", () => {
     expect(result.current.getDisplayText()).toBe("hello world");
   });
 
-  it("moves ghost to solid after successful format", async () => {
+  it("flush formats ghost text and returns result", async () => {
     mockFormatDictation.mockResolvedValue({
       formatted: "Hello world.",
       changed: true,
@@ -63,34 +58,30 @@ describe("useDictationFormatter", () => {
 
     act(() => result.current.addRawText("hello world period"));
 
-    // Advance past debounce
+    let flushed = "";
     await act(async () => {
-      vi.advanceTimersByTime(350);
-      await Promise.resolve();
-      await Promise.resolve();
+      flushed = await result.current.flush();
     });
 
     expect(mockFormatDictation).toHaveBeenCalledWith("hello world period");
-    expect(result.current.state.solidText).toBe("Hello world.");
+    expect(flushed).toBe("Hello world.");
     expect(result.current.state.ghostText).toBe("");
     expect(result.current.state.isFormatting).toBe(false);
   });
 
-  it("falls back to raw text when formatting fails", async () => {
+  it("flush returns raw text when formatting fails", async () => {
     mockFormatDictation.mockRejectedValue(new Error("timeout"));
 
     const { result } = renderHook(() => useDictationFormatter());
 
     act(() => result.current.addRawText("hello world"));
 
+    let flushed = "";
     await act(async () => {
-      vi.advanceTimersByTime(350);
-      await Promise.resolve();
-      await Promise.resolve();
+      flushed = await result.current.flush();
     });
 
-    // Should keep raw text even on failure
-    expect(result.current.state.solidText).toBe("hello world");
+    expect(flushed).toBe("hello world");
     expect(result.current.state.ghostText).toBe("");
   });
 
@@ -117,69 +108,39 @@ describe("useDictationFormatter", () => {
     expect(result.current.state.ghostText).toBe("");
   });
 
-  it("flush immediately formats ghost text and returns result", async () => {
-    mockFormatDictation.mockResolvedValue({
-      formatted: "Hello world.",
-      changed: true,
-    });
-
+  it("flush returns empty string when no ghost text", async () => {
     const { result } = renderHook(() => useDictationFormatter());
-
-    act(() => result.current.addRawText("hello world period"));
 
     let flushed = "";
     await act(async () => {
       flushed = await result.current.flush();
     });
 
-    expect(flushed).toBe("Hello world.");
-    expect(result.current.state.solidText).toBe("Hello world.");
-    expect(result.current.state.ghostText).toBe("");
+    expect(flushed).toBe("");
+    expect(mockFormatDictation).not.toHaveBeenCalled();
   });
 
-  it("flush returns solidText when no ghost text pending", async () => {
-    mockFormatDictation.mockResolvedValue({
-      formatted: "Hello.",
-      changed: true,
-    });
-
-    const { result } = renderHook(() => useDictationFormatter());
-
-    // Format some text first
-    act(() => result.current.addRawText("hello period"));
-    await act(async () => {
-      vi.advanceTimersByTime(350);
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    // Flush with no pending ghost text
-    let flushed = "";
-    await act(async () => {
-      flushed = await result.current.flush();
-    });
-
-    expect(flushed).toBe("Hello.");
-  });
-
-  it("flush preserves raw text on API failure", async () => {
-    mockFormatDictation.mockRejectedValue(new Error("timeout"));
-
+  it("addRawText does not trigger formatting automatically", async () => {
     const { result } = renderHook(() => useDictationFormatter());
 
     act(() => result.current.addRawText("hello world"));
 
-    let flushed = "";
-    await act(async () => {
-      flushed = await result.current.flush();
-    });
-
-    expect(flushed).toBe("hello world");
-    expect(result.current.state.solidText).toBe("hello world");
-    expect(result.current.state.ghostText).toBe("");
+    // No formatting should happen without explicit flush
+    expect(mockFormatDictation).not.toHaveBeenCalled();
+    expect(result.current.state.ghostText).toBe("hello world");
+    expect(result.current.state.solidText).toBe("");
   });
 
-  it("display text combines solid and ghost", async () => {
+  it("getDisplayText shows ghost text during accumulation", () => {
+    const { result } = renderHook(() => useDictationFormatter());
+
+    act(() => result.current.addRawText("hello"));
+    act(() => result.current.addRawText("how are you"));
+
+    expect(result.current.getDisplayText()).toBe("hello how are you");
+  });
+
+  it("state clears after flush completes", async () => {
     mockFormatDictation.mockResolvedValue({
       formatted: "Hello.",
       changed: true,
@@ -187,19 +148,15 @@ describe("useDictationFormatter", () => {
 
     const { result } = renderHook(() => useDictationFormatter());
 
-    // First phrase: format it
     act(() => result.current.addRawText("hello period"));
     await act(async () => {
-      vi.advanceTimersByTime(350);
-      await Promise.resolve();
-      await Promise.resolve();
+      await result.current.flush();
     });
 
-    expect(result.current.state.solidText).toBe("Hello.");
-
-    // Second phrase: still ghost
-    act(() => result.current.addRawText("how are you"));
-
-    expect(result.current.getDisplayText()).toBe("Hello. how are you");
+    // After flush, all state should be clear
+    expect(result.current.state.solidText).toBe("");
+    expect(result.current.state.ghostText).toBe("");
+    expect(result.current.state.isFormatting).toBe(false);
+    expect(result.current.getDisplayText()).toBe("");
   });
 });

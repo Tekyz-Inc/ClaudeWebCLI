@@ -50,6 +50,7 @@ export function useVoiceInput(onTranscript: (text: string) => void) {
     // Track last processed final result index to prevent duplicates
     // (some browsers re-fire onresult for already-finalized results)
     let lastFinalIndex = -1;
+    let lastFinalText = "";
 
     recognition.onresult = (e: SpeechRecognitionEvent) => {
       let final_ = "";
@@ -66,7 +67,11 @@ export function useVoiceInput(onTranscript: (text: string) => void) {
         }
       }
       if (final_) {
-        onTranscript(final_);
+        // Content-based dedup: skip if identical to last finalized transcript
+        if (final_.trim() !== lastFinalText) {
+          lastFinalText = final_.trim();
+          onTranscript(final_);
+        }
         setInterimText("");
       } else if (interim) {
         setInterimText(interim);

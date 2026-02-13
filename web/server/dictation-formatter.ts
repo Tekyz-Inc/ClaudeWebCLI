@@ -1,16 +1,26 @@
-const DEFAULT_MODEL = "claude-sonnet-4-5-20250929";
-const TIMEOUT_MS = 5_000;
+const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
+const TIMEOUT_MS = 30_000;
 const MAX_INPUT_LENGTH = 2_000;
 
 let resolvedBinary: string | null = null;
 
 async function resolveClaudeBinary(): Promise<string> {
   if (resolvedBinary) return resolvedBinary;
+  const isWindows = process.platform === "win32";
+  const cmd = isWindows ? "where" : "which";
   try {
-    const proc = Bun.spawn(["which", "claude"], { stdout: "pipe", stderr: "pipe" });
+    const proc = Bun.spawn([cmd, "claude"], { stdout: "pipe", stderr: "pipe" });
     await proc.exited;
     const out = await new Response(proc.stdout).text();
-    resolvedBinary = out.trim() || "claude";
+    const lines = out.trim().split("\n").map((l) => l.trim()).filter(Boolean);
+    if (isWindows) {
+      // Prefer .exe (Bun.spawn can't execute extensionless files on Windows)
+      const exe = lines.find((l) => l.endsWith(".exe"));
+      if (exe) { resolvedBinary = exe; return resolvedBinary; }
+      const cmdFile = lines.find((l) => l.endsWith(".cmd"));
+      if (cmdFile) { resolvedBinary = cmdFile; return resolvedBinary; }
+    }
+    resolvedBinary = lines[0] || "claude";
   } catch {
     resolvedBinary = "claude";
   }
@@ -22,7 +32,7 @@ export interface FormatResult {
   changed: boolean;
 }
 
-const SYSTEM_PROMPT = [
+const FORMAT_INSTRUCTIONS = [
   "You are a dictation formatter. The user spoke text into a microphone and it was transcribed literally.",
   "Your job: add punctuation, fix capitalization, and format numbers. Preserve every word exactly.",
   "Rules:",
@@ -32,7 +42,7 @@ const SYSTEM_PROMPT = [
   "- 'period' at end of a sentence = '.' punctuation",
   "- 'period' as a noun (e.g. 'school period', 'time period') = keep the word",
   "- Same logic for 'comma', 'colon', 'semicolon', 'question mark', 'exclamation point'",
-  "- Output ONLY the formatted text. No explanation, no quotes.",
+  "- Output ONLY the formatted text. No explanation, no quotes, no markdown.",
 ].join("\n");
 
 /**
@@ -50,13 +60,16 @@ export async function formatDictation(
   const binary = await resolveClaudeBinary();
   const useModel = model || DEFAULT_MODEL;
 
-  const prompt = `Format this dictated text:\n\n${input}`;
+  // Embed instructions directly in prompt (avoids --system-prompt flag issues)
+  const prompt = `${FORMAT_INSTRUCTIONS}\n\nFormat this dictated text:\n\n${input}`;
 
   try {
+    // Run from temp dir to avoid loading project CLAUDE.md context
+    // (which adds ~37K tokens and makes the model respond as a project assistant)
+    const { tmpdir } = await import("node:os");
     const proc = Bun.spawn(
-      [binary, "-p", prompt, "--model", useModel, "--output-format", "json",
-       "--system-prompt", SYSTEM_PROMPT],
-      { stdout: "pipe", stderr: "pipe", env: process.env },
+      [binary, "-p", prompt, "--model", useModel, "--output-format", "json"],
+      { stdout: "pipe", stderr: "pipe", env: process.env, cwd: tmpdir() },
     );
 
     let timer: ReturnType<typeof setTimeout>;
@@ -72,7 +85,8 @@ export async function formatDictation(
     clearTimeout(timer!);
 
     const stdout = await new Response(proc.stdout).text();
-    return parseCliOutput(stdout, input);
+    const result = parseCliOutput(stdout, input);
+    return result;
   } catch (err) {
     console.warn("[dictation-formatter] Format failed:", err);
     return null;
