@@ -1,68 +1,81 @@
 const TARGET_SAMPLE_RATE = 16_000;
 
-/**
- * Start capturing audio from the microphone.
- * Captures at the device's native sample rate (NOT 16kHz)
- * to avoid browser constraint issues. Resampling happens in stopAndConvert.
- */
-export async function startAudioCapture(): Promise<{
-  recorder: MediaRecorder;
+export interface RawCapture {
+  audioCtx: AudioContext;
   stream: MediaStream;
-  chunks: Blob[];
-}> {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: { channelCount: 1 },
-  });
-  const chunks: Blob[] = [];
-  const recorder = new MediaRecorder(stream);
-  recorder.ondataavailable = (e) => {
-    if (e.data.size > 0) chunks.push(e.data);
-  };
-  recorder.start(250);
-  return { recorder, stream, chunks };
+  samples: Float32Array[];
 }
 
 /**
- * Stop recording and convert captured audio to Float32Array at 16kHz.
- * Uses OfflineAudioContext for proper resampling from native rate.
+ * Start capturing raw PCM audio from the microphone.
+ * Uses ScriptProcessorNode to capture Float32Array samples directly,
+ * bypassing MediaRecorder encode/decode which corrupts audio on some systems.
  */
-export async function stopAndConvert(
-  recorder: MediaRecorder,
-  stream: MediaStream,
-  chunks: Blob[],
-): Promise<Float32Array> {
-  // Stop recording and wait for final data
-  await new Promise<void>((resolve) => {
-    recorder.onstop = () => resolve();
-    recorder.stop();
+export async function startRawCapture(): Promise<RawCapture> {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: { channelCount: 1 },
   });
+  const audioCtx = new AudioContext();
+  const source = audioCtx.createMediaStreamSource(stream);
+  const samples: Float32Array[] = [];
 
-  // Stop all tracks to release microphone
+  // ScriptProcessorNode captures raw PCM — deprecated but reliable
+  const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+  processor.onaudioprocess = (e) => {
+    // Must copy — the buffer is reused by the browser
+    samples.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+  };
+
+  source.connect(processor);
+  // ScriptProcessor requires connection to destination to fire events
+  processor.connect(audioCtx.destination);
+
+  return { audioCtx, stream, samples };
+}
+
+/**
+ * Stop capturing and convert to Float32Array at 16kHz for Whisper.
+ */
+export async function stopRawCapture(
+  capture: RawCapture,
+): Promise<Float32Array> {
+  const { audioCtx, stream, samples } = capture;
+
+  // Stop microphone
   for (const track of stream.getTracks()) {
     track.stop();
   }
 
-  // Decode audio blob at native sample rate
-  const blob = new Blob(chunks, { type: recorder.mimeType });
-  const arrayBuffer = await blob.arrayBuffer();
-  const decodeCtx = new AudioContext();
-  const audioBuffer = await decodeCtx.decodeAudioData(arrayBuffer);
-  await decodeCtx.close();
+  // Concatenate all captured samples
+  const totalLength = samples.reduce((sum, s) => sum + s.length, 0);
+  if (totalLength === 0) {
+    await audioCtx.close();
+    return new Float32Array(0);
+  }
 
-  const nativeSr = audioBuffer.sampleRate;
-  const mono = audioBuffer.getChannelData(0);
+  const fullAudio = new Float32Array(totalLength);
+  let offset = 0;
+  for (const s of samples) {
+    fullAudio.set(s, offset);
+    offset += s.length;
+  }
 
-  // Already at target rate — return directly
+  const nativeSr = audioCtx.sampleRate;
+  await audioCtx.close();
+
+  // Already at target rate
   if (nativeSr === TARGET_SAMPLE_RATE) {
-    return mono;
+    return fullAudio;
   }
 
   // Resample to 16kHz using OfflineAudioContext (proper sinc interpolation)
-  const duration = mono.length / nativeSr;
+  const duration = fullAudio.length / nativeSr;
   const outLength = Math.round(duration * TARGET_SAMPLE_RATE);
   const offline = new OfflineAudioContext(1, outLength, TARGET_SAMPLE_RATE);
+  const buffer = offline.createBuffer(1, fullAudio.length, nativeSr);
+  buffer.getChannelData(0).set(fullAudio);
   const src = offline.createBufferSource();
-  src.buffer = audioBuffer;
+  src.buffer = buffer;
   src.connect(offline.destination);
   src.start(0);
   const resampled = await offline.startRendering();

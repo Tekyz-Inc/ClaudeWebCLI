@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
-import { startAudioCapture, stopAndConvert } from "../utils/audio-utils.js";
+import type { RawCapture } from "../utils/audio-utils.js";
+import { startRawCapture, stopRawCapture } from "../utils/audio-utils.js";
 
 export interface WhisperState {
   isModelLoaded: boolean;
@@ -25,9 +26,7 @@ export function useWhisper() {
   });
 
   const workerRef = useRef<Worker | null>(null);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  const captureRef = useRef<RawCapture | null>(null);
   const transcribeResolveRef = useRef<((text: string) => void) | null>(null);
 
   const getWorker = useCallback((): Worker => {
@@ -84,10 +83,8 @@ export function useWhisper() {
   const startRecording = useCallback(async () => {
     try {
       setState((s) => ({ ...s, error: null }));
-      const { recorder, stream, chunks } = await startAudioCapture();
-      recorderRef.current = recorder;
-      streamRef.current = stream;
-      chunksRef.current = chunks;
+      const capture = await startRawCapture();
+      captureRef.current = capture;
     } catch (err) {
       setState((s) => ({
         ...s,
@@ -97,18 +94,17 @@ export function useWhisper() {
   }, []);
 
   const stopRecording = useCallback(async (): Promise<string> => {
-    if (!recorderRef.current || !streamRef.current) return "";
+    if (!captureRef.current) return "";
 
     setState((s) => ({ ...s, isTranscribing: true }));
 
-    const audio = await stopAndConvert(
-      recorderRef.current,
-      streamRef.current,
-      chunksRef.current,
-    );
-    recorderRef.current = null;
-    streamRef.current = null;
-    chunksRef.current = [];
+    const audio = await stopRawCapture(captureRef.current);
+    captureRef.current = null;
+
+    if (audio.length === 0) {
+      setState((s) => ({ ...s, isTranscribing: false }));
+      return "";
+    }
 
     return new Promise<string>((resolve) => {
       transcribeResolveRef.current = resolve;
@@ -117,15 +113,13 @@ export function useWhisper() {
   }, [getWorker]);
 
   const cancelRecording = useCallback(() => {
-    if (recorderRef.current) {
-      recorderRef.current.stop();
-      recorderRef.current = null;
+    if (captureRef.current) {
+      for (const track of captureRef.current.stream.getTracks()) {
+        track.stop();
+      }
+      captureRef.current.audioCtx.close().catch(() => {});
+      captureRef.current = null;
     }
-    if (streamRef.current) {
-      for (const track of streamRef.current.getTracks()) track.stop();
-      streamRef.current = null;
-    }
-    chunksRef.current = [];
   }, []);
 
   return { state, loadModel, startRecording, stopRecording, cancelRecording };

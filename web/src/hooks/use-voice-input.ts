@@ -67,36 +67,13 @@ export function useVoiceInput(): UseVoiceReturn {
   const isSupported = canUseWhisper || hasSpeechApi;
   const activeWhisper = canUseWhisper && whisper.state.isModelLoaded;
 
-  /* ─── Whisper path ──────────────────────────────────── */
+  /* ─── Speech API helpers (used for streaming preview) ─── */
 
-  const startWhisper = useCallback(async () => {
-    setError(null);
-    setInterimText("");
-    setIsListening(true);
-    activeBackendRef.current = "whisper";
-    await whisper.startRecording();
-  }, [whisper]);
-
-  const stopWhisper = useCallback(async (): Promise<string> => {
-    setIsListening(false);
-    setIsProcessing(true);
-    const text = await whisper.stopRecording();
-    setIsProcessing(false);
-    activeBackendRef.current = null;
-    return text;
-  }, [whisper]);
-
-  /* ─── Web Speech API fallback ───────────────────────── */
-
-  const startSpeechApi = useCallback(() => {
+  const startSpeechPreview = useCallback(() => {
     const SR = getSpeechRecognition();
     if (!SR) return;
 
-    setError(null);
-    setInterimText("");
     accumulatedRef.current = "";
-    activeBackendRef.current = "speech";
-
     const recognition = new SR();
     recognition.continuous = true;
     recognition.interimResults = true;
@@ -131,37 +108,86 @@ export function useVoiceInput(): UseVoiceReturn {
     };
 
     recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
-      setError(e.error);
-      setIsListening(false);
-      setInterimText("");
+      // In hybrid mode, Speech API errors are non-fatal — Whisper is primary
+      if (activeBackendRef.current === "speech") {
+        setError(e.error);
+        setIsListening(false);
+        activeBackendRef.current = null;
+      }
       recognitionRef.current = null;
-      activeBackendRef.current = null;
     };
 
     recognition.onend = () => {
-      setIsListening(false);
+      if (activeBackendRef.current === "speech") {
+        setIsListening(false);
+        activeBackendRef.current = null;
+      }
       setInterimText("");
       recognitionRef.current = null;
-      activeBackendRef.current = null;
     };
 
     recognitionRef.current = recognition;
     recognition.start();
-    setIsListening(true);
   }, []);
 
-  const stopSpeechApi = useCallback(async (): Promise<string> => {
+  const stopSpeechPreview = useCallback((): string => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
     }
-    setIsListening(false);
     setInterimText("");
-    activeBackendRef.current = null;
     const result = accumulatedRef.current;
     accumulatedRef.current = "";
     return result;
   }, []);
+
+  /* ─── Whisper path (with Speech API streaming preview) ── */
+
+  const startWhisper = useCallback(async () => {
+    setError(null);
+    setInterimText("");
+    setIsListening(true);
+    activeBackendRef.current = "whisper";
+
+    // Start Whisper audio capture
+    await whisper.startRecording();
+
+    // Also start Speech API for live streaming text preview
+    startSpeechPreview();
+  }, [whisper, startSpeechPreview]);
+
+  const stopWhisper = useCallback(async (): Promise<string> => {
+    setIsListening(false);
+    setIsProcessing(true);
+
+    // Stop Speech API preview — get its text as fallback
+    const speechText = stopSpeechPreview();
+
+    // Stop Whisper and get transcription
+    const whisperText = await whisper.stopRecording();
+
+    setIsProcessing(false);
+    activeBackendRef.current = null;
+
+    // Use Whisper result if available, fall back to Speech API text
+    return whisperText || speechText;
+  }, [whisper, stopSpeechPreview]);
+
+  /* ─── Speech-only path (no Whisper available) ─────────── */
+
+  const startSpeechOnly = useCallback(() => {
+    setError(null);
+    setInterimText("");
+    setIsListening(true);
+    activeBackendRef.current = "speech";
+    startSpeechPreview();
+  }, [startSpeechPreview]);
+
+  const stopSpeechOnly = useCallback(async (): Promise<string> => {
+    setIsListening(false);
+    activeBackendRef.current = null;
+    return stopSpeechPreview();
+  }, [stopSpeechPreview]);
 
   /* ─── Unified interface ─────────────────────────────── */
 
@@ -174,21 +200,19 @@ export function useVoiceInput(): UseVoiceReturn {
     if (canUseWhisper && !whisper.state.isModelLoaded && !whisper.state.isModelLoading) {
       whisper.loadModel();
     }
-    // Use Web Speech API while Whisper loads
+    // Use Speech API only while Whisper loads
     if (hasSpeechApi) {
-      startSpeechApi();
+      startSpeechOnly();
     }
-  }, [activeWhisper, canUseWhisper, hasSpeechApi, whisper, startWhisper, startSpeechApi]);
+  }, [activeWhisper, canUseWhisper, hasSpeechApi, whisper, startWhisper, startSpeechOnly]);
 
   const stop = useCallback(async (): Promise<string> => {
-    // Always use the same backend that was started — prevents race condition
-    // where model loads between start/stop and we call the wrong stopper
     const backend = activeBackendRef.current;
     if (backend === "whisper") {
       return stopWhisper();
     }
-    return stopSpeechApi();
-  }, [stopWhisper, stopSpeechApi]);
+    return stopSpeechOnly();
+  }, [stopWhisper, stopSpeechOnly]);
 
   // Cleanup on unmount
   useEffect(() => {
