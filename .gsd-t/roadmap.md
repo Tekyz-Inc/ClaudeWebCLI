@@ -26,7 +26,7 @@
 **Estimated effort**: small (< 1 hour)
 **Priority**: MEDIUM — next available slot
 
-### Milestone 3: Browser-Side Whisper Voice [ACTIVE]
+### Milestone 3: Browser-Side Whisper Voice [COMPLETE v0.4.0]
 **Goal**: Replace Web Speech API + Claude CLI formatting with in-browser Whisper via @huggingface/transformers + WebGPU. Single-step transcription produces properly punctuated, capitalized text with no server round-trip.
 **Scope**:
 - In-browser Whisper (whisper-small, quantized ~530MB) via @huggingface/transformers

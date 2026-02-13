@@ -1,7 +1,7 @@
 # GSD-T Progress
 
 ## Project: ClaudeWebCLI
-## Version: 0.4.0
+## Version: 0.4.1
 ## Current Milestone
 None — ready for next milestone.
 
@@ -31,3 +31,6 @@ None — ready for next milestone.
 - 2026-02-12: Milestone 3 "Browser-Side Whisper Voice" defined. Replace Web Speech API + Claude CLI formatting with in-browser Whisper (whisper-small, quantized ~530MB) via @huggingface/transformers + WebGPU. Single-step transcription with built-in punctuation/capitalization. Fallback to Web Speech API for non-WebGPU browsers.
 - 2026-02-13: Milestone 3 completed. 3 domains, 9 tasks, all verified. Whisper engine (Web Worker + audio capture), unified voice hook (Whisper primary + Web Speech fallback), UI cleanup (Composer/HomePage integration, 4 legacy files deleted, server route removed). Version 0.3.0 → 0.4.0.
 - 2026-02-13: [debug] Fixed Whisper voice pipeline: (1) MediaRecorder encode/decode roundtrip corrupted audio causing "you" hallucinations — replaced with raw PCM capture via ScriptProcessorNode, proper resampling via OfflineAudioContext. (2) Race condition where model loading between start/stop caused backend mismatch — added activeBackendRef. (3) No streaming text — now runs Web Speech API simultaneously with Whisper capture for live preview, Whisper result replaces preview on stop.
+- 2026-02-13: [debug] Fixed Speech API streaming preview not showing text during Whisper recording: (1) setInterimText("") cleared accumulated text on each final result — now shows full accumulated text. (2) onerror killed recognitionRef in whisper mode — now non-fatal. (3) onend cleared preview and stopped — now auto-restarts Speech API to keep streaming.
+- 2026-02-13: [debug] Fixed Whisper not correcting text on stop: start() only used Whisper path when model was already loaded. On first mic click after page load, speech-only mode had no raw capture → no Whisper correction. Now always uses whisper path (raw capture + Speech API preview) when Whisper is supported. On stop, corrects with Whisper if model loaded, otherwise falls back to Speech API text. Also fixed orphaned SpeechRecognition restart by clearing recognitionRef before .stop().
+- 2026-02-13: [debug] Fixed useEffect cleanup killing recording on every re-render: useEffect depended on [whisper] but whisper is a new object each render. Cleanup ran on EVERY re-render, aborting SpeechRecognition and cancelling raw capture mid-recording. Fix: whisperRef + empty deps for unmount-only cleanup. Also added stale instance guards (recognitionRef.current !== recognition) on all SpeechRecognition handlers to prevent race conditions between old callbacks and new sessions.
