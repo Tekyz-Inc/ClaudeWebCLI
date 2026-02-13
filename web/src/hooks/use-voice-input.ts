@@ -127,7 +127,7 @@ export function useVoiceInput(): UseVoiceReturn {
         activeBackendRef.current = null;
         setInterimText("");
         recognitionRef.current = null;
-      } else if (activeBackendRef.current === "whisper") {
+      } else if (activeBackendRef.current === "whisper" && recognitionRef.current) {
         // Speech API preview ended while Whisper still recording — restart
         try {
           recognition.start();
@@ -146,8 +146,9 @@ export function useVoiceInput(): UseVoiceReturn {
 
   const stopSpeechPreview = useCallback((): string => {
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
+      const rec = recognitionRef.current;
+      recognitionRef.current = null; // Clear ref first so onend won't restart
+      rec.stop();
     }
     setInterimText("");
     const result = accumulatedRef.current;
@@ -172,19 +173,22 @@ export function useVoiceInput(): UseVoiceReturn {
 
   const stopWhisper = useCallback(async (): Promise<string> => {
     setIsListening(false);
-    setIsProcessing(true);
+    activeBackendRef.current = null;
 
     // Stop Speech API preview — get its text as fallback
     const speechText = stopSpeechPreview();
 
-    // Stop Whisper and get transcription
-    const whisperText = await whisper.stopRecording();
+    // If model loaded, use Whisper for corrected transcription
+    if (whisper.state.isModelLoaded) {
+      setIsProcessing(true);
+      const whisperText = await whisper.stopRecording();
+      setIsProcessing(false);
+      return whisperText || speechText;
+    }
 
-    setIsProcessing(false);
-    activeBackendRef.current = null;
-
-    // Use Whisper result if available, fall back to Speech API text
-    return whisperText || speechText;
+    // Model not loaded yet — cancel raw capture, use Speech API text
+    whisper.cancelRecording();
+    return speechText;
   }, [whisper, stopSpeechPreview]);
 
   /* ─── Speech-only path (no Whisper available) ─────────── */
@@ -206,19 +210,21 @@ export function useVoiceInput(): UseVoiceReturn {
   /* ─── Unified interface ─────────────────────────────── */
 
   const start = useCallback(() => {
-    if (activeWhisper) {
+    if (canUseWhisper) {
+      // Auto-load model on first mic click
+      if (!whisper.state.isModelLoaded && !whisper.state.isModelLoading) {
+        whisper.loadModel();
+      }
+      // Always use whisper path (Speech API preview + raw capture)
+      // so Whisper can correct text when model finishes loading
       startWhisper();
       return;
     }
-    // Auto-load Whisper model on first mic click
-    if (canUseWhisper && !whisper.state.isModelLoaded && !whisper.state.isModelLoading) {
-      whisper.loadModel();
-    }
-    // Use Speech API only while Whisper loads
+    // Fallback: no Whisper support at all
     if (hasSpeechApi) {
       startSpeechOnly();
     }
-  }, [activeWhisper, canUseWhisper, hasSpeechApi, whisper, startWhisper, startSpeechOnly]);
+  }, [canUseWhisper, hasSpeechApi, whisper, startWhisper, startSpeechOnly]);
 
   const stop = useCallback(async (): Promise<string> => {
     const backend = activeBackendRef.current;
