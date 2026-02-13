@@ -83,6 +83,9 @@ export function useVoiceInput(): UseVoiceReturn {
     let lastFinalText = "";
 
     recognition.onresult = (e: SpeechRecognitionEvent) => {
+      // Ignore results from stale recognition instances
+      if (recognitionRef.current !== recognition) return;
+
       let final_ = "";
       let interim = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -112,22 +115,25 @@ export function useVoiceInput(): UseVoiceReturn {
     };
 
     recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
+      if (recognitionRef.current !== recognition) return;
       if (activeBackendRef.current === "speech") {
         setError(e.error);
         setIsListening(false);
         activeBackendRef.current = null;
         recognitionRef.current = null;
       }
-      // In whisper mode, Speech API errors are non-fatal — just log
     };
 
     recognition.onend = () => {
+      // Ignore onend from stale recognition instances
+      if (recognitionRef.current !== recognition) return;
+
       if (activeBackendRef.current === "speech") {
         setIsListening(false);
         activeBackendRef.current = null;
         setInterimText("");
         recognitionRef.current = null;
-      } else if (activeBackendRef.current === "whisper" && recognitionRef.current) {
+      } else if (activeBackendRef.current === "whisper") {
         // Speech API preview ended while Whisper still recording — restart
         try {
           recognition.start();
@@ -141,7 +147,11 @@ export function useVoiceInput(): UseVoiceReturn {
     };
 
     recognitionRef.current = recognition;
-    recognition.start();
+    try {
+      recognition.start();
+    } catch {
+      recognitionRef.current = null;
+    }
   }, []);
 
   const stopSpeechPreview = useCallback((): string => {
@@ -164,10 +174,10 @@ export function useVoiceInput(): UseVoiceReturn {
     setIsListening(true);
     activeBackendRef.current = "whisper";
 
-    // Start Speech API first for immediate streaming text preview
-    startSpeechPreview();
+    // Start Speech API for streaming preview (non-fatal if it fails)
+    try { startSpeechPreview(); } catch { /* preview is optional */ }
 
-    // Then start Whisper audio capture (may await mic permission)
+    // Start Whisper audio capture (may await mic permission)
     await whisper.startRecording();
   }, [whisper, startSpeechPreview]);
 
@@ -217,7 +227,7 @@ export function useVoiceInput(): UseVoiceReturn {
       }
       // Always use whisper path (Speech API preview + raw capture)
       // so Whisper can correct text when model finishes loading
-      startWhisper();
+      startWhisper().catch(() => {});
       return;
     }
     // Fallback: no Whisper support at all
@@ -234,16 +244,20 @@ export function useVoiceInput(): UseVoiceReturn {
     return stopSpeechOnly();
   }, [stopWhisper, stopSpeechOnly]);
 
-  // Cleanup on unmount
+  // Keep latest whisper ref for unmount cleanup (avoids re-running on every render)
+  const whisperRef = useRef(whisper);
+  whisperRef.current = whisper;
+
+  // Cleanup on unmount only
   useEffect(() => {
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.abort();
         recognitionRef.current = null;
       }
-      whisper.cancelRecording();
+      whisperRef.current.cancelRecording();
     };
-  }, [whisper]);
+  }, []);
 
   return {
     isSupported,
