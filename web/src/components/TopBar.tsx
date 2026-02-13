@@ -4,6 +4,7 @@ import { api } from "../api.js";
 export function TopBar() {
   const currentSessionId = useStore((s) => s.currentSessionId);
   const cliConnected = useStore((s) => s.cliConnected);
+  const connectionStatus = useStore((s) => s.connectionStatus);
   const sessionStatus = useStore((s) => s.sessionStatus);
   const sidebarOpen = useStore((s) => s.sidebarOpen);
   const setSidebarOpen = useStore((s) => s.setSidebarOpen);
@@ -13,6 +14,7 @@ export function TopBar() {
   const setActiveTab = useStore((s) => s.setActiveTab);
 
   const isConnected = currentSessionId ? (cliConnected.get(currentSessionId) ?? false) : false;
+  const connStatus = currentSessionId ? (connectionStatus.get(currentSessionId) ?? "disconnected") : null;
   const status = currentSessionId ? (sessionStatus.get(currentSessionId) ?? null) : null;
 
   return (
@@ -33,18 +35,26 @@ export function TopBar() {
           <div className="flex items-center gap-1.5">
             <span
               className={`w-1.5 h-1.5 rounded-full ${
-                isConnected ? "bg-cc-success" : "bg-cc-muted opacity-40"
+                connStatus === "disconnected"
+                  ? "bg-cc-warning animate-pulse"
+                  : isConnected
+                    ? "bg-cc-success"
+                    : "bg-cc-warning"
               }`}
             />
-            {isConnected ? (
-              <span className="text-[11px] text-cc-muted hidden sm:inline">Connected</span>
-            ) : (
+            {connStatus === "disconnected" ? (
+              <span className="text-[11px] text-cc-warning font-medium hidden sm:inline">
+                Reconnecting...
+              </span>
+            ) : !isConnected ? (
               <button
                 onClick={() => currentSessionId && api.relaunchSession(currentSessionId).catch(console.error)}
                 className="text-[11px] text-cc-warning hover:text-cc-warning/80 font-medium cursor-pointer hidden sm:inline"
               >
                 Reconnect
               </button>
+            ) : (
+              <span className="text-[11px] text-cc-muted hidden sm:inline">Connected</span>
             )}
           </div>
         )}
