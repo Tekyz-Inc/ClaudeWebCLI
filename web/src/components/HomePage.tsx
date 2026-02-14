@@ -74,6 +74,15 @@ export function HomePage() {
     ? [text, voice.interimText].filter(Boolean).join(" ")
     : text;
 
+  // Split voice text into stable (pre-existing + corrected) vs pending (uncorrected ghost)
+  const showVoiceOverlay = voice.isListening && !!voice.interimText;
+  const voiceStable = showVoiceOverlay
+    ? [text, voice.correctedText].filter(Boolean).join(" ")
+    : "";
+  const voicePending = showVoiceOverlay
+    ? displayText.slice(voiceStable.length)
+    : "";
+
   // Dropdown states
   const [showFolderPicker, setShowFolderPicker] = useState(false);
 
@@ -348,17 +357,29 @@ export function HomePage() {
 
         {/* Input card */}
         <div className="bg-cc-card border border-cc-border rounded-[14px] shadow-sm overflow-hidden">
-          <textarea
-            ref={textareaRef}
-            value={displayText}
-            onChange={handleInput}
-            onKeyDown={handleKeyDown}
-            onPaste={handlePaste}
-            placeholder="Fix a bug, build a feature, refactor code..."
-            rows={4}
-            className={`w-full px-4 pt-4 pb-2 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted${voice.isListening && !voice.hasCorrected ? " voice-ghost" : ""}`}
-            style={{ minHeight: "100px", maxHeight: "300px" }}
-          />
+          <div className="relative">
+            <textarea
+              ref={textareaRef}
+              value={displayText}
+              onChange={handleInput}
+              onKeyDown={handleKeyDown}
+              onPaste={handlePaste}
+              placeholder="Fix a bug, build a feature, refactor code..."
+              rows={4}
+              className={`w-full px-4 pt-4 pb-2 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted${showVoiceOverlay ? " voice-overlay-active" : ""}`}
+              style={{ minHeight: "100px", maxHeight: "300px" }}
+            />
+            {showVoiceOverlay && (
+              <div
+                className="absolute top-0 left-0 right-0 px-4 pt-4 pb-2 text-sm font-sans-ui pointer-events-none whitespace-pre-wrap break-words overflow-hidden"
+                style={{ maxHeight: "300px" }}
+                aria-hidden="true"
+              >
+                <span className="text-cc-fg">{voiceStable}</span>
+                <span className="voice-ghost">{voicePending}</span>
+              </div>
+            )}
+          </div>
 
           {/* Bottom toolbar — matches Composer layout */}
           <div className="flex items-center justify-between px-3 pb-3">

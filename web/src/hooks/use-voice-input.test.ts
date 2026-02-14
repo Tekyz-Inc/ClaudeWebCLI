@@ -281,6 +281,7 @@ describe("useVoiceInput — mid-recording correction", () => {
     expect(mockWhisper.cancelTranscription).toHaveBeenCalled();
     expect(mockWhisper.transcribeSnapshot).toHaveBeenCalled();
     expect(result.current.interimText).toBe("Corrected text.");
+    expect(result.current.correctedText).toBe("Corrected text.");
   });
 
   it("does NOT trigger correction before 5s threshold", async () => {
@@ -342,6 +343,26 @@ describe("useVoiceInput — mid-recording correction", () => {
     });
 
     expect(mockWhisper.transcribeSnapshot).not.toHaveBeenCalled();
+  });
+
+  it("correctedText resets to empty on new recording start", async () => {
+    const { result } = renderHook(() => useVoiceInput());
+
+    // First recording + correction
+    act(() => result.current.start());
+    fakeNow += 5001;
+    const instance = mockInstances[0];
+    await act(async () => {
+      instance.onend?.();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(result.current.correctedText).toBe("Corrected text.");
+
+    // Stop and start again
+    await act(async () => { await result.current.stop(); });
+    act(() => result.current.start());
+    expect(result.current.correctedText).toBe("");
   });
 
   it("stop cancels any in-flight correction", async () => {

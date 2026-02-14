@@ -82,8 +82,11 @@ async function transcribe(audio: Float32Array): Promise<void> {
     const raw = typeof result === "string"
       ? result
       : (result as { text: string }).text ?? "";
-    // Filter Whisper hallucination artifacts (blank/silent audio produces these)
-    const text = raw.trim().replace(/\[BLANK_AUDIO\]/g, "").trim();
+    // Filter Whisper hallucination artifacts (blank/silent audio, sound annotations)
+    const text = raw.trim()
+      .replace(/\[BLANK_AUDIO\]/g, "")
+      .replace(/\([^)]*(?:typing|clicking|silence|music|applause|laughter|coughing|breathing|sighing)[^)]*\)/gi, "")
+      .trim();
     post({ type: "result", data: text });
   } catch (err) {
     if (cancelledId >= myId) return;

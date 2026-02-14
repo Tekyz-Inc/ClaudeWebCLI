@@ -121,9 +121,14 @@
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
-/* Ghost text: lighter color + italic while voice dictation is being formatted */
+/* Ghost text: lighter color + italic for uncorrected voice dictation */
 .voice-ghost {
   color: var(--color-cc-muted);
   font-style: italic;
-  transition: color 200ms ease-in, font-style 200ms ease-in;
+}
+
+/* Make textarea text invisible when voice overlay is active */
+.voice-overlay-active {
+  color: transparent !important;
+  caret-color: var(--color-cc-fg);
 }

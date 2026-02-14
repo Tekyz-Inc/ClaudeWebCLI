@@ -70,6 +70,15 @@ export function Composer({ sessionId }: { sessionId: string }) {
     ? [text, voice.interimText].filter(Boolean).join(" ")
     : text;
 
+  // Split voice text into stable (pre-existing + corrected) vs pending (uncorrected ghost)
+  const showVoiceOverlay = voice.isListening && !!voice.interimText;
+  const voiceStable = showVoiceOverlay
+    ? [text, voice.correctedText].filter(Boolean).join(" ")
+    : "";
+  const voicePending = showVoiceOverlay
+    ? displayText.slice(voiceStable.length)
+    : "";
+
   const isConnected = cliConnected.get(sessionId) ?? false;
   const currentMode = sessionData?.permissionMode || "acceptEdits";
   const isPlan = currentMode === "plan";
@@ -418,18 +427,30 @@ export function Composer({ sessionId }: { sessionId: string }) {
             </div>
           )}
 
-          <textarea
-            ref={textareaRef}
-            value={displayText}
-            onChange={handleInput}
-            onKeyDown={handleKeyDown}
-            onPaste={handlePaste}
-            placeholder={isConnected ? "Type a message... (/ for commands)" : "Waiting for CLI connection..."}
-            disabled={!isConnected}
-            rows={1}
-            className={`w-full px-4 pt-3 pb-1 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted disabled:opacity-50${voice.isListening && !voice.hasCorrected ? " voice-ghost" : ""}`}
-            style={{ minHeight: "36px", maxHeight: "200px" }}
-          />
+          <div className="relative">
+            <textarea
+              ref={textareaRef}
+              value={displayText}
+              onChange={handleInput}
+              onKeyDown={handleKeyDown}
+              onPaste={handlePaste}
+              placeholder={isConnected ? "Type a message... (/ for commands)" : "Waiting for CLI connection..."}
+              disabled={!isConnected}
+              rows={1}
+              className={`w-full px-4 pt-3 pb-1 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted disabled:opacity-50${showVoiceOverlay ? " voice-overlay-active" : ""}`}
+              style={{ minHeight: "36px", maxHeight: "200px" }}
+            />
+            {showVoiceOverlay && (
+              <div
+                className="absolute top-0 left-0 right-0 px-4 pt-3 pb-1 text-sm font-sans-ui pointer-events-none whitespace-pre-wrap break-words overflow-hidden"
+                style={{ maxHeight: "200px" }}
+                aria-hidden="true"
+              >
+                <span className="text-cc-fg">{voiceStable}</span>
+                <span className="voice-ghost">{voicePending}</span>
+              </div>
+            )}
+          </div>
 
           {/* Git branch + lines info */}
           {sessionData?.git_branch && (
