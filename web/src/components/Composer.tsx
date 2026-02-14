@@ -171,8 +171,25 @@ export function Composer({ sessionId }: { sessionId: string }) {
     textareaRef.current?.focus();
   }, []);
 
-  function handleSend() {
-    const msg = text.trim();
+  async function handleSend() {
+    let msg = text;
+
+    // Stop voice and include transcription if mic is on
+    if (voice.isListening) {
+      const transcribed = await voice.stop();
+      if (transcribed) {
+        const pos = voiceCursorRef.current;
+        const at = pos >= 0 ? Math.min(pos, msg.length) : msg.length;
+        const before = msg.slice(0, at);
+        const after = msg.slice(at);
+        const sB = before.length > 0 && !before.endsWith(" ");
+        const sA = after.length > 0 && !after.startsWith(" ");
+        msg = before + (sB ? " " : "") + transcribed + (sA ? " " : "") + after;
+      }
+      voiceCursorRef.current = -1;
+    }
+
+    msg = msg.trim();
     if (!msg || !isConnected) return;
 
     sendToSession(sessionId, {
@@ -362,7 +379,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
 
   const sessionStatus = useStore((s) => s.sessionStatus);
   const isRunning = sessionStatus.get(sessionId) === "running";
-  const canSend = text.trim().length > 0 && isConnected;
+  const canSend = displayText.trim().length > 0 && isConnected;
 
   return (
     <div

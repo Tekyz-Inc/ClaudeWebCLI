@@ -273,7 +273,24 @@ export function HomePage() {
   }
 
   async function handleSend() {
-    const msg = text.trim();
+    let msg = text;
+
+    // Stop voice and include transcription if mic is on
+    if (voice.isListening) {
+      const transcribed = await voice.stop();
+      if (transcribed) {
+        const pos = voiceCursorRef.current;
+        const at = pos >= 0 ? Math.min(pos, msg.length) : msg.length;
+        const before = msg.slice(0, at);
+        const after = msg.slice(at);
+        const sB = before.length > 0 && !before.endsWith(" ");
+        const sA = after.length > 0 && !after.startsWith(" ");
+        msg = before + (sB ? " " : "") + transcribed + (sA ? " " : "") + after;
+      }
+      voiceCursorRef.current = -1;
+    }
+
+    msg = msg.trim();
     if (!msg || sending) return;
 
     setSending(true);
@@ -337,7 +354,7 @@ export function HomePage() {
     }
   }
 
-  const canSend = text.trim().length > 0 && !sending;
+  const canSend = displayText.trim().length > 0 && !sending;
 
   return (
     <div className="flex-1 h-full flex items-center justify-center px-3 sm:px-4">
