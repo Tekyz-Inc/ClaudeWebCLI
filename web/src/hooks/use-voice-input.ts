@@ -44,6 +44,7 @@ export interface UseVoiceReturn {
   isListening: boolean;
   isProcessing: boolean;
   interimText: string;
+  hasCorrected: boolean;
   error: string | null;
   isModelLoaded: boolean;
   isModelLoading: boolean;
@@ -61,6 +62,7 @@ export function useVoiceInput(): UseVoiceReturn {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [interimText, setInterimText] = useState("");
+  const [hasCorrected, setHasCorrected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
@@ -91,6 +93,7 @@ export function useVoiceInput(): UseVoiceReturn {
     if (activeBackendRef.current === "whisper" && text.trim()) {
       accumulatedRef.current = text.trim();
       setInterimText(text.trim());
+      setHasCorrected(true);
     }
   }, [whisper]);
 
@@ -217,6 +220,7 @@ export function useVoiceInput(): UseVoiceReturn {
   const startWhisper = useCallback(async () => {
     setError(null);
     setInterimText("");
+    setHasCorrected(false);
     setIsListening(true);
     activeBackendRef.current = "whisper";
     lastCorrectionRef.current = Date.now();
@@ -308,6 +312,7 @@ export function useVoiceInput(): UseVoiceReturn {
     isListening,
     isProcessing: isProcessing || whisper.state.isTranscribing,
     interimText,
+    hasCorrected,
     error: error || whisper.state.error,
     isModelLoaded: whisper.state.isModelLoaded,
     isModelLoading: whisper.state.isModelLoading,

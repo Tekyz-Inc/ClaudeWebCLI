@@ -427,7 +427,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
             placeholder={isConnected ? "Type a message... (/ for commands)" : "Waiting for CLI connection..."}
             disabled={!isConnected}
             rows={1}
-            className={`w-full px-4 pt-3 pb-1 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted disabled:opacity-50${voice.isListening ? " voice-ghost" : ""}`}
+            className={`w-full px-4 pt-3 pb-1 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted disabled:opacity-50${voice.isListening && !voice.hasCorrected ? " voice-ghost" : ""}`}
             style={{ minHeight: "36px", maxHeight: "200px" }}
           />
 
