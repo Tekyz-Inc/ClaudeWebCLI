@@ -216,6 +216,7 @@
 | FR-15.4 | Voice input: toggle between idle, recording, and transcribing states with visual indicator | [DONE] | Pulsing red indicator during recording, spinner during transcription |
 | FR-15.6 | Voice input: model download progress indicator during first use | [DONE] | `isModelLoading` + `loadProgress` (0-100%) shown on mic button title |
 | FR-15.7 | Voice input: transcribed text includes punctuation and capitalization natively | [DONE] | Whisper outputs properly formatted text — no server-side post-processing needed |
+| FR-15.8 | Voice input: only spoken/sung words reach the prompt — no Whisper metadata artifacts | [DONE] | `whisper-worker.ts` strips all `[bracketed]` annotations and `(parenthesized)` sound labels before returning text. See whisper-contract.md "Output Filtering" section. |
 | FR-15.5 | File drag-and-drop: drop zone overlay on Composer with image attachment | [DONE] | Drag handlers on wrapper div. Images via `readFileAsBase64`. Non-images ignored. |
 
 ### FR-16: Foundation — Session Configuration (Milestone 1)

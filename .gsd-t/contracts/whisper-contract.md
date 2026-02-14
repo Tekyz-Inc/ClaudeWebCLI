@@ -53,6 +53,23 @@ function snapshotAudio(capture: RawCapture): Float32Array[]
 - Does NOT stop the processor or close AudioContext
 - Called by `transcribeSnapshot()` internally
 
+## Output Filtering (MANDATORY)
+
+The Whisper worker MUST strip all non-speech artifacts before returning text.
+Only actual spoken/sung words may reach the prompt field. No annotations, no
+sound labels, no hallucination text.
+
+**Bracketed annotations** — Always non-speech. Strip all `[...]` patterns:
+`[Music]`, `[BLANK_AUDIO]`, `[Applause]`, `[Laughter]`, `[Silence]`, etc.
+
+**Parenthesized annotations** — Strip when matching sound keywords:
+`(typing)`, `(clicking)`, `(silence)`, `(music)`, `(applause)`, `(laughter)`,
+`(coughing)`, `(breathing)`, `(sighing)`, `(sneezing)`, etc.
+
+If new annotation patterns are discovered, add them to the filter in
+`whisper-worker.ts` immediately. The prompt field must never contain
+Whisper metadata artifacts.
+
 ## Worker Protocol Extension (M4)
 
 Existing messages:

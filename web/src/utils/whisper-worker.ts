@@ -82,10 +82,13 @@ async function transcribe(audio: Float32Array): Promise<void> {
     const raw = typeof result === "string"
       ? result
       : (result as { text: string }).text ?? "";
-    // Filter Whisper hallucination artifacts (blank/silent audio, sound annotations)
+    // Filter Whisper non-speech artifacts:
+    // - Bracketed annotations are ALWAYS non-speech ([Music], [BLANK_AUDIO], [Applause], etc.)
+    // - Parenthesized annotations matching sound keywords ((typing), (silence), etc.)
+    // Only actual spoken/sung words should reach the prompt field.
     const text = raw.trim()
-      .replace(/\[BLANK_AUDIO\]/g, "")
-      .replace(/\([^)]*(?:typing|clicking|silence|music|applause|laughter|coughing|breathing|sighing)[^)]*\)/gi, "")
+      .replace(/\[[^\]]*\]/g, "")
+      .replace(/\([^)]*(?:typing|clicking|silence|music|applause|laughter|coughing|breathing|sighing|sneezing)[^)]*\)/gi, "")
       .trim();
     post({ type: "result", data: text });
   } catch (err) {
