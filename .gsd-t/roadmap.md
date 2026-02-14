@@ -26,6 +26,33 @@
 **Estimated effort**: small (< 1 hour)
 **Priority**: MEDIUM — next available slot
 
+### Milestone 4: Real-Time Whisper Correction
+**Goal**: Whisper continuously corrects streaming Speech API text during recording — re-processes all audio on each trigger, replacing raw preview with punctuated/capitalized text while user is still speaking.
+**Scope**:
+- `snapshotAudio()` — copy current audio buffer without stopping capture
+- Correction trigger: Speech API pause (>= 5s since last correction) OR 10s timer (forced, for non-stop speakers)
+- Each correction sends ALL audio from start to now (full context, no chunking)
+- Corrected text replaces streaming preview in-place
+- Cancel in-flight Whisper when new trigger arrives (always freshest audio)
+- Final correction on stop is fast (most audio already corrected)
+**NOT in scope**:
+- Word-level Whisper streaming (not supported by transformers.js)
+- Multilingual support
+- Configurable timing thresholds (hardcoded 5s/10s)
+**Success criteria**:
+- [ ] Text auto-corrects while user is still speaking
+- [ ] Correction triggers on pauses (>= 5s since last) or forced every 10s
+- [ ] Correction latency < 2s for dictation under 1 minute
+- [ ] No audio glitches or mic interruption during correction
+- [ ] Stop produces final corrected text within 1s
+- [ ] All existing voice tests still pass
+**Impact on existing**:
+- New: `snapshotAudio()` in `audio-utils.ts`
+- Modified: `whisper-worker.ts` (cancellation support)
+- Modified: `use-whisper.ts` (mid-recording transcription)
+- Modified: `use-voice-input.ts` (correction triggers, timer, text replacement)
+**Estimated effort**: Medium (2-3 domains, ~6-8 tasks)
+
 ### Milestone 3: Browser-Side Whisper Voice [COMPLETE v0.4.0]
 **Goal**: Replace Web Speech API + Claude CLI formatting with in-browser Whisper via @huggingface/transformers + WebGPU. Single-step transcription produces properly punctuated, capitalized text with no server round-trip.
 **Scope**:

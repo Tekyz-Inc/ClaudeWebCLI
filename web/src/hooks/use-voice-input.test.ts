@@ -3,21 +3,25 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 
 // Mock use-whisper to avoid loading transformers.js in tests
+const mockWhisper = {
+  state: {
+    isModelLoaded: false,
+    isModelLoading: false,
+    loadProgress: 0,
+    isSupported: false,
+    isTranscribing: false,
+    error: null,
+  },
+  loadModel: vi.fn(),
+  startRecording: vi.fn(),
+  stopRecording: vi.fn().mockResolvedValue(""),
+  cancelRecording: vi.fn(),
+  transcribeSnapshot: vi.fn().mockResolvedValue(""),
+  cancelTranscription: vi.fn(),
+};
+
 vi.mock("./use-whisper.js", () => ({
-  useWhisper: () => ({
-    state: {
-      isModelLoaded: false,
-      isModelLoading: false,
-      loadProgress: 0,
-      isSupported: false,
-      isTranscribing: false,
-      error: null,
-    },
-    loadModel: vi.fn(),
-    startRecording: vi.fn(),
-    stopRecording: vi.fn().mockResolvedValue(""),
-    cancelRecording: vi.fn(),
-  }),
+  useWhisper: () => mockWhisper,
 }));
 
 import { useVoiceInput } from "./use-voice-input.js";
@@ -230,5 +234,125 @@ describe("useVoiceInput", () => {
     expect(result.current.loadProgress).toBe(0);
     expect(result.current.useWhisper).toBe(false);
     expect(result.current.isProcessing).toBe(false);
+  });
+});
+
+describe("useVoiceInput — mid-recording correction", () => {
+  let dateNowSpy: ReturnType<typeof vi.spyOn>;
+  let fakeNow: number;
+
+  beforeEach(() => {
+    fakeNow = 1000;
+    dateNowSpy = vi.spyOn(Date, "now").mockImplementation(() => fakeNow);
+    mockWhisper.state.isSupported = true;
+    mockWhisper.state.isModelLoaded = true;
+    mockWhisper.state.isModelLoading = false;
+    mockWhisper.transcribeSnapshot.mockResolvedValue("Corrected text.");
+    mockWhisper.cancelTranscription.mockClear();
+    mockWhisper.transcribeSnapshot.mockClear();
+    mockWhisper.startRecording.mockClear();
+    mockWhisper.stopRecording.mockResolvedValue("Final corrected.");
+    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
+  });
+
+  afterEach(() => {
+    dateNowSpy.mockRestore();
+    mockWhisper.state.isSupported = false;
+    mockWhisper.state.isModelLoaded = false;
+  });
+
+  it("triggers correction on Speech API pause after >= 5s", async () => {
+    const { result } = renderHook(() => useVoiceInput());
+
+    act(() => result.current.start());
+
+    // Advance fake time past the 5s threshold
+    fakeNow += 5001;
+
+    // Simulate Speech API onend (pause)
+    const instance = mockInstances[0];
+    await act(async () => {
+      instance.onend?.();
+      // Allow the async transcribeSnapshot promise to resolve
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockWhisper.cancelTranscription).toHaveBeenCalled();
+    expect(mockWhisper.transcribeSnapshot).toHaveBeenCalled();
+    expect(result.current.interimText).toBe("Corrected text.");
+  });
+
+  it("does NOT trigger correction before 5s threshold", async () => {
+    const { result } = renderHook(() => useVoiceInput());
+
+    act(() => result.current.start());
+
+    // Only 2s elapsed — below threshold
+    fakeNow += 2000;
+
+    const instance = mockInstances[0];
+    await act(async () => {
+      instance.onend?.();
+      await Promise.resolve();
+    });
+
+    expect(mockWhisper.transcribeSnapshot).not.toHaveBeenCalled();
+  });
+
+  it("cancels previous transcription before new correction", async () => {
+    const { result } = renderHook(() => useVoiceInput());
+
+    act(() => result.current.start());
+
+    // First correction
+    fakeNow += 5001;
+    const instance = mockInstances[0];
+    await act(async () => {
+      instance.onend?.();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockWhisper.cancelTranscription).toHaveBeenCalledTimes(1);
+
+    // Second correction after another 5s
+    fakeNow += 5001;
+    await act(async () => {
+      instance.onend?.();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockWhisper.cancelTranscription).toHaveBeenCalledTimes(2);
+    expect(mockWhisper.transcribeSnapshot).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not correct when model not loaded", async () => {
+    mockWhisper.state.isModelLoaded = false;
+    const { result } = renderHook(() => useVoiceInput());
+
+    act(() => result.current.start());
+
+    fakeNow += 5001;
+    const instance = mockInstances[0];
+    await act(async () => {
+      instance.onend?.();
+      await Promise.resolve();
+    });
+
+    expect(mockWhisper.transcribeSnapshot).not.toHaveBeenCalled();
+  });
+
+  it("stop cancels any in-flight correction", async () => {
+    const { result } = renderHook(() => useVoiceInput());
+
+    act(() => result.current.start());
+
+    await act(async () => {
+      await result.current.stop();
+    });
+
+    expect(mockWhisper.cancelTranscription).toHaveBeenCalled();
   });
 });

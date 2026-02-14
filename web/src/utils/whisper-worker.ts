@@ -9,9 +9,12 @@ const MODEL_ID = "onnx-community/whisper-tiny";
 let whisperPipeline: any = null;
 
 interface WorkerMessage {
-  type: "load" | "transcribe";
+  type: "load" | "transcribe" | "cancel";
   audio?: Float32Array;
 }
+
+let cancelledId = 0;
+let currentTranscribeId = 0;
 
 interface WorkerResponse {
   type: "progress" | "ready" | "result" | "error";
@@ -68,17 +71,20 @@ async function transcribe(audio: Float32Array): Promise<void> {
     post({ type: "error", data: "Model not loaded" });
     return;
   }
+  const myId = ++currentTranscribeId;
   try {
     const result = await whisperPipeline(audio, {
       language: "en",
       task: "transcribe",
     });
-    // Result can be string or object with .text
+    // If cancelled while transcribing, discard result silently
+    if (cancelledId >= myId) return;
     const text = typeof result === "string"
       ? result
       : (result as { text: string }).text ?? "";
     post({ type: "result", data: text.trim() });
   } catch (err) {
+    if (cancelledId >= myId) return;
     post({ type: "error", data: String(err) });
   }
 }
@@ -89,5 +95,7 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
     loadModel();
   } else if (type === "transcribe" && audio) {
     transcribe(audio);
+  } else if (type === "cancel") {
+    cancelledId = currentTranscribeId;
   }
 };

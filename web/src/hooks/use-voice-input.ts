@@ -32,6 +32,11 @@ function getSpeechRecognition(): SpeechRecognitionCtor | null {
     SpeechRecognitionCtor | null;
 }
 
+/* ─── Constants ─────────────────────────────────────────── */
+
+const PAUSE_THRESHOLD_MS = 5_000;
+const FORCED_INTERVAL_MS = 10_000;
+
 /* ─── Unified voice hook ────────────────────────────────── */
 
 export interface UseVoiceReturn {
@@ -61,11 +66,36 @@ export function useVoiceInput(): UseVoiceReturn {
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const accumulatedRef = useRef<string>("");
   const activeBackendRef = useRef<ActiveBackend>(null);
+  const lastCorrectionRef = useRef<number>(0);
+  const forcedTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const correctionFnRef = useRef<() => void>(() => {});
 
   const hasSpeechApi = getSpeechRecognition() !== null;
   const canUseWhisper = whisper.state.isSupported;
   const isSupported = canUseWhisper || hasSpeechApi;
   const activeWhisper = canUseWhisper && whisper.state.isModelLoaded;
+
+  /* ─── Mid-recording correction ────────────────────────── */
+
+  const triggerCorrection = useCallback(async () => {
+    if (activeBackendRef.current !== "whisper") return;
+    if (!whisper.state.isModelLoaded) return;
+
+    const now = Date.now();
+    if (now - lastCorrectionRef.current < PAUSE_THRESHOLD_MS) return;
+
+    whisper.cancelTranscription();
+    lastCorrectionRef.current = now;
+
+    const text = await whisper.transcribeSnapshot();
+    if (activeBackendRef.current === "whisper" && text.trim()) {
+      accumulatedRef.current = text.trim();
+      setInterimText(text.trim());
+    }
+  }, [whisper]);
+
+  // Keep ref in sync so onend closure can access latest version
+  correctionFnRef.current = triggerCorrection;
 
   /* ─── Speech API helpers (used for streaming preview) ─── */
 
@@ -83,7 +113,6 @@ export function useVoiceInput(): UseVoiceReturn {
     let lastFinalText = "";
 
     recognition.onresult = (e: SpeechRecognitionEvent) => {
-      // Ignore results from stale recognition instances
       if (recognitionRef.current !== recognition) return;
 
       let final_ = "";
@@ -125,7 +154,6 @@ export function useVoiceInput(): UseVoiceReturn {
     };
 
     recognition.onend = () => {
-      // Ignore onend from stale recognition instances
       if (recognitionRef.current !== recognition) return;
 
       if (activeBackendRef.current === "speech") {
@@ -134,7 +162,9 @@ export function useVoiceInput(): UseVoiceReturn {
         setInterimText("");
         recognitionRef.current = null;
       } else if (activeBackendRef.current === "whisper") {
-        // Speech API preview ended while Whisper still recording — restart
+        // Speech API paused — trigger mid-recording correction via ref
+        correctionFnRef.current();
+        // Restart Speech API preview for continued streaming
         try {
           recognition.start();
         } catch {
@@ -157,13 +187,29 @@ export function useVoiceInput(): UseVoiceReturn {
   const stopSpeechPreview = useCallback((): string => {
     if (recognitionRef.current) {
       const rec = recognitionRef.current;
-      recognitionRef.current = null; // Clear ref first so onend won't restart
+      recognitionRef.current = null;
       rec.stop();
     }
     setInterimText("");
     const result = accumulatedRef.current;
     accumulatedRef.current = "";
     return result;
+  }, []);
+
+  /* ─── Timer helpers ──────────────────────────────────── */
+
+  const startForcedTimer = useCallback(() => {
+    if (forcedTimerRef.current) clearInterval(forcedTimerRef.current);
+    forcedTimerRef.current = setInterval(() => {
+      correctionFnRef.current();
+    }, FORCED_INTERVAL_MS);
+  }, []);
+
+  const stopForcedTimer = useCallback(() => {
+    if (forcedTimerRef.current) {
+      clearInterval(forcedTimerRef.current);
+      forcedTimerRef.current = null;
+    }
   }, []);
 
   /* ─── Whisper path (with Speech API streaming preview) ── */
@@ -173,22 +219,22 @@ export function useVoiceInput(): UseVoiceReturn {
     setInterimText("");
     setIsListening(true);
     activeBackendRef.current = "whisper";
+    lastCorrectionRef.current = Date.now();
 
-    // Start Speech API for streaming preview (non-fatal if it fails)
     try { startSpeechPreview(); } catch { /* preview is optional */ }
 
-    // Start Whisper audio capture (may await mic permission)
+    startForcedTimer();
     await whisper.startRecording();
-  }, [whisper, startSpeechPreview]);
+  }, [whisper, startSpeechPreview, startForcedTimer]);
 
   const stopWhisper = useCallback(async (): Promise<string> => {
     setIsListening(false);
     activeBackendRef.current = null;
+    stopForcedTimer();
+    whisper.cancelTranscription();
 
-    // Stop Speech API preview — get its text as fallback
     const speechText = stopSpeechPreview();
 
-    // If model loaded, use Whisper for corrected transcription
     if (whisper.state.isModelLoaded) {
       setIsProcessing(true);
       const whisperText = await whisper.stopRecording();
@@ -196,10 +242,9 @@ export function useVoiceInput(): UseVoiceReturn {
       return whisperText || speechText;
     }
 
-    // Model not loaded yet — cancel raw capture, use Speech API text
     whisper.cancelRecording();
     return speechText;
-  }, [whisper, stopSpeechPreview]);
+  }, [whisper, stopSpeechPreview, stopForcedTimer]);
 
   /* ─── Speech-only path (no Whisper available) ─────────── */
 
@@ -221,16 +266,12 @@ export function useVoiceInput(): UseVoiceReturn {
 
   const start = useCallback(() => {
     if (canUseWhisper) {
-      // Auto-load model on first mic click
       if (!whisper.state.isModelLoaded && !whisper.state.isModelLoading) {
         whisper.loadModel();
       }
-      // Always use whisper path (Speech API preview + raw capture)
-      // so Whisper can correct text when model finishes loading
       startWhisper().catch(() => {});
       return;
     }
-    // Fallback: no Whisper support at all
     if (hasSpeechApi) {
       startSpeechOnly();
     }
@@ -244,16 +285,19 @@ export function useVoiceInput(): UseVoiceReturn {
     return stopSpeechOnly();
   }, [stopWhisper, stopSpeechOnly]);
 
-  // Keep latest whisper ref for unmount cleanup (avoids re-running on every render)
+  // Keep latest whisper ref for unmount cleanup
   const whisperRef = useRef(whisper);
   whisperRef.current = whisper;
 
-  // Cleanup on unmount only
   useEffect(() => {
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.abort();
         recognitionRef.current = null;
+      }
+      if (forcedTimerRef.current) {
+        clearInterval(forcedTimerRef.current);
+        forcedTimerRef.current = null;
       }
       whisperRef.current.cancelRecording();
     };

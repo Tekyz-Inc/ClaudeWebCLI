@@ -43,6 +43,46 @@ export async function startRawCapture(): Promise<RawCapture> {
 }
 
 /**
+ * Copy current audio buffer without stopping capture.
+ * Returns a shallow copy of the samples array (each chunk is shared, not cloned).
+ */
+export function snapshotAudio(capture: RawCapture): Float32Array[] {
+  return [...capture.samples];
+}
+
+/**
+ * Concatenate sample chunks and resample to 16kHz for Whisper.
+ */
+export async function resampleAudio(
+  samples: Float32Array[],
+  nativeSr: number,
+): Promise<Float32Array> {
+  const totalLength = samples.reduce((sum, s) => sum + s.length, 0);
+  if (totalLength === 0) return new Float32Array(0);
+
+  const fullAudio = new Float32Array(totalLength);
+  let offset = 0;
+  for (const s of samples) {
+    fullAudio.set(s, offset);
+    offset += s.length;
+  }
+
+  if (nativeSr === TARGET_SAMPLE_RATE) return fullAudio;
+
+  const duration = fullAudio.length / nativeSr;
+  const outLength = Math.round(duration * TARGET_SAMPLE_RATE);
+  const offline = new OfflineAudioContext(1, outLength, TARGET_SAMPLE_RATE);
+  const buffer = offline.createBuffer(1, fullAudio.length, nativeSr);
+  buffer.getChannelData(0).set(fullAudio);
+  const src = offline.createBufferSource();
+  src.buffer = buffer;
+  src.connect(offline.destination);
+  src.start(0);
+  const resampled = await offline.startRendering();
+  return resampled.getChannelData(0);
+}
+
+/**
  * Stop capturing and convert to Float32Array at 16kHz for Whisper.
  */
 export async function stopRawCapture(
@@ -58,37 +98,8 @@ export async function stopRawCapture(
     track.stop();
   }
 
-  // Concatenate all captured samples
-  const totalLength = samples.reduce((sum, s) => sum + s.length, 0);
-  if (totalLength === 0) {
-    await audioCtx.close();
-    return new Float32Array(0);
-  }
-
-  const fullAudio = new Float32Array(totalLength);
-  let offset = 0;
-  for (const s of samples) {
-    fullAudio.set(s, offset);
-    offset += s.length;
-  }
-
   const nativeSr = audioCtx.sampleRate;
   await audioCtx.close();
 
-  if (nativeSr === TARGET_SAMPLE_RATE) {
-    return fullAudio;
-  }
-
-  // Resample to 16kHz using OfflineAudioContext
-  const duration = fullAudio.length / nativeSr;
-  const outLength = Math.round(duration * TARGET_SAMPLE_RATE);
-  const offline = new OfflineAudioContext(1, outLength, TARGET_SAMPLE_RATE);
-  const buffer = offline.createBuffer(1, fullAudio.length, nativeSr);
-  buffer.getChannelData(0).set(fullAudio);
-  const src = offline.createBufferSource();
-  src.buffer = buffer;
-  src.connect(offline.destination);
-  src.start(0);
-  const resampled = await offline.startRendering();
-  return resampled.getChannelData(0);
+  return resampleAudio(samples, nativeSr);
 }

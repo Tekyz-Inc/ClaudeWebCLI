@@ -1,6 +1,6 @@
-# Contract: Whisper Engine ↔ Voice Hook
+# Contract: Whisper Engine ↔ Correction Orchestration
 
-## useWhisper Hook Interface
+## useWhisper Hook Interface (Milestone 4 — Extended)
 
 ```typescript
 interface WhisperState {
@@ -16,53 +16,69 @@ interface UseWhisperReturn {
   state: WhisperState;
   loadModel: () => Promise<void>;
   startRecording: () => void;
-  stopRecording: () => Promise<string>;  // Returns transcribed text
+  stopRecording: () => Promise<string>;     // Returns transcribed text
   cancelRecording: () => void;
+  // NEW in M4:
+  transcribeSnapshot: () => Promise<string>; // Mid-recording transcription (copies audio, doesn't stop capture)
+  cancelTranscription: () => void;           // Cancel in-flight transcription (pipeline stays loaded)
 }
 ```
 
-## Behavior Contract
+## New Method Contracts (M4)
 
-1. `loadModel()` — Downloads and initializes the Whisper pipeline
-   - Loads `onnx-community/whisper-small` (quantized) in a Web Worker
-   - Updates `loadProgress` 0→100 during download
-   - Sets `isModelLoaded: true` on success
-   - Sets `error` on failure
-   - Model is cached in browser storage after first download
+### `transcribeSnapshot()` — Mid-recording transcription
+- Snapshots ALL captured audio from start to current moment
+- Does NOT stop the microphone or close AudioContext
+- Resamples snapshot to 16kHz (reuses stopRawCapture logic)
+- Sends to Worker for transcription
+- Returns transcribed text with punctuation/capitalization
+- Can be called multiple times during a single recording session
+- If called while another transcription is in-flight, the previous is cancelled first
 
-2. `startRecording()` — Begins audio capture
-   - Uses MediaRecorder API to capture microphone audio
-   - Stores audio chunks in memory
+### `cancelTranscription()` — Cancel in-flight work
+- Aborts the current Worker transcription (if any)
+- Does NOT affect model state (pipeline stays loaded and ready)
+- Does NOT stop audio capture
+- No-op if nothing is in-flight
+- Used by correction-orchestration to cancel stale corrections before triggering new ones
 
-3. `stopRecording()` — Stops capture and runs inference
-   - Stops MediaRecorder
-   - Converts audio to PCM float32 at 16kHz (Whisper requirement)
-   - Runs Whisper inference in Web Worker
-   - Returns transcribed text with punctuation and capitalization
-   - Cleans up tensors after inference
+## snapshotAudio() (audio-utils.ts — internal)
 
-4. `cancelRecording()` — Aborts without transcription
-   - Stops MediaRecorder, discards audio chunks
+```typescript
+function snapshotAudio(capture: RawCapture): Float32Array[]
+```
 
-## Voice Hook Contract (consumer-facing)
+- Returns a COPY of the current samples array
+- Does NOT modify the original capture
+- Does NOT stop the processor or close AudioContext
+- Called by `transcribeSnapshot()` internally
 
-The voice hook exposes the same shape to Composer:
+## Worker Protocol Extension (M4)
+
+Existing messages:
+- `{ type: "load" }` → `{ type: "ready" }` or `{ type: "error" }`
+- `{ type: "transcribe", audio: Float32Array }` → `{ type: "result", data: string }` or `{ type: "error" }`
+
+New message:
+- `{ type: "cancel" }` → Aborts current transcription, no response (next transcribe starts fresh)
+
+## Voice Hook Contract (consumer-facing — unchanged interface)
 
 ```typescript
 interface UseVoiceReturn {
-  isSupported: boolean;      // Whisper OR Web Speech API available
-  isListening: boolean;      // Currently recording
-  isProcessing: boolean;     // Whisper is transcribing (post-recording)
-  interimText: string;       // Live interim text (Web Speech API only)
+  isSupported: boolean;
+  isListening: boolean;
+  isProcessing: boolean;
+  interimText: string;        // Updated during recording by corrections
   error: string | null;
-  isModelLoaded: boolean;    // Whisper model ready
-  isModelLoading: boolean;   // Whisper model downloading
-  loadProgress: number;      // 0-100 download progress
-  start: () => void;         // Begin voice input
-  stop: () => Promise<string>; // Stop and return transcribed text
-  useWhisper: boolean;       // true if using Whisper, false if Web Speech API
+  isModelLoaded: boolean;
+  isModelLoading: boolean;
+  loadProgress: number;
+  start: () => void;
+  stop: () => Promise<string>;
+  useWhisper: boolean;
 }
 ```
 
-**Owner:** whisper-engine domain (hook), voice-hook domain (integration)
-**Consumer:** ui-cleanup domain (Composer)
+**Owner:** whisper-engine domain (hook + worker + audio-utils)
+**Consumer:** correction-orchestration domain (use-voice-input.ts)

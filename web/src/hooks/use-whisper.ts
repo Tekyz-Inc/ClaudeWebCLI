@@ -1,6 +1,11 @@
 import { useState, useRef, useCallback } from "react";
 import type { RawCapture } from "../utils/audio-utils.js";
-import { startRawCapture, stopRawCapture } from "../utils/audio-utils.js";
+import {
+  startRawCapture,
+  stopRawCapture,
+  snapshotAudio,
+  resampleAudio,
+} from "../utils/audio-utils.js";
 
 export interface WhisperState {
   isModelLoaded: boolean;
@@ -122,5 +127,35 @@ export function useWhisper() {
     }
   }, []);
 
-  return { state, loadModel, startRecording, stopRecording, cancelRecording };
+  const transcribeSnapshot = useCallback(async (): Promise<string> => {
+    if (!captureRef.current) return "";
+
+    const samples = snapshotAudio(captureRef.current);
+    const nativeSr = captureRef.current.audioCtx.sampleRate;
+    const audio = await resampleAudio(samples, nativeSr);
+    if (audio.length === 0) return "";
+
+    return new Promise<string>((resolve) => {
+      transcribeResolveRef.current = resolve;
+      getWorker().postMessage({ type: "transcribe", audio }, [audio.buffer]);
+    });
+  }, [getWorker]);
+
+  const cancelTranscription = useCallback(() => {
+    getWorker().postMessage({ type: "cancel" });
+    if (transcribeResolveRef.current) {
+      transcribeResolveRef.current("");
+      transcribeResolveRef.current = null;
+    }
+  }, [getWorker]);
+
+  return {
+    state,
+    loadModel,
+    startRecording,
+    stopRecording,
+    cancelRecording,
+    transcribeSnapshot,
+    cancelTranscription,
+  };
 }

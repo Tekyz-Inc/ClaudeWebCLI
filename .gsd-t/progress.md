@@ -1,13 +1,14 @@
 # GSD-T Progress
 
 ## Project: ClaudeWebCLI
-## Version: 0.4.1
+## Version: 0.5.0
 ## Current Milestone
-None — ready for next milestone.
+None — ready for next milestone
 
 ## Completed Milestones
 | # | Milestone | Version | Completed | Tag |
 |---|-----------|---------|-----------|-----|
+| 4 | Real-Time Whisper Correction | 0.5.0 | 2026-02-13 | v0.5.0 |
 | 3 | Browser-Side Whisper Voice | 0.4.0 | 2026-02-13 | v0.4.0 |
 | 2 | Smart Voice Dictation | 0.3.0 | 2026-02-12 | v0.3.0 |
 | 1 | Foundation — Daily Workflow + Voice + Files | 0.2.0 | 2026-02-11 | v0.2.0 |
@@ -34,3 +35,5 @@ None — ready for next milestone.
 - 2026-02-13: [debug] Fixed Speech API streaming preview not showing text during Whisper recording: (1) setInterimText("") cleared accumulated text on each final result — now shows full accumulated text. (2) onerror killed recognitionRef in whisper mode — now non-fatal. (3) onend cleared preview and stopped — now auto-restarts Speech API to keep streaming.
 - 2026-02-13: [debug] Fixed Whisper not correcting text on stop: start() only used Whisper path when model was already loaded. On first mic click after page load, speech-only mode had no raw capture → no Whisper correction. Now always uses whisper path (raw capture + Speech API preview) when Whisper is supported. On stop, corrects with Whisper if model loaded, otherwise falls back to Speech API text. Also fixed orphaned SpeechRecognition restart by clearing recognitionRef before .stop().
 - 2026-02-13: [debug] Fixed useEffect cleanup killing recording on every re-render: useEffect depended on [whisper] but whisper is a new object each render. Cleanup ran on EVERY re-render, aborting SpeechRecognition and cancelling raw capture mid-recording. Fix: whisperRef + empty deps for unmount-only cleanup. Also added stale instance guards (recognitionRef.current !== recognition) on all SpeechRecognition handlers to prevent race conditions between old callbacks and new sessions.
+- 2026-02-13: Milestone 4 partitioned into 2 domains: whisper-engine (snapshotAudio, worker cancellation, transcribeSnapshot), correction-orchestration (pause detection, 5s/10s timers, text replacement). Contracts updated. Old M3 domains cleaned up.
+- 2026-02-13: Milestone 4 executed and verified. 6/6 tasks complete across 2 domains. audio-utils.ts: snapshotAudio + resampleAudio (extracted from stopRawCapture). whisper-worker.ts: cancel message with ID-based discard. use-whisper.ts: transcribeSnapshot + cancelTranscription. use-voice-input.ts: correction triggers via correctionFnRef pattern (pause >= 5s, forced 10s timer). 16 tests pass (5 new correction tests). 563/568 total tests pass (5 pre-existing TD-011). Typecheck clean.
