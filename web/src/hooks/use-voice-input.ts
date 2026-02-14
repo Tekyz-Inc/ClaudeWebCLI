@@ -193,7 +193,8 @@ export function useVoiceInput(): UseVoiceReturn {
       recognitionRef.current = null;
       rec.stop();
     }
-    setInterimText("");
+    // Don't clear interimText here — let it persist during Whisper processing
+    // so the prompt field doesn't flash empty. Cleared on next start().
     const result = accumulatedRef.current;
     accumulatedRef.current = "";
     return result;

@@ -66,7 +66,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
     }
   }, [voice]);
 
-  const displayText = voice.isListening && voice.interimText
+  const displayText = (voice.isListening || voice.isProcessing) && voice.interimText
     ? [text, voice.interimText].filter(Boolean).join(" ")
     : text;
 

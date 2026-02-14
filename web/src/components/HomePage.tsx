@@ -70,7 +70,7 @@ export function HomePage() {
     }
   }, [voice]);
 
-  const displayText = voice.isListening && voice.interimText
+  const displayText = (voice.isListening || voice.isProcessing) && voice.interimText
     ? [text, voice.interimText].filter(Boolean).join(" ")
     : text;
 
