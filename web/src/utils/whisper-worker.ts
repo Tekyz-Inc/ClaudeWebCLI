@@ -79,10 +79,12 @@ async function transcribe(audio: Float32Array): Promise<void> {
     });
     // If cancelled while transcribing, discard result silently
     if (cancelledId >= myId) return;
-    const text = typeof result === "string"
+    const raw = typeof result === "string"
       ? result
       : (result as { text: string }).text ?? "";
-    post({ type: "result", data: text.trim() });
+    // Filter Whisper hallucination artifacts (blank/silent audio produces these)
+    const text = raw.trim().replace(/\[BLANK_AUDIO\]/g, "").trim();
+    post({ type: "result", data: text });
   } catch (err) {
     if (cancelledId >= myId) return;
     post({ type: "error", data: String(err) });
