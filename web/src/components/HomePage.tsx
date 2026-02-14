@@ -62,26 +62,54 @@ export function HomePage() {
 
   // Voice input
   const voice = useVoiceInput();
+  const voiceCursorRef = useRef<number>(-1);
+
+  const handleStartVoice = useCallback(() => {
+    voiceCursorRef.current = textareaRef.current?.selectionStart ?? text.length;
+    voice.start();
+  }, [voice, text]);
 
   const handleStopVoice = useCallback(async () => {
     const transcribed = await voice.stop();
     if (transcribed) {
-      setText((prev) => [prev, transcribed].filter(Boolean).join(" "));
+      const pos = voiceCursorRef.current;
+      setText((prev) => {
+        const at = pos >= 0 ? Math.min(pos, prev.length) : prev.length;
+        const before = prev.slice(0, at);
+        const after = prev.slice(at);
+        const sB = before.length > 0 && !before.endsWith(" ");
+        const sA = after.length > 0 && !after.startsWith(" ");
+        return before + (sB ? " " : "") + transcribed + (sA ? " " : "") + after;
+      });
     }
+    voiceCursorRef.current = -1;
   }, [voice]);
 
-  const displayText = (voice.isListening || voice.isProcessing) && voice.interimText
-    ? [text, voice.interimText].filter(Boolean).join(" ")
+  // Insert voice text at cursor position (or end if -1)
+  const voiceActive = (voice.isListening || voice.isProcessing) && !!voice.interimText;
+  const vCursor = voiceCursorRef.current >= 0 ? Math.min(voiceCursorRef.current, text.length) : text.length;
+  const vBefore = voiceActive ? text.slice(0, vCursor) : "";
+  const vAfter = voiceActive ? text.slice(vCursor) : "";
+  const vSpaceB = voiceActive && vBefore.length > 0 && !vBefore.endsWith(" ");
+  const vSpaceA = voiceActive && vAfter.length > 0 && !vAfter.startsWith(" ");
+
+  const displayText = voiceActive
+    ? vBefore + (vSpaceB ? " " : "") + voice.interimText + (vSpaceA ? " " : "") + vAfter
     : text;
 
-  // Split voice text into stable (pre-existing + corrected) vs pending (uncorrected ghost)
+  // Overlay: split voice portion into corrected (normal) + pending (ghost)
   const showVoiceOverlay = voice.isListening && !!voice.interimText;
-  const voiceStable = showVoiceOverlay
-    ? [text, voice.correctedText].filter(Boolean).join(" ")
-    : "";
-  const voicePending = showVoiceOverlay
-    ? displayText.slice(voiceStable.length)
-    : "";
+  let overlayLeft = "";
+  let overlayGhost = "";
+  let overlayRight = "";
+  if (showVoiceOverlay) {
+    const voiceStart = vBefore.length + (vSpaceB ? 1 : 0);
+    const voiceEnd = voiceStart + voice.interimText.length;
+    const corrLen = voice.correctedText ? voice.correctedText.length : 0;
+    overlayLeft = displayText.slice(0, voiceStart + corrLen);
+    overlayGhost = displayText.slice(voiceStart + corrLen, voiceEnd);
+    overlayRight = displayText.slice(voiceEnd);
+  }
 
   // Dropdown states
   const [showFolderPicker, setShowFolderPicker] = useState(false);
@@ -375,8 +403,9 @@ export function HomePage() {
                 style={{ maxHeight: "300px" }}
                 aria-hidden="true"
               >
-                <span className="text-cc-fg">{voiceStable}</span>
-                <span className="voice-ghost">{voicePending}</span>
+                <span className="text-cc-fg">{overlayLeft}</span>
+                <span className="voice-ghost">{overlayGhost}</span>
+                <span className="text-cc-fg">{overlayRight}</span>
               </div>
             )}
           </div>
@@ -409,7 +438,7 @@ export function HomePage() {
             <div className="flex items-center gap-1">
               {voice.isSupported && (
                 <button
-                  onClick={voice.isListening ? handleStopVoice : voice.isProcessing ? undefined : voice.start}
+                  onClick={voice.isListening ? handleStopVoice : voice.isProcessing ? undefined : handleStartVoice}
                   disabled={voice.isProcessing || voice.isModelLoading}
                   className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
                     voice.isModelLoading
