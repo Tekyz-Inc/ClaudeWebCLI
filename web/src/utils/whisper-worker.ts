@@ -76,6 +76,8 @@ async function transcribe(audio: Float32Array): Promise<void> {
     const result = await whisperPipeline(audio, {
       language: "en",
       task: "transcribe",
+      chunk_length_s: 30,
+      stride_length_s: 5,
     });
     // If cancelled while transcribing, discard result silently
     if (cancelledId >= myId) return;

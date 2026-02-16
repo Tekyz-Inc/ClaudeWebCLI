@@ -30,7 +30,7 @@ interface UseWhisperReturn {
 - Snapshots ALL captured audio from start to current moment
 - Does NOT stop the microphone or close AudioContext
 - Resamples snapshot to 16kHz (reuses stopRawCapture logic)
-- Sends to Worker for transcription
+- Sends to Worker for transcription with `chunk_length_s: 30, stride_length_s: 5` for long audio support
 - Returns transcribed text with punctuation/capitalization
 - Can be called multiple times during a single recording session
 - If called while another transcription is in-flight, the previous is cancelled first

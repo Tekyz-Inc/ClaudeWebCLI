@@ -261,13 +261,13 @@ describe("useVoiceInput — mid-recording correction", () => {
     mockWhisper.state.isModelLoaded = false;
   });
 
-  it("triggers correction on Speech API pause after >= 5s", async () => {
+  it("triggers correction on Speech API pause after >= 3s", async () => {
     const { result } = renderHook(() => useVoiceInput());
 
     act(() => result.current.start());
 
-    // Advance fake time past the 5s threshold
-    fakeNow += 5001;
+    // Advance fake time past the 3s threshold
+    fakeNow += 3001;
 
     // Simulate Speech API onend (pause)
     const instance = mockInstances[0];
@@ -284,7 +284,7 @@ describe("useVoiceInput — mid-recording correction", () => {
     expect(result.current.correctedText).toBe("Corrected text.");
   });
 
-  it("does NOT trigger correction before 5s threshold", async () => {
+  it("does NOT trigger correction before 3s threshold", async () => {
     const { result } = renderHook(() => useVoiceInput());
 
     act(() => result.current.start());
@@ -307,7 +307,7 @@ describe("useVoiceInput — mid-recording correction", () => {
     act(() => result.current.start());
 
     // First correction
-    fakeNow += 5001;
+    fakeNow += 3001;
     const instance = mockInstances[0];
     await act(async () => {
       instance.onend?.();
@@ -317,8 +317,8 @@ describe("useVoiceInput — mid-recording correction", () => {
 
     expect(mockWhisper.cancelTranscription).toHaveBeenCalledTimes(1);
 
-    // Second correction after another 5s
-    fakeNow += 5001;
+    // Second correction after another 3s
+    fakeNow += 3001;
     await act(async () => {
       instance.onend?.();
       await Promise.resolve();
@@ -350,7 +350,7 @@ describe("useVoiceInput — mid-recording correction", () => {
 
     // First recording + correction
     act(() => result.current.start());
-    fakeNow += 5001;
+    fakeNow += 3001;
     const instance = mockInstances[0];
     await act(async () => {
       instance.onend?.();

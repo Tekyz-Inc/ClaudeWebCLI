@@ -34,8 +34,8 @@ function getSpeechRecognition(): SpeechRecognitionCtor | null {
 
 /* ─── Constants ─────────────────────────────────────────── */
 
-const PAUSE_THRESHOLD_MS = 5_000;
-const FORCED_INTERVAL_MS = 10_000;
+const PAUSE_THRESHOLD_MS = 3_000;
+const FORCED_INTERVAL_MS = 5_000;
 
 /* ─── Unified voice hook ────────────────────────────────── */
 
