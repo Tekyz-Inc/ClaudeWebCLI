@@ -6,7 +6,13 @@ function resolveClaudeBinary(): string {
   if (resolvedBinary) return resolvedBinary;
   try {
     const cmd = process.platform === "win32" ? "where claude" : "which claude";
-    resolvedBinary = execSync(cmd, { encoding: "utf-8" }).trim().split("\n")[0].trim();
+    const lines = execSync(cmd, { encoding: "utf-8" }).trim().split("\n").map(l => l.trim());
+    if (process.platform === "win32") {
+      // On Windows, prefer .cmd/.exe over extensionless shell scripts
+      resolvedBinary = lines.find(l => /\.(cmd|exe)$/i.test(l)) || "claude";
+    } else {
+      resolvedBinary = lines[0] || "claude";
+    }
   } catch {
     resolvedBinary = "claude";
   }
