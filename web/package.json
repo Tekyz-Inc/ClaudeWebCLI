@@ -1,6 +1,6 @@
 {
   "name": "the-vibe-companion",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "module",
   "description": "Web UI for launching and interacting with Claude Code agents",
   "license": "MIT",
@@ -33,10 +33,15 @@
     "prepublishOnly": "bun run build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "npx playwright test",
+    "test:e2e:original": "npx playwright test --project=original",
+    "test:e2e:component": "npx playwright test --project=component",
+    "test:e2e:headed": "npx playwright test --headed"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",
+    "@tekyzinc/stt-component": "^0.1.0",
     "hono": "^4.7.0"
   },
   "devDependencies": {
@@ -47,6 +52,7 @@
     "@codemirror/lang-markdown": "^6.5.0",
     "@codemirror/lang-python": "^6.2.1",
     "@codemirror/theme-one-dark": "^6.1.3",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/vite": "^4.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

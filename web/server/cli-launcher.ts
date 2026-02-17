@@ -183,9 +183,10 @@ export class CliLauncher {
 
   private spawnCLI(sessionId: string, info: SdkSessionInfo, options: LaunchOptions & { resumeSessionId?: string }): void {
     let binary = options.claudeBinary || "claude";
-    if (!binary.startsWith("/")) {
+    if (!binary.startsWith("/") && !binary.match(/^[A-Z]:\\/i)) {
       try {
-        binary = execSync(`which ${binary}`, { encoding: "utf-8" }).trim();
+        const cmd = process.platform === "win32" ? "where" : "which";
+        binary = execSync(`${cmd} ${binary}`, { encoding: "utf-8" }).trim().split("\n")[0];
       } catch {
         // fall through, hope it's in PATH
       }

@@ -476,6 +476,9 @@ export function Sidebar() {
           )}
           <span>{darkMode ? "Light mode" : "Dark mode"}</span>
         </button>
+        <p className="text-[10px] text-cc-muted/40 text-center pt-2">
+          {import.meta.env.VITE_STT_BACKEND === "component" ? "component" : "original"} v0.6.0
+        </p>
       </div>
 
       {/* Environment manager modal */}

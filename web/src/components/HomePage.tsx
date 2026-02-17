@@ -82,11 +82,12 @@ export function HomePage() {
         return before + (sB ? " " : "") + transcribed + (sA ? " " : "") + after;
       });
     }
+    voice.clearState();
     voiceCursorRef.current = -1;
   }, [voice]);
 
   // Insert voice text at cursor position (or end if -1)
-  const voiceActive = (voice.isListening || voice.isProcessing) && !!voice.interimText;
+  const voiceActive = !!voice.interimText;
   const vCursor = voiceCursorRef.current >= 0 ? Math.min(voiceCursorRef.current, text.length) : text.length;
   const vBefore = voiceActive ? text.slice(0, vCursor) : "";
   const vAfter = voiceActive ? text.slice(vCursor) : "";
@@ -256,6 +257,7 @@ export function HomePage() {
   }, [displayText]);
 
   function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    if (voice.isListening || voice.isProcessing) return;
     setText(e.target.value);
   }
 
@@ -278,6 +280,7 @@ export function HomePage() {
     // Stop voice and include transcription if mic is on
     if (voice.isListening) {
       const transcribed = await voice.stop();
+      voice.clearState();
       if (transcribed) {
         const pos = voiceCursorRef.current;
         const at = pos >= 0 ? Math.min(pos, msg.length) : msg.length;

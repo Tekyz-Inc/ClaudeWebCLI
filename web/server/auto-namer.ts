@@ -5,7 +5,8 @@ let resolvedBinary: string | null = null;
 function resolveClaudeBinary(): string {
   if (resolvedBinary) return resolvedBinary;
   try {
-    resolvedBinary = execSync("which claude", { encoding: "utf-8" }).trim();
+    const cmd = process.platform === "win32" ? "where claude" : "which claude";
+    resolvedBinary = execSync(cmd, { encoding: "utf-8" }).trim().split("\n")[0];
   } catch {
     resolvedBinary = "claude";
   }

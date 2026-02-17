@@ -52,6 +52,7 @@ export interface UseVoiceReturn {
   useWhisper: boolean;
   start: () => void;
   stop: () => Promise<string>;
+  clearState: () => void;
 }
 
 type ActiveBackend = "whisper" | "speech" | null;
@@ -243,7 +244,8 @@ export function useVoiceInput(): UseVoiceReturn {
     if (whisper.state.isModelLoaded) {
       setIsProcessing(true);
       const whisperText = await whisper.stopRecording();
-      setIsProcessing(false);
+      // Don't clear isProcessing here — consumer calls clearState()
+      // after inserting text, so the display doesn't flash empty.
       return whisperText || speechText;
     }
 
@@ -266,6 +268,14 @@ export function useVoiceInput(): UseVoiceReturn {
     activeBackendRef.current = null;
     return stopSpeechPreview();
   }, [stopSpeechPreview]);
+
+  /* ─── Clear state (called by consumer after inserting text) */
+
+  const clearState = useCallback(() => {
+    setInterimText("");
+    setCorrectedText("");
+    setIsProcessing(false);
+  }, []);
 
   /* ─── Unified interface ─────────────────────────────── */
 
@@ -321,5 +331,6 @@ export function useVoiceInput(): UseVoiceReturn {
     useWhisper: activeWhisper,
     start,
     stop,
+    clearState,
   };
 }

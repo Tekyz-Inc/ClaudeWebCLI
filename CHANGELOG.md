@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.6.0] - 2026-02-17
+
+### Added
+- STT-component toggle mode: `bun run dev --component` runs on ports 3457/5175 using @tekyz/stt-component via Vite resolve.alias swap
+- Playwright E2E test infrastructure with 22 tests across dual projects (original + component), covering page load, sidebar, textarea, voice input, dark mode, edge cases, and responsive layout
+- Backlog management files (backlog.md, backlog-settings.md) with 4 initial items
+- Version label in sidebar footer showing mode and version
+
+### Fixed
+- Voice input display flash-clear on stop: hooks now keep state populated until consumer calls `clearState()` after inserting text
+- Spacebar duplicating voice text while recording: added `isListening || isProcessing` guard to handleInput in both Composer and HomePage
+- Component-mode mid-recording text duplication: `skipFinalsRef` pattern skips Speech API finals after Whisper correction while keeping interims streaming
+- Windows `which` command not recognized: use `where` on Windows in cli-launcher.ts and auto-namer.ts
+- kill-ports.ps1 PowerShell `$pid` reserved variable conflict: renamed to `$procId`
+
 ## [0.14.1](https://github.com/The-Vibe-Company/companion/compare/the-vibe-companion-v0.14.0...the-vibe-companion-v0.14.1) (2026-02-10)
 
 
