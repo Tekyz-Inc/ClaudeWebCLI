@@ -186,7 +186,7 @@ export class CliLauncher {
     if (!binary.startsWith("/") && !binary.match(/^[A-Z]:\\/i)) {
       try {
         const cmd = process.platform === "win32" ? "where" : "which";
-        binary = execSync(`${cmd} ${binary}`, { encoding: "utf-8" }).trim().split("\n")[0];
+        binary = execSync(`${cmd} ${binary}`, { encoding: "utf-8" }).trim().split("\n")[0].trim();
       } catch {
         // fall through, hope it's in PATH
       }
