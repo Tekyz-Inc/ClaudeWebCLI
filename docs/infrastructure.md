@@ -62,10 +62,12 @@ Ctrl+C kills both. If either process exits unexpectedly, the other is killed aut
 
 During development, the Vite dev server proxies `/api` and `/ws` requests to the backend on `:3456`. In production, the backend serves the built frontend from `web/dist/`.
 
+> **Windows / Bitdefender:** Port 3456 may be blocked. Use `$env:PORT=3457; bun run dev` to shift the backend to `:3457`. Vite reads the same env var and updates its proxy automatically. Access the app on `:5174` in both cases.
+
 ### Access the App
 
-- **Development:** Open `http://localhost:5174`
-- **Production:** Open `http://localhost:3456`
+- **Development:** Open `http://localhost:5174` (Vite proxies API to the backend port)
+- **Production:** Open `http://localhost:3456` (or whichever port `PORT` is set to)
 
 ---
 

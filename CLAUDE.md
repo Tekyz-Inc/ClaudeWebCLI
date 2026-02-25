@@ -204,7 +204,11 @@ If in doubt, skip research and proceed — we can research if execution reveals 
     cd web
     bun run dev
 
-Then open http://localhost:3456
+Then open http://localhost:5174 (Vite frontend — proxies API to :3456)
+
+> **Windows / Bitdefender note:** If port 3456 is blocked, use:
+>     $env:PORT=3457; bun run dev
+> Then open http://localhost:5174 (backend moves to :3457; Vite still serves on :5174)
 
 ### Production build:
 
