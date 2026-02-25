@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { useStore } from "./store.js";
 import { connectSession } from "./ws.js";
 import { Sidebar } from "./components/Sidebar.js";
@@ -27,6 +27,9 @@ export default function App() {
   const activeTab = useStore((s) => s.activeTab);
   const terminalOpen = useStore((s) => s.terminalOpen);
   const activeProjectCwd = useStore((s) => s.activeProjectCwd);
+  // Lazy-mount: only spawn terminal WebSocket/PTY after first open
+  const terminalMountedRef = useRef(false);
+  if (terminalOpen) terminalMountedRef.current = true;
   const sdkSessions = useStore((s) => s.sdkSessions);
   const hash = useHash();
 
@@ -114,7 +117,7 @@ export default function App() {
           </div>
         </>
       )}
-      {/* Terminal panel — always mounted to preserve session across open/close */}
+      {/* Terminal panel — lazy-mount on first open, then keep mounted to preserve session */}
       {(() => {
         const currentSession = sdkSessions.find((s) => s.sessionId === currentSessionId);
         const termCwd = activeProjectCwd || currentSession?.cwd || undefined;
@@ -127,7 +130,7 @@ export default function App() {
               overflow-hidden
             `}
           >
-            <TerminalPanel cwd={termCwd} />
+            {terminalMountedRef.current && <TerminalPanel cwd={termCwd} />}
           </div>
         );
       })()}
