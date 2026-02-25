@@ -4,6 +4,7 @@ import { sendToSession } from "../ws.js";
 import { api } from "../api.js";
 import { usePromptHistory } from "../hooks/use-prompt-history.js";
 import { useVoiceInput } from "../hooks/use-voice-input.js";
+import { SpeechMonitor } from "./SpeechMonitor.js";
 import { requestNotificationPermission } from "../utils/notifications.js";
 
 let idCounter = 0;
@@ -296,7 +297,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
   }, [displayText]);
 
   function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    if (voice.isListening || voice.isProcessing) return;
+    if (voice.isListening || voice.isProcessing || voice.isStarting) return;
     setText(e.target.value);
   }
 
@@ -384,6 +385,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
   const canSend = displayText.trim().length > 0 && isConnected;
 
   return (
+  <>
     <div
       className="shrink-0 border-t border-cc-border bg-cc-card px-2 sm:px-4 py-2 sm:py-3 relative"
       onDragEnter={handleDragEnter}
@@ -567,12 +569,12 @@ export function Composer({ sessionId }: { sessionId: string }) {
             <div className="flex items-center gap-1">
               {voice.isSupported && (
                 <button
-                  onClick={voice.isListening ? handleStopVoice : voice.isProcessing ? undefined : handleStartVoice}
-                  disabled={!isConnected || voice.isProcessing || voice.isModelLoading}
+                  onClick={voice.isListening ? handleStopVoice : (voice.isProcessing || voice.isStarting) ? undefined : handleStartVoice}
+                  disabled={!isConnected || voice.isProcessing || voice.isStarting || voice.isModelLoading}
                   className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
                     !isConnected || voice.isModelLoading
                       ? "text-cc-muted opacity-30 cursor-not-allowed"
-                      : voice.isProcessing
+                      : voice.isProcessing || voice.isStarting
                       ? "text-cc-primary opacity-60 cursor-wait"
                       : voice.isListening
                       ? "text-cc-error hover:bg-cc-error/10 cursor-pointer"
@@ -580,12 +582,13 @@ export function Composer({ sessionId }: { sessionId: string }) {
                   }`}
                   title={
                     voice.isModelLoading ? `Loading voice model (${Math.round(voice.loadProgress)}%)`
+                    : voice.isStarting ? "Starting..."
                     : voice.isProcessing ? "Transcribing..."
                     : voice.isListening ? "Stop recording"
                     : "Voice input"
                   }
                 >
-                  {voice.isProcessing ? (
+                  {voice.isProcessing || voice.isStarting ? (
                     <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 animate-spin">
                       <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" strokeDasharray="28" strokeDashoffset="8" strokeLinecap="round" />
                     </svg>
@@ -654,5 +657,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
         </div>
       </div>
     </div>
+    <SpeechMonitor />
+  </>
   );
 }

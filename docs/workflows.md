@@ -2,8 +2,8 @@
 
 Living document describing user-facing and technical workflows in ClaudeWebCLI.
 
-**Last Updated:** 2026-02-10
-**Version:** 0.14.1
+**Last Updated:** 2026-02-17
+**Version:** 0.6.0
 
 ---
 
@@ -17,6 +17,7 @@ Living document describing user-facing and technical workflows in ClaudeWebCLI.
   - [UW-5: Plan Mode Toggle](#uw-5-plan-mode-toggle)
   - [UW-6: File Editing](#uw-6-file-editing)
   - [UW-7: Environment Management](#uw-7-environment-management)
+  - [UW-8: Voice Input (Dictation)](#uw-8-voice-input-dictation)
 - [Technical Workflows](#technical-workflows)
   - [TW-1: CLI Process Lifecycle](#tw-1-cli-process-lifecycle)
   - [TW-2: WebSocket Connection Lifecycle](#tw-2-websocket-connection-lifecycle)
@@ -26,6 +27,8 @@ Living document describing user-facing and technical workflows in ClaudeWebCLI.
   - [TW-6: Session Persistence](#tw-6-session-persistence)
   - [TW-7: Git Worktree Creation and Cleanup](#tw-7-git-worktree-creation-and-cleanup)
   - [TW-8: Task Extraction from Tool Use Blocks](#tw-8-task-extraction-from-tool-use-blocks)
+  - [TW-9: Voice Mode Architecture](#tw-9-voice-mode-architecture)
+  - [TW-10: Voice Correction with Session Counter](#tw-10-voice-correction-with-session-counter)
 
 ---
 
@@ -241,6 +244,63 @@ Environment sets store groups of environment variables that are injected into CL
 - When creating a session, the selected environment's variables are resolved and passed to the CLI process
 
 **Storage:** All environment sets are stored as plaintext JSON in `~/.companion/envs/`. Variables may contain secrets (API keys, tokens) -- they are not encrypted.
+
+---
+
+### UW-8: Voice Input (Dictation)
+
+**Entry Points:** Composer (`web/src/components/Composer.tsx`), HomePage (`web/src/components/HomePage.tsx`)
+
+Users can dictate text via a microphone button instead of typing. Three voice modes are available, selectable at runtime via a dropdown in the Composer.
+
+**Modes:**
+
+| Mode | Backend | Streaming | Correction | Hook |
+|------|---------|-----------|------------|------|
+| **Original** | App's Whisper worker + Web Speech API | Speech API interims | App's pause/timer triggers | `use-voice-input.ts` |
+| **Whisper** | STTEngine component + Web Speech API | Speech API interims | STTEngine's correction events | `use-voice-input-component.ts` |
+| **Full** | STTEngine component + Web Speech API | Speech API interims | STTEngine's correction events | `use-voice-input-full.ts` |
+
+**Steps:**
+
+1. **Select Mode** -- Use the VoiceModeSelector dropdown next to the mic button. Choice persists in Zustand store.
+
+2. **Start Recording** -- Click the mic button. All modes:
+   - Start the backend (Whisper worker or STTEngine)
+   - Start Web Speech API for streaming preview
+   - Set `speechSessionRef = 1`
+
+3. **Streaming Preview** -- Web Speech API provides real-time text as the user speaks:
+   - Interim results show in italic text in the textarea
+   - Final results accumulate in `accumulatedRef`
+   - Display: `accumulatedRef + " " + currentInterim`
+
+4. **Mid-Recording Correction** -- Whisper corrects the accumulated text:
+   - **Original mode**: triggered on pause (>=3s silence) or forced timer (every 5s)
+   - **Whisper/Full modes**: triggered by STTEngine's internal correction orchestrator
+   - Corrected text replaces `accumulatedRef`, shown as solid (non-italic) text
+   - Session counter tracks which Speech API session the correction happened in
+
+5. **Resume Speaking** -- After correction, user continues speaking:
+   - Speech API may have restarted (new session) or may still be running (same session)
+   - Session counter determines whether to prepend corrected text to new interims (see TW-10)
+
+6. **Stop Recording** -- Click mic button again or click Send:
+   - Speech API stopped, backend produces final transcription
+   - Final Whisper text preferred over Speech API accumulation
+   - Text inserted at cursor position in the textarea
+
+7. **Send** -- If Send is clicked while recording, mic stops first with final Whisper transcription, then the message is sent.
+
+**Voice Event Monitor** -- The SpeechMonitor component (bottom of screen) shows real-time events with mode badges (ORIGINAL/WHISPER/FULL), event types (WSAPI interim/final, Whisper correction), and speech text in quotes. Collapsed by default.
+
+```
+User selects mode -> Click mic -> Start backend + Speech API
+  -> Speech API streams interims (italic text)
+  -> Whisper corrects periodically (solid text)
+  -> User continues speaking -> corrected text preserved
+  -> Click mic/Send -> Final Whisper transcription -> Insert text
+```
 
 ---
 
@@ -563,6 +623,146 @@ assistant message received -> scan content blocks for tool_use
 
 ---
 
+### TW-9: Voice Mode Architecture
+
+**Source:** `web/src/hooks/use-voice-mode.ts` (wrapper), `web/src/hooks/use-voice-input.ts` (original), `web/src/hooks/use-voice-input-component.ts` (whisper), `web/src/hooks/use-voice-input-full.ts` (full)
+
+The voice system has three modes sharing a common interface (`UseVoiceReturn`). A wrapper hook calls all three unconditionally (React rules of hooks) and returns the active one's state.
+
+**Mode Selection:**
+- Zustand store (`useVoiceModeStore`) holds `voiceMode: "original" | "whisper" | "full"`
+- `useVoiceMode()` wrapper reads the store and delegates to the active hook
+- All three hooks run simultaneously but only the active one's state is returned
+
+**Common Pattern — Dual Backend:**
+
+All three modes use the same dual-backend pattern for streaming + correction:
+
+```
+┌──────────────────────────────┐     ┌──────────────────────────────┐
+│  Web Speech API              │     │  Whisper Backend              │
+│  (streaming preview)         │     │  (correction)                 │
+│                              │     │                               │
+│  continuous = true           │     │  Original: Web Worker          │
+│  interimResults = true       │     │    (use-whisper.ts)            │
+│  lang = "en-US"              │     │  Whisper/Full: STTEngine       │
+│                              │     │    (@tekyzinc/stt-component)   │
+│  Provides: real-time text    │     │  Provides: corrected text      │
+│  (interim + final results)   │     │  (better punctuation/caps)     │
+└──────────────────────────────┘     └──────────────────────────────┘
+         │                                       │
+         ▼                                       ▼
+┌────────────────────────────────────────────────────────────────────┐
+│  Display Logic (shared across all modes)                           │
+│                                                                    │
+│  interimText = accumulatedRef + " " + currentInterim               │
+│  (unless same session as last correction → show raw interim)       │
+│  correctedText = last Whisper correction result                    │
+│  displayText = correctedText || interimText                        │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+**Mode Differences:**
+
+| Aspect | Original | Whisper | Full |
+|--------|----------|---------|------|
+| Whisper backend | App's Web Worker (`use-whisper.ts`) | STTEngine | STTEngine |
+| Correction trigger | App's pause (3s) + forced timer (5s) | STTEngine internal | STTEngine internal |
+| Audio capture | App's raw PCM via ScriptProcessorNode | STTEngine | STTEngine |
+| Model loading | App manages (`whisper.loadModel()`) | STTEngine manages | STTEngine manages |
+| Worker URL | `whisper-worker.ts` | `stt-component-worker.ts` | `stt-component-worker.ts` |
+
+**Voice Event Bus:**
+
+`web/src/hooks/voice-events.ts` provides a module-level pub/sub for real-time monitoring:
+- `emitVoiceEvent()` auto-populates `mode` from Zustand store and `timestamp` from `Date.now()`
+- `subscribeVoiceEvents()` returns an unsubscribe function
+- Events: `speech-interim`, `speech-final`, `whisper-correction`, `whisper-status`, `engine-event`
+- Consumer: `SpeechMonitor.tsx` displays events with mode-colored badges
+
+---
+
+### TW-10: Voice Correction with Session Counter
+
+**Source:** All three voice hooks (`use-voice-input.ts`, `use-voice-input-component.ts`, `use-voice-input-full.ts`)
+
+The session counter prevents two problems after Whisper correction:
+1. **Text duplication** — Speech API finals/interims from the same session overlap with corrected text
+2. **Text disappearance** — After Speech API restart, interims are fresh but corrected text is lost if not prepended
+
+**State:**
+
+| Ref | Purpose |
+|-----|---------|
+| `speechSessionRef` | Counter incremented on each Speech API start/restart |
+| `correctionSessionRef` | Set to `speechSessionRef.current` when a correction happens |
+| `accumulatedRef` | Running text: finals accumulate, corrections replace entirely |
+
+**Decision Matrix:**
+
+```
+sameSession = (correctionSessionRef === speechSessionRef)
+
+             │ sameSession (YES)         │ sameSession (NO)
+─────────────┼───────────────────────────┼──────────────────────────
+  Finals     │ SKIP (overlap with        │ ACCUMULATE into
+             │ corrected text)           │ accumulatedRef
+─────────────┼───────────────────────────┼──────────────────────────
+  Interims   │ SHOW RAW interim          │ PREPEND accumulatedRef
+             │ (covers same audio)       │ (corrected text + new)
+```
+
+**Flow — Correction via onend (user pauses):**
+
+```
+Session #1 running
+  │
+  ▼ user pauses → Speech API fires onend
+  │
+  ├─ 1. correctionFn() fires async — captures corrSession = 1
+  ├─ 2. speechSession++ → 2
+  └─ 3. recognition.start() → Session #2 begins
+                                    │
+         ┌──────────────────────────┘
+         ▼
+  Session #2: interims arrive
+    correctionSession (-1) ≠ speechSession (2)
+    → prepend accumulatedRef (old finals) ✓
+         │
+         ▼ async correction resolves
+    accumulatedRef = "Corrected text."
+    correctionSession = 1 (captured before restart)
+         │
+         ▼
+  More interims from Session #2:
+    correctionSession (1) ≠ speechSession (2)
+    → prepend "Corrected text." + new speech ✓
+```
+
+**Flow — Correction via forced timer (no restart, Original mode only):**
+
+```
+Session #1 running, forced timer fires every 5s
+  │
+  ├─ correctionFn() async — captures corrSession = 1
+  ├─ correction resolves: accumulatedRef = corrected, correctionSession = 1
+  │
+  ▼ interims from Session #1:
+    correctionSession (1) === speechSession (1) → sameSession
+    → show raw interim (may cover same audio, avoids duplication) ✓
+         │
+         ▼ user pauses → onend → speechSession = 2 → restart
+  interims from Session #2:
+    correctionSession (1) ≠ speechSession (2)
+    → prepend corrected text ✓
+```
+
+**Why this beats the boolean `skipFinalsRef`:**
+
+The boolean approach had an async race condition: `onend` set `skipFinalsRef = false`, then the async correction resolved and set it back to `true`, causing interims from a fresh session to lose the corrected text. The session counter captures the session identity at correction start (before `await`), so it correctly identifies which session the correction belongs to regardless of async timing.
+
+---
+
 ## Cross-Reference: Key Timeouts and Limits
 
 | Parameter | Value | Location | Purpose |
@@ -591,3 +791,6 @@ assistant message received -> scan content blocks for tool_use
 | Random name pool | 1600 | `names.ts` | 40 adjectives x 40 nouns |
 | Random name retries | 100 | `names.ts` | Collision avoidance |
 | Worktree suffix retries | 100 | `git-utils.ts` | Branch name collision avoidance |
+| Voice pause threshold | 3000ms | `use-voice-input.ts` | Min silence before correction |
+| Voice forced correction | 5000ms | `use-voice-input.ts` | Max time between corrections |
+| Voice event buffer | 100 events | `SpeechMonitor.tsx` | Max events in monitor |

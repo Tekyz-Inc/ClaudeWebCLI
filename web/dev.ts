@@ -10,19 +10,10 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const webDir = resolve(__dirname);
 
-const isComponent = process.argv.includes("--component");
 const baseEnv: Record<string, string | undefined> = {
   ...process.env,
   NODE_ENV: "development",
-  ...(isComponent
-    ? { VITE_STT_BACKEND: "component", PORT: "3457" }
-    : {}),
 };
-
-if (isComponent) {
-  const cyan = "\x1b[36m", reset = "\x1b[0m";
-  console.log(`${cyan}[component] Running with @tekyz/stt-component on ports 3457/5175${reset}`);
-}
 
 const procs: Subprocess[] = [];
 

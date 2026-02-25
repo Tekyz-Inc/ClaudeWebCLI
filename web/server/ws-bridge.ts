@@ -31,7 +31,13 @@ interface BrowserSocketData {
   sessionId: string;
 }
 
-export type SocketData = CLISocketData | BrowserSocketData;
+interface TerminalSocketData {
+  kind: "terminal";
+  terminalId: string;
+  cwd?: string;
+}
+
+export type SocketData = CLISocketData | BrowserSocketData | TerminalSocketData;
 
 // ─── Session ──────────────────────────────────────────────────────────────────
 

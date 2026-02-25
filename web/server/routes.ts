@@ -330,6 +330,28 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
     return c.json({ ok: true });
   });
 
+  // ─── GSD-T Projects ──────────────────────────────────────────────────
+
+  api.get("/projects", async (c) => {
+    const projectsFile = join(homedir(), ".claude", ".gsd-t-projects");
+    try {
+      const content = await readFile(projectsFile, "utf-8");
+      const projects = content
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => {
+          const parts = line.split("|");
+          const path = (parts.length >= 2 ? parts[1] : parts[0]).trim().replace(/\\/g, "/");
+          const name = parts.length >= 2 ? parts[0].trim() : (path.split("/").pop() || path);
+          return { name, path };
+        });
+      return c.json({ projects });
+    } catch {
+      return c.json({ projects: [] });
+    }
+  });
+
   // ─── Git operations ─────────────────────────────────────────────────
 
   api.get("/git/repo-info", (c) => {

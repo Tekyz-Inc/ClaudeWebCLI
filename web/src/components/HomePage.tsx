@@ -4,6 +4,7 @@ import { api, type CompanionEnv, type GitRepoInfo, type GitBranchInfo } from "..
 import { connectSession, waitForConnection, sendToSession } from "../ws.js";
 import { disconnectSession } from "../ws.js";
 import { useVoiceInput } from "../hooks/use-voice-input.js";
+import { SpeechMonitor } from "./SpeechMonitor.js";
 import { getRecentDirs, addRecentDir } from "../utils/recent-dirs.js";
 import { EnvManager } from "./EnvManager.js";
 import { FolderPicker } from "./FolderPicker.js";
@@ -30,7 +31,7 @@ function readFileAsBase64(file: File): Promise<{ base64: string; mediaType: stri
 
 const MODELS = [
   { value: "claude-opus-4-6", label: "Opus", icon: "\u2733" },
-  { value: "claude-sonnet-4-5-20250929", label: "Sonnet", icon: "\u25D0" },
+  { value: "claude-sonnet-4-6", label: "Sonnet", icon: "\u25D0" },
   { value: "claude-haiku-4-5-20251001", label: "Haiku", icon: "\u26A1" },
 ];
 
@@ -45,7 +46,7 @@ let idCounter = 0;
 
 export function HomePage() {
   const [text, setText] = useState("");
-  const [model, setModel] = useState(MODELS[0].value);
+  const [model, setModel] = useState(MODELS[1].value);
   const [mode, setMode] = useState(MODES[0].value);
   const [cwd, setCwd] = useState(() => getRecentDirs()[0] || "");
   const [images, setImages] = useState<ImageAttachment[]>([]);
@@ -360,7 +361,8 @@ export function HomePage() {
   const canSend = displayText.trim().length > 0 && !sending;
 
   return (
-    <div className="flex-1 h-full flex items-center justify-center px-3 sm:px-4">
+  <div className="flex flex-col h-full">
+    <div className="flex-1 min-h-0 overflow-auto flex items-center justify-center px-3 sm:px-4">
       <div className="w-full max-w-2xl">
         {/* Logo + Title */}
         <div className="flex flex-col items-center justify-center mb-4 sm:mb-6">
@@ -794,5 +796,7 @@ export function HomePage() {
         />
       )}
     </div>
+    <SpeechMonitor />
+  </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import CodeMirror from "@uiw/react-codemirror";
+import { DiffView } from "./DiffView.js";
 import { EditorView } from "@codemirror/view";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { javascript } from "@codemirror/lang-javascript";
@@ -160,28 +161,6 @@ function FileTreeNode({
   );
 }
 
-function DiffView({ diff }: { diff: string }) {
-  if (!diff) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <p className="text-cc-muted text-sm">No changes</p>
-      </div>
-    );
-  }
-  const lines = diff.split("\n");
-  return (
-    <div className="h-full overflow-auto font-mono-code text-[13px] p-4">
-      {lines.map((line, i) => {
-        let cls = "text-cc-fg/60";
-        if (line.startsWith("+") && !line.startsWith("+++")) cls = "bg-cc-success/10 text-cc-success";
-        else if (line.startsWith("-") && !line.startsWith("---")) cls = "bg-cc-error/10 text-cc-error";
-        else if (line.startsWith("@@")) cls = "text-cc-primary";
-        else if (line.startsWith("diff") || line.startsWith("index")) cls = "text-cc-muted";
-        return <div key={i} className={`px-2 ${cls}`}>{line || "\u00A0"}</div>;
-      })}
-    </div>
-  );
-}
 
 export function EditorPanel({ sessionId }: { sessionId: string }) {
   const darkMode = useStore((s) => s.darkMode);

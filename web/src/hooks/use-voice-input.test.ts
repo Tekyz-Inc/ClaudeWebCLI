@@ -2,378 +2,328 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 
-// Mock use-whisper to avoid loading transformers.js in tests
-const mockWhisper = {
-  state: {
-    isModelLoaded: false,
-    isModelLoading: false,
-    loadProgress: 0,
-    isSupported: false,
-    isTranscribing: false,
-    error: null,
-  },
-  loadModel: vi.fn(),
-  startRecording: vi.fn(),
-  stopRecording: vi.fn().mockResolvedValue(""),
-  cancelRecording: vi.fn(),
-  transcribeSnapshot: vi.fn().mockResolvedValue(""),
-  cancelTranscription: vi.fn(),
-};
+/* ─── Mock STTEngine ──────────────────────────────────── */
 
-vi.mock("./use-whisper.js", () => ({
-  useWhisper: () => mockWhisper,
+type EventHandler = (...args: unknown[]) => void;
+
+class MockSTTEngine {
+  private handlers: Record<string, EventHandler[]> = {};
+  initCalled = false;
+  startCalled = false;
+  stopCalled = false;
+  destroyCalled = false;
+  stopResult = "Final transcription.";
+
+  on(event: string, handler: EventHandler): void {
+    if (!this.handlers[event]) this.handlers[event] = [];
+    this.handlers[event].push(handler);
+  }
+
+  emit(event: string, ...args: unknown[]): void {
+    for (const h of this.handlers[event] ?? []) h(...args);
+  }
+
+  async init(): Promise<void> {
+    this.initCalled = true;
+  }
+
+  async start(): Promise<void> {
+    this.startCalled = true;
+  }
+
+  async stop(): Promise<string> {
+    this.stopCalled = true;
+    return this.stopResult;
+  }
+
+  destroy(): void {
+    this.destroyCalled = true;
+  }
+
+  getState(): { status: string } {
+    return { status: this.initCalled ? "ready" : "idle" };
+  }
+}
+
+let mockEngine: MockSTTEngine;
+
+vi.mock("@tekyzinc/stt-component", () => ({
+  STTEngine: class {
+    constructor() {
+      return mockEngine;
+    }
+  },
 }));
 
 import { useVoiceInput } from "./use-voice-input.js";
 
-let mockInstances: MockSpeechRecognition[] = [];
-
-class MockSpeechRecognition {
-  continuous = false;
-  interimResults = false;
-  lang = "";
-  onresult: ((e: unknown) => void) | null = null;
-  onerror: ((e: unknown) => void) | null = null;
-  onend: (() => void) | null = null;
-  start = vi.fn();
-  stop = vi.fn(() => {
-    this.onend?.();
-  });
-  abort = vi.fn();
-
-  constructor() {
-    mockInstances.push(this);
-  }
-}
+/* ─── Setup ───────────────────────────────────────────── */
 
 beforeEach(() => {
-  mockInstances = [];
+  mockEngine = new MockSTTEngine();
 });
 
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
+/* ─── Tests ───────────────────────────────────────────── */
 
 describe("useVoiceInput", () => {
-  it("reports unsupported when SpeechRecognition is absent and Whisper unavailable", () => {
-    const { result } = renderHook(() => useVoiceInput());
-    expect(result.current.isSupported).toBe(false);
-    expect(result.current.isListening).toBe(false);
-  });
-
-  it("reports supported when SpeechRecognition exists", () => {
-    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
+  it("reports supported when Worker is available", () => {
+    vi.stubGlobal("Worker", class {});
     const { result } = renderHook(() => useVoiceInput());
     expect(result.current.isSupported).toBe(true);
+    vi.unstubAllGlobals();
   });
 
-  it("reports supported with webkit prefix", () => {
-    vi.stubGlobal("webkitSpeechRecognition", MockSpeechRecognition);
+  it("initial state is idle", () => {
     const { result } = renderHook(() => useVoiceInput());
-    expect(result.current.isSupported).toBe(true);
-  });
-
-  it("start creates recognition instance and begins listening", () => {
-    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const { result } = renderHook(() => useVoiceInput());
-
-    act(() => result.current.start());
-
-    expect(result.current.isListening).toBe(true);
-    expect(mockInstances).toHaveLength(1);
-    expect(mockInstances[0].start).toHaveBeenCalled();
-    expect(mockInstances[0].continuous).toBe(true);
-  });
-
-  it("start does nothing when unsupported", () => {
-    const { result } = renderHook(() => useVoiceInput());
-
-    act(() => result.current.start());
-
     expect(result.current.isListening).toBe(false);
-    expect(mockInstances).toHaveLength(0);
-  });
-
-  it("stop returns accumulated transcript text", async () => {
-    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const { result } = renderHook(() => useVoiceInput());
-
-    act(() => result.current.start());
-
-    const instance = mockInstances[0];
-    act(() => {
-      instance.onresult?.({
-        resultIndex: 0,
-        results: {
-          length: 1,
-          item: () => null,
-          0: {
-            isFinal: true,
-            length: 1,
-            item: () => ({ transcript: "hello world", confidence: 0.9 }),
-            0: { transcript: "hello world", confidence: 0.9 },
-          },
-        },
-      });
-    });
-
-    let text = "";
-    await act(async () => {
-      text = await result.current.stop();
-    });
-
-    expect(text).toBe("hello world");
-    expect(result.current.isListening).toBe(false);
-  });
-
-  it("sets interimText for non-final results", () => {
-    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const { result } = renderHook(() => useVoiceInput());
-
-    act(() => result.current.start());
-
-    const instance = mockInstances[0];
-    act(() => {
-      instance.onresult?.({
-        resultIndex: 0,
-        results: {
-          length: 1,
-          item: () => null,
-          0: {
-            isFinal: false,
-            length: 1,
-            item: () => ({ transcript: "hello", confidence: 0.5 }),
-            0: { transcript: "hello", confidence: 0.5 },
-          },
-        },
-      });
-    });
-
-    expect(result.current.interimText).toBe("hello");
-  });
-
-  it("accumulates multiple final results", async () => {
-    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const { result } = renderHook(() => useVoiceInput());
-
-    act(() => result.current.start());
-
-    const instance = mockInstances[0];
-    act(() => {
-      instance.onresult?.({
-        resultIndex: 0,
-        results: {
-          length: 1,
-          item: () => null,
-          0: {
-            isFinal: true,
-            length: 1,
-            item: () => ({ transcript: "hello", confidence: 0.9 }),
-            0: { transcript: "hello", confidence: 0.9 },
-          },
-        },
-      });
-    });
-    act(() => {
-      instance.onresult?.({
-        resultIndex: 1,
-        results: {
-          length: 2,
-          item: () => null,
-          1: {
-            isFinal: true,
-            length: 1,
-            item: () => ({ transcript: "world", confidence: 0.9 }),
-            0: { transcript: "world", confidence: 0.9 },
-          },
-        },
-      });
-    });
-
-    let text = "";
-    await act(async () => {
-      text = await result.current.stop();
-    });
-
-    expect(text).toBe("hello world");
-  });
-
-  it("sets error on recognition error", () => {
-    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const { result } = renderHook(() => useVoiceInput());
-
-    act(() => result.current.start());
-
-    const instance = mockInstances[0];
-    act(() => {
-      instance.onerror?.({ error: "not-allowed" });
-    });
-
-    expect(result.current.error).toBe("not-allowed");
-    expect(result.current.isListening).toBe(false);
-  });
-
-  it("resets isListening when recognition ends", () => {
-    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
-    const { result } = renderHook(() => useVoiceInput());
-
-    act(() => result.current.start());
-    expect(result.current.isListening).toBe(true);
-
-    act(() => {
-      mockInstances[0].onend?.();
-    });
-
-    expect(result.current.isListening).toBe(false);
-  });
-
-  it("exposes Whisper state properties", () => {
-    const { result } = renderHook(() => useVoiceInput());
+    expect(result.current.isStarting).toBe(false);
+    expect(result.current.isProcessing).toBe(false);
+    expect(result.current.interimText).toBe("");
+    expect(result.current.correctedText).toBe("");
+    expect(result.current.error).toBeNull();
     expect(result.current.isModelLoaded).toBe(false);
     expect(result.current.isModelLoading).toBe(false);
     expect(result.current.loadProgress).toBe(0);
     expect(result.current.useWhisper).toBe(false);
-    expect(result.current.isProcessing).toBe(false);
-  });
-});
-
-describe("useVoiceInput — mid-recording correction", () => {
-  let dateNowSpy: ReturnType<typeof vi.spyOn>;
-  let fakeNow: number;
-
-  beforeEach(() => {
-    fakeNow = 1000;
-    dateNowSpy = vi.spyOn(Date, "now").mockImplementation(() => fakeNow);
-    mockWhisper.state.isSupported = true;
-    mockWhisper.state.isModelLoaded = true;
-    mockWhisper.state.isModelLoading = false;
-    mockWhisper.transcribeSnapshot.mockResolvedValue("Corrected text.");
-    mockWhisper.cancelTranscription.mockClear();
-    mockWhisper.transcribeSnapshot.mockClear();
-    mockWhisper.startRecording.mockClear();
-    mockWhisper.stopRecording.mockResolvedValue("Final corrected.");
-    vi.stubGlobal("SpeechRecognition", MockSpeechRecognition);
   });
 
-  afterEach(() => {
-    dateNowSpy.mockRestore();
-    mockWhisper.state.isSupported = false;
-    mockWhisper.state.isModelLoaded = false;
-  });
-
-  it("triggers correction on Speech API pause after >= 3s", async () => {
+  it("start() inits engine and begins listening", async () => {
     const { result } = renderHook(() => useVoiceInput());
 
-    act(() => result.current.start());
-
-    // Advance fake time past the 3s threshold
-    fakeNow += 3001;
-
-    // Simulate Speech API onend (pause)
-    const instance = mockInstances[0];
     await act(async () => {
-      instance.onend?.();
-      // Allow the async transcribeSnapshot promise to resolve
+      result.current.start();
       await Promise.resolve();
       await Promise.resolve();
     });
 
-    expect(mockWhisper.cancelTranscription).toHaveBeenCalled();
-    expect(mockWhisper.transcribeSnapshot).toHaveBeenCalled();
-    expect(result.current.interimText).toBe("Corrected text.");
-    expect(result.current.correctedText).toBe("Corrected text.");
+    expect(mockEngine.initCalled).toBe(true);
+    expect(mockEngine.startCalled).toBe(true);
+    expect(result.current.isListening).toBe(true);
   });
 
-  it("does NOT trigger correction before 3s threshold", async () => {
+  it("isStarting is false after engine init completes", async () => {
     const { result } = renderHook(() => useVoiceInput());
 
-    act(() => result.current.start());
-
-    // Only 2s elapsed — below threshold
-    fakeNow += 2000;
-
-    const instance = mockInstances[0];
     await act(async () => {
-      instance.onend?.();
-      await Promise.resolve();
-    });
-
-    expect(mockWhisper.transcribeSnapshot).not.toHaveBeenCalled();
-  });
-
-  it("cancels previous transcription before new correction", async () => {
-    const { result } = renderHook(() => useVoiceInput());
-
-    act(() => result.current.start());
-
-    // First correction
-    fakeNow += 3001;
-    const instance = mockInstances[0];
-    await act(async () => {
-      instance.onend?.();
+      result.current.start();
       await Promise.resolve();
       await Promise.resolve();
     });
 
-    expect(mockWhisper.cancelTranscription).toHaveBeenCalledTimes(1);
+    expect(result.current.isStarting).toBe(false);
+    expect(result.current.isListening).toBe(true);
+  });
 
-    // Second correction after another 3s
-    fakeNow += 3001;
+  it("stop() returns engine transcription", async () => {
+    const { result } = renderHook(() => useVoiceInput());
+
     await act(async () => {
-      instance.onend?.();
+      result.current.start();
       await Promise.resolve();
       await Promise.resolve();
     });
 
-    expect(mockWhisper.cancelTranscription).toHaveBeenCalledTimes(2);
-    expect(mockWhisper.transcribeSnapshot).toHaveBeenCalledTimes(2);
+    let text = "";
+    await act(async () => {
+      text = await result.current.stop();
+    });
+
+    expect(text).toBe("Final transcription.");
+    expect(result.current.isListening).toBe(false);
+    expect(result.current.isProcessing).toBe(true);
   });
 
-  it("does not correct when model not loaded", async () => {
-    mockWhisper.state.isModelLoaded = false;
+  it("stop() returns empty string and destroys engine when hung past 2s timeout", async () => {
+    vi.useFakeTimers();
+    // Make stop() hang indefinitely
+    mockEngine.stop = () => new Promise<string>(() => {});
+
     const { result } = renderHook(() => useVoiceInput());
 
-    act(() => result.current.start());
-
-    fakeNow += 5001;
-    const instance = mockInstances[0];
     await act(async () => {
-      instance.onend?.();
+      result.current.start();
+      await Promise.resolve();
       await Promise.resolve();
     });
 
-    expect(mockWhisper.transcribeSnapshot).not.toHaveBeenCalled();
+    let text = "not-empty";
+    await act(async () => {
+      const stopPromise = result.current.stop();
+      await vi.advanceTimersByTimeAsync(2001);
+      text = await stopPromise;
+    });
+
+    expect(text).toBe("");
+    expect(mockEngine.destroyCalled).toBe(true);
+    vi.useRealTimers();
   });
 
-  it("correctedText resets to empty on new recording start", async () => {
+  it("clearState() resets display state", async () => {
     const { result } = renderHook(() => useVoiceInput());
 
-    // First recording + correction
-    act(() => result.current.start());
-    fakeNow += 3001;
-    const instance = mockInstances[0];
     await act(async () => {
-      instance.onend?.();
+      result.current.start();
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(result.current.correctedText).toBe("Corrected text.");
 
-    // Stop and start again
-    await act(async () => { await result.current.stop(); });
-    act(() => result.current.start());
-    expect(result.current.correctedText).toBe("");
-  });
-
-  it("stop cancels any in-flight correction", async () => {
-    const { result } = renderHook(() => useVoiceInput());
-
-    act(() => result.current.start());
+    act(() => {
+      mockEngine.emit("correction", "Some corrected text");
+    });
+    expect(result.current.correctedText).toBe("Some corrected text");
 
     await act(async () => {
       await result.current.stop();
     });
 
-    expect(mockWhisper.cancelTranscription).toHaveBeenCalled();
+    act(() => {
+      result.current.clearState();
+    });
+
+    expect(result.current.interimText).toBe("");
+    expect(result.current.correctedText).toBe("");
+    expect(result.current.isProcessing).toBe(false);
+  });
+});
+
+describe("useVoiceInput — engine events", () => {
+  it("transcript event updates interimText", async () => {
+    const { result } = renderHook(() => useVoiceInput());
+
+    await act(async () => {
+      result.current.start();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    act(() => {
+      mockEngine.emit("transcript", "hello world");
+    });
+
+    expect(result.current.interimText).toBe("hello world");
+  });
+
+  it("correction updates both correctedText and interimText", async () => {
+    const { result } = renderHook(() => useVoiceInput());
+
+    await act(async () => {
+      result.current.start();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    act(() => {
+      mockEngine.emit("correction", "  Hello world.  ");
+    });
+
+    expect(result.current.correctedText).toBe("Hello world.");
+    expect(result.current.interimText).toBe("Hello world.");
+  });
+
+  it("error event updates error state", async () => {
+    const { result } = renderHook(() => useVoiceInput());
+
+    await act(async () => {
+      result.current.start();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    act(() => {
+      mockEngine.emit("error", {
+        code: "MIC_DENIED",
+        message: "Microphone access denied",
+      });
+    });
+
+    expect(result.current.error).toBe("Microphone access denied");
+  });
+
+  it("status event updates model state", async () => {
+    const { result } = renderHook(() => useVoiceInput());
+
+    await act(async () => {
+      result.current.start();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    act(() => {
+      mockEngine.emit("status", {
+        isModelLoaded: true,
+        loadProgress: 100,
+        status: "idle",
+      });
+    });
+
+    expect(result.current.isModelLoaded).toBe(true);
+    expect(result.current.loadProgress).toBe(100);
+    expect(result.current.useWhisper).toBe(true);
+  });
+
+  it("ignores events after stop", async () => {
+    const { result } = renderHook(() => useVoiceInput());
+
+    await act(async () => {
+      result.current.start();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      await result.current.stop();
+    });
+
+    act(() => {
+      mockEngine.emit("correction", "late correction");
+    });
+
+    expect(result.current.correctedText).not.toBe("late correction");
+  });
+
+  it("correctedText resets on new recording start", async () => {
+    const { result } = renderHook(() => useVoiceInput());
+
+    await act(async () => {
+      result.current.start();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    act(() => {
+      mockEngine.emit("correction", "First correction");
+    });
+    expect(result.current.correctedText).toBe("First correction");
+
+    await act(async () => {
+      await result.current.stop();
+    });
+
+    act(() => result.current.clearState());
+
+    await act(async () => {
+      result.current.start();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(result.current.correctedText).toBe("");
+    expect(result.current.interimText).toBe("");
+  });
+});
+
+describe("useVoiceInput — cleanup", () => {
+  it("destroys engine on unmount", async () => {
+    const { result, unmount } = renderHook(() => useVoiceInput());
+
+    await act(async () => {
+      result.current.start();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    unmount();
+
+    expect(mockEngine.destroyCalled).toBe(true);
   });
 });

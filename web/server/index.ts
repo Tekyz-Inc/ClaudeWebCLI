@@ -1,5 +1,13 @@
 process.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = "1";
 
+// Suppress async ERR_SOCKET_CLOSED errors from node-pty when terminal WebSocket
+// closes while a write is still in-flight — these are harmless but would crash Bun.
+process.on("uncaughtException", (err: NodeJS.ErrnoException) => {
+  if (err.code === "ERR_SOCKET_CLOSED") return;
+  console.error("Uncaught exception:", err);
+  process.exit(1);
+});
+
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Hono } from "hono";
@@ -13,6 +21,7 @@ import { WorktreeTracker } from "./worktree-tracker.js";
 import { generateSessionTitle } from "./auto-namer.js";
 import * as sessionNames from "./session-names.js";
 import type { SocketData } from "./ws-bridge.js";
+import { handleTerminalOpen, handleTerminalMessage, handleTerminalClose } from "./terminal-ws.js";
 import type { ServerWebSocket } from "bun";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -109,6 +118,18 @@ const server = Bun.serve<SocketData>({
       return new Response("WebSocket upgrade failed", { status: 400 });
     }
 
+    // ── Terminal WebSocket — embedded PowerShell/shell terminal ─────────
+    const terminalMatch = url.pathname.match(/^\/ws\/terminal\/([^/]+)$/);
+    if (terminalMatch) {
+      const terminalId = terminalMatch[1];
+      const cwd = url.searchParams.get("cwd") || undefined;
+      const upgraded = server.upgrade(req, {
+        data: { kind: "terminal" as const, terminalId, cwd },
+      });
+      if (upgraded) return undefined;
+      return new Response("WebSocket upgrade failed", { status: 400 });
+    }
+
     // Hono handles the rest
     return app.fetch(req, server);
   },
@@ -120,6 +141,8 @@ const server = Bun.serve<SocketData>({
         launcher.markConnected(data.sessionId);
       } else if (data.kind === "browser") {
         wsBridge.handleBrowserOpen(ws, data.sessionId);
+      } else if (data.kind === "terminal") {
+        handleTerminalOpen(ws);
       }
     },
     message(ws: ServerWebSocket<SocketData>, msg: string | Buffer) {
@@ -128,6 +151,8 @@ const server = Bun.serve<SocketData>({
         wsBridge.handleCLIMessage(ws, msg);
       } else if (data.kind === "browser") {
         wsBridge.handleBrowserMessage(ws, msg);
+      } else if (data.kind === "terminal") {
+        handleTerminalMessage(ws, msg);
       }
     },
     close(ws: ServerWebSocket<SocketData>) {
@@ -136,6 +161,8 @@ const server = Bun.serve<SocketData>({
         wsBridge.handleCLIClose(ws);
       } else if (data.kind === "browser") {
         wsBridge.handleBrowserClose(ws);
+      } else if (data.kind === "terminal") {
+        handleTerminalClose(ws);
       }
     },
   },

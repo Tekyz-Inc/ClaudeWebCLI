@@ -1,19 +1,5 @@
 # Backlog
 
-## BL-001: Code Compare View
-- **Type:** feature
-- **Category:** ui
-- **App:** claudewebcli
-- **Added:** 2026-02-16
-- **Description:** Live code compare/diff view that shows file changes as they're being made. Enables users to see what Claude is changing in real-time with before/after comparison.
-
-## BL-002: Split View Terminal Session
-- **Type:** feature
-- **Category:** ui
-- **App:** claudewebcli
-- **Added:** 2026-02-16
-- **Description:** Split view with an embedded terminal/PowerShell session that automatically sets the working directory to the current project folder. Users can run commands alongside the Claude conversation without switching windows.
-
 ## BL-003: Web Viewer / App Preview
 - **Type:** feature
 - **Category:** ui

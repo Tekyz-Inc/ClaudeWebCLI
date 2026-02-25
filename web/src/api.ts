@@ -202,4 +202,8 @@ export const api = {
   getFileDiff: (path: string) =>
     get<{ path: string; diff: string }>(`/fs/diff?path=${encodeURIComponent(path)}`),
 
+  // GSD-T Projects
+  listProjects: () =>
+    get<{ projects: Array<{ name: string; path: string }> }>("/projects"),
+
 };

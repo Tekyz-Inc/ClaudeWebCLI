@@ -82,6 +82,7 @@ function makeTask(overrides: Partial<TaskItem> = {}): TaskItem {
 beforeEach(() => {
   useStore.getState().reset();
   localStorage.clear();
+  sessionStorage.clear();
 });
 
 // ─── Session management ─────────────────────────────────────────────────────
@@ -193,17 +194,17 @@ describe("Session management", () => {
     expect(useStore.getState().currentSessionId).toBe("s1");
   });
 
-  it("setCurrentSession: persists to localStorage", () => {
+  it("setCurrentSession: persists to sessionStorage", () => {
     useStore.getState().setCurrentSession("s1");
     expect(useStore.getState().currentSessionId).toBe("s1");
-    expect(localStorage.getItem("cc-current-session")).toBe("s1");
+    expect(sessionStorage.getItem("cc-current-session")).toBe("s1");
   });
 
-  it("setCurrentSession(null): removes from localStorage", () => {
+  it("setCurrentSession(null): removes from sessionStorage", () => {
     useStore.getState().setCurrentSession("s1");
     useStore.getState().setCurrentSession(null);
     expect(useStore.getState().currentSessionId).toBeNull();
-    expect(localStorage.getItem("cc-current-session")).toBeNull();
+    expect(sessionStorage.getItem("cc-current-session")).toBeNull();
   });
 });
 
@@ -453,7 +454,7 @@ describe("UI state", () => {
 
     expect(useStore.getState().currentSessionId).toBeNull();
     expect(useStore.getState().homeResetKey).toBe(keyBefore + 1);
-    expect(localStorage.getItem("cc-current-session")).toBeNull();
+    expect(sessionStorage.getItem("cc-current-session")).toBeNull();
   });
 });
 

@@ -8,7 +8,9 @@ import { tmpdir } from "node:os";
 // Mock randomUUID so session IDs are deterministic
 vi.mock("node:crypto", () => ({ randomUUID: () => "test-session-id" }));
 
-// Mock execSync for `which` command resolution
+// Mock execSync for `which`/`where` command resolution
+const isWin = process.platform === "win32";
+const mockClaudePath = isWin ? "C:\\Program Files\\claude.cmd" : "/usr/bin/claude";
 const mockExecSync = vi.hoisted(() => vi.fn(() => "/usr/bin/claude"));
 vi.mock("node:child_process", () => ({ execSync: mockExecSync }));
 
@@ -92,7 +94,7 @@ beforeEach(() => {
   launcher = new CliLauncher(3456);
   launcher.setStore(store);
   mockSpawn.mockReturnValue(createMockProc());
-  mockExecSync.mockReturnValue("/usr/bin/claude");
+  mockExecSync.mockReturnValue(mockClaudePath);
 });
 
 afterEach(() => {
@@ -118,7 +120,7 @@ describe("launch", () => {
     const [cmdAndArgs, options] = mockSpawn.mock.calls[0];
 
     // Binary should be resolved via execSync
-    expect(cmdAndArgs[0]).toBe("/usr/bin/claude");
+    expect(cmdAndArgs[0]).toBe(mockClaudePath);
 
     // Core required flags
     expect(cmdAndArgs).toContain("--sdk-url");
@@ -175,10 +177,11 @@ describe("launch", () => {
     expect(toolFlags).toEqual(["Read", "Write", "Bash"]);
   });
 
-  it("resolves binary path with `which` when not absolute", () => {
+  it("resolves binary path with `which`/`where` when not absolute", () => {
     launcher.launch({ claudeBinary: "claude-dev", cwd: "/tmp" });
 
-    expect(mockExecSync).toHaveBeenCalledWith("which claude-dev", {
+    const expectedCmd = isWin ? "where claude-dev" : "which claude-dev";
+    expect(mockExecSync).toHaveBeenCalledWith(expectedCmd, {
       encoding: "utf-8",
     });
   });

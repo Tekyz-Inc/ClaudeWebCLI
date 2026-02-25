@@ -75,6 +75,7 @@ ClaudeWebCLI/
     │   ├── routes.ts               # REST API: sessions, filesystem, git, environments
     │   ├── ws-bridge.ts            # Core bridge: CLI (NDJSON) <-> Browser (JSON) translation
     │   ├── cli-launcher.ts         # Spawns Claude CLI with --sdk-url; manages process lifecycle
+    │   ├── terminal-ws.ts          # Terminal WebSocket: spawns PowerShell/bash, relays stdin/stdout over /ws/terminal/:id
     │   ├── session-store.ts        # Disk persistence: JSON files in $TMPDIR/vibe-sessions/
     │   ├── session-types.ts        # All WebSocket protocol types (CLI + Browser messages)
     │   ├── session-names.ts        # Session name persistence (~/.companion/session-names.json)
@@ -104,7 +105,10 @@ ClaudeWebCLI/
     │   │   ├── HomePage.tsx        # Session creation: model, 4 permission modes, folder, project detect, branch, env
     │   │   ├── ToolBlock.tsx       # Collapsible tool call visualization with per-tool icons
     │   │   ├── TaskPanel.tsx       # Right sidebar: session stats (cost, context, turns) + task list
-    │   │   ├── EditorPanel.tsx     # CodeMirror editor: file tree, auto-save, diff view
+    │   │   ├── DiffView.tsx        # Side-by-side diff viewer: parses unified diff, two-column table with line numbers + color coding
+    │   │   ├── ProjectTabBar.tsx   # Thin scrollable tab bar: one tab per GSD-T project, status indicators (running/waiting/done)
+    │   │   ├── TerminalPanel.tsx   # Embedded xterm.js terminal: WS to /ws/terminal/:id, persists across open/close
+    │   │   ├── EditorPanel.tsx     # CodeMirror editor: file tree, auto-save, diff view (uses DiffView)
     │   │   ├── EnvManager.tsx      # Modal: environment variable set CRUD
     │   │   ├── FolderPicker.tsx    # Modal: folder browser with recent dirs
     │   │   └── Playground.tsx      # Dev-only component playground at #/playground
@@ -263,6 +267,12 @@ All endpoints are served by Hono on the bridge server (default port 3456).
 | PUT | `/api/envs/:slug` | Update environment set |
 | DELETE | `/api/envs/:slug` | Delete environment set |
 
+### Projects
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/projects` | List GSD-T projects from `~/.claude/.gsd-t-projects` |
+
 ### Git Operations
 
 | Method | Path | Purpose |
@@ -360,6 +370,16 @@ The CLI communicates using newline-delimited JSON. Each message is a single JSON
 | `user` | Send prompts or follow-up messages |
 | `control_response` | Respond to tool permission requests |
 | `control_request` | Server-initiated control (interrupt, set_model, set_permission_mode) |
+
+### 7.1b Terminal WebSocket (`/ws/terminal/:id?cwd=...`)
+
+Direct stdin/stdout relay for the embedded terminal panel. Not part of the CLI/browser bridge.
+
+| Direction | Message | Purpose |
+|-----------|---------|---------|
+| Browser → Server | `{ type: "input", data: "..." }` | Keystrokes to shell |
+| Server → Browser | `{ type: "output", data: "..." }` | Shell output (ANSI) |
+| Server → Browser | `{ type: "exit", code: N }` | Process exited |
 
 ### 7.2 Browser Side (JSON)
 

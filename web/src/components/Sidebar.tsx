@@ -202,6 +202,15 @@ export function Sidebar() {
   const activeSessions = allSessionList.filter((s) => !s.archived);
   const archivedSessions = allSessionList.filter((s) => s.archived);
 
+  const activeProjectCwd = useStore((s) => s.activeProjectCwd);
+  const filteredActiveSessions = activeProjectCwd
+    ? activeSessions.filter((s) => {
+        const cwd = (s.cwd || "").replace(/\\/g, "/");
+        const p = activeProjectCwd.replace(/\\/g, "/");
+        return cwd === p || cwd.startsWith(p + "/");
+      })
+    : activeSessions;
+
   function renderSessionItem(s: typeof allSessionList[number], options?: { isArchived?: boolean }) {
     const isActive = currentSessionId === s.id;
     const name = sessionNames.get(s.id);
@@ -223,7 +232,7 @@ export function Sidebar() {
             setEditingSessionId(s.id);
             setEditingName(label);
           }}
-          className={`w-full px-3 py-2.5 ${archived ? "pr-14" : "pr-8"} text-left rounded-[10px] transition-all duration-100 cursor-pointer ${
+          className={`w-full px-3 py-2.5 pr-14 text-left rounded-[10px] transition-all duration-100 cursor-pointer ${
             isActive
               ? "bg-cc-active"
               : "hover:bg-cc-hover"
@@ -351,16 +360,34 @@ export function Sidebar() {
             </button>
           </>
         ) : (
-          <button
-            onClick={(e) => handleArchiveSession(e, s.id)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-cc-border text-cc-muted hover:text-cc-fg transition-all cursor-pointer"
-            title="Archive session"
-          >
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
-              <path d="M3 3h10v2H3zM4 5v7a1 1 0 001 1h6a1 1 0 001-1V5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M6.5 8h3" strokeLinecap="round" />
-            </svg>
-          </button>
+          <>
+            {/* Edit/rename button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditingSessionId(s.id);
+                setEditingName(label);
+              }}
+              className="absolute right-8 top-1/2 -translate-y-1/2 p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-cc-border text-cc-muted hover:text-cc-fg transition-all cursor-pointer"
+              title="Rename session"
+            >
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
+                <path d="M11.5 1.5l3 3L5 14H2v-3z" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M9.5 3.5l3 3" strokeLinecap="round" />
+              </svg>
+            </button>
+            {/* Archive button */}
+            <button
+              onClick={(e) => handleArchiveSession(e, s.id)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-cc-border text-cc-muted hover:text-cc-fg transition-all cursor-pointer"
+              title="Archive session"
+            >
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
+                <path d="M3 3h10v2H3zM4 5v7a1 1 0 001 1h6a1 1 0 001-1V5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M6.5 8h3" strokeLinecap="round" />
+              </svg>
+            </button>
+          </>
         )}
       </div>
     );
@@ -418,14 +445,14 @@ export function Sidebar() {
 
       {/* Session list */}
       <div className="flex-1 overflow-y-auto px-2 pb-2">
-        {activeSessions.length === 0 && archivedSessions.length === 0 ? (
+        {filteredActiveSessions.length === 0 && archivedSessions.length === 0 ? (
           <p className="px-3 py-8 text-xs text-cc-muted text-center leading-relaxed">
-            No sessions yet.
+            {activeProjectCwd ? "No sessions for this project." : "No sessions yet."}
           </p>
         ) : (
           <>
             <div className="space-y-0.5">
-              {activeSessions.map((s) => renderSessionItem(s))}
+              {filteredActiveSessions.map((s) => renderSessionItem(s))}
             </div>
 
             {archivedSessions.length > 0 && (
@@ -477,7 +504,7 @@ export function Sidebar() {
           <span>{darkMode ? "Light mode" : "Dark mode"}</span>
         </button>
         <p className="text-[10px] text-cc-muted/40 text-center pt-2">
-          {import.meta.env.VITE_STT_BACKEND === "component" ? "component" : "original"} v0.6.0
+          v0.7.0
         </p>
       </div>
 

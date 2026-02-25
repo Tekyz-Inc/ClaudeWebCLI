@@ -158,10 +158,10 @@ describe("EditorPanel", () => {
       expect(mockApi.getFileDiff).toHaveBeenCalledWith("/repo/file.ts");
     });
 
-    // Diff lines should be rendered
+    // Diff lines should be rendered (new side-by-side format: content without prefix)
     await waitFor(() => {
-      expect(screen.getByText("-old line")).toBeInTheDocument();
-      expect(screen.getByText("+new line")).toBeInTheDocument();
+      expect(screen.getByText("old line")).toBeInTheDocument();
+      expect(screen.getByText("new line")).toBeInTheDocument();
     });
 
     // CodeMirror should not be visible
@@ -185,7 +185,7 @@ describe("EditorPanel", () => {
     // Switch to diff
     fireEvent.click(screen.getByText("Diff"));
     await waitFor(() => {
-      expect(screen.getByText("+added")).toBeInTheDocument();
+      expect(screen.getByText("added")).toBeInTheDocument();
     });
 
     // Switch back to edit
@@ -239,21 +239,22 @@ describe("EditorPanel", () => {
     fireEvent.click(screen.getByText("Diff"));
 
     await waitFor(() => {
-      expect(screen.getByText("-removed")).toBeInTheDocument();
+      expect(screen.getByText("removed")).toBeInTheDocument();
     });
 
-    // Check color classes — getByText returns the div containing the text
-    const removedLine = screen.getByText("-removed");
+    // Check color classes — side-by-side format: content spans carry the color class
+    const removedLine = screen.getByText("removed");
     expect(removedLine).toHaveClass("text-cc-error");
 
-    const addedLine = screen.getByText("+added");
+    const addedLine = screen.getByText("added");
     expect(addedLine).toHaveClass("text-cc-success");
 
     const hunkHeader = screen.getByText("@@ -1,2 +1,2 @@");
     expect(hunkHeader).toHaveClass("text-cc-primary");
 
-    const contextLine = screen.getByText("context");
-    expect(contextLine).toHaveClass("text-cc-fg/60");
+    // Context lines use text-cc-fg in side-by-side view
+    const contextLine = screen.getAllByText("context")[0];
+    expect(contextLine).toHaveClass("text-cc-fg");
   });
 
   it("displays Changed Files section when files are modified", () => {

@@ -103,22 +103,24 @@ function EditToolDetail({ input }: { input: Record<string, unknown> }) {
   return (
     <div className="space-y-2">
       <div className="text-xs text-cc-muted font-mono-code">{filePath}</div>
-      {oldStr && (
-        <div className="rounded-lg overflow-hidden border border-cc-border">
-          <div className="px-2 py-1 bg-cc-error/5 text-[10px] text-cc-error font-mono-code">removed</div>
-          <pre className="px-3 py-2 bg-cc-code-bg text-cc-code-fg text-[11px] font-mono-code leading-relaxed overflow-x-auto max-h-32 overflow-y-auto">
-            {oldStr}
+      <div className="rounded-lg overflow-hidden border border-cc-border flex">
+        <div className="flex-1 min-w-0 border-r border-cc-border overflow-hidden">
+          <div className="px-2 py-1 bg-cc-error/5 text-[10px] text-cc-error font-semibold border-b border-cc-border">
+            Before
+          </div>
+          <pre className="px-3 py-2 bg-cc-code-bg text-cc-error text-[11px] font-mono-code leading-relaxed overflow-x-auto max-h-40 overflow-y-auto whitespace-pre">
+            {oldStr || <span className="text-cc-muted italic">empty</span>}
           </pre>
         </div>
-      )}
-      {newStr && (
-        <div className="rounded-lg overflow-hidden border border-cc-border">
-          <div className="px-2 py-1 bg-cc-success/5 text-[10px] text-cc-success font-mono-code">added</div>
-          <pre className="px-3 py-2 bg-cc-code-bg text-cc-code-fg text-[11px] font-mono-code leading-relaxed overflow-x-auto max-h-32 overflow-y-auto">
-            {newStr}
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="px-2 py-1 bg-cc-success/5 text-[10px] text-cc-success font-semibold border-b border-cc-border">
+            After
+          </div>
+          <pre className="px-3 py-2 bg-cc-code-bg text-cc-success text-[11px] font-mono-code leading-relaxed overflow-x-auto max-h-40 overflow-y-auto whitespace-pre">
+            {newStr || <span className="text-cc-muted italic">empty</span>}
           </pre>
         </div>
-      )}
+      </div>
     </div>
   );
 }

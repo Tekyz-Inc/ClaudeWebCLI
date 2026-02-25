@@ -10,6 +10,8 @@ export function TopBar() {
   const setSidebarOpen = useStore((s) => s.setSidebarOpen);
   const taskPanelOpen = useStore((s) => s.taskPanelOpen);
   const setTaskPanelOpen = useStore((s) => s.setTaskPanelOpen);
+  const terminalOpen = useStore((s) => s.terminalOpen);
+  const setTerminalOpen = useStore((s) => s.setTerminalOpen);
   const activeTab = useStore((s) => s.activeTab);
   const setActiveTab = useStore((s) => s.setActiveTab);
 
@@ -61,58 +63,75 @@ export function TopBar() {
       </div>
 
       {/* Right side */}
-      {currentSessionId && (
-        <div className="flex items-center gap-2 sm:gap-3 text-[12px] text-cc-muted">
-          {status === "compacting" && (
-            <span className="text-cc-warning font-medium animate-pulse">Compacting...</span>
-          )}
+      <div className="flex items-center gap-2 sm:gap-3 text-[12px] text-cc-muted">
+        {currentSessionId && status === "compacting" && (
+          <span className="text-cc-warning font-medium animate-pulse">Compacting...</span>
+        )}
 
-          {status === "running" && (
-            <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-cc-primary animate-[pulse-dot_1s_ease-in-out_infinite]" />
-              <span className="text-cc-primary font-medium">Thinking</span>
-            </div>
-          )}
-
-          {/* Chat / Editor tab toggle */}
-          <div className="flex items-center bg-cc-hover rounded-lg p-0.5">
-            <button
-              onClick={() => setActiveTab("chat")}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
-                activeTab === "chat"
-                  ? "bg-cc-card text-cc-fg shadow-sm"
-                  : "text-cc-muted hover:text-cc-fg"
-              }`}
-            >
-              Chat
-            </button>
-            <button
-              onClick={() => setActiveTab("editor")}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
-                activeTab === "editor"
-                  ? "bg-cc-card text-cc-fg shadow-sm"
-                  : "text-cc-muted hover:text-cc-fg"
-              }`}
-            >
-              Editor
-            </button>
+        {currentSessionId && status === "running" && (
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-cc-primary animate-[pulse-dot_1s_ease-in-out_infinite]" />
+            <span className="text-cc-primary font-medium">Thinking</span>
           </div>
+        )}
 
+        {/* Chat / Editor tab toggle */}
+        <div className={`flex items-center bg-cc-hover rounded-lg p-0.5 ${!currentSessionId ? "opacity-40 pointer-events-none" : ""}`}>
           <button
-            onClick={() => setTaskPanelOpen(!taskPanelOpen)}
-            className={`flex items-center justify-center w-7 h-7 rounded-lg transition-colors cursor-pointer ${
-              taskPanelOpen
-                ? "text-cc-primary bg-cc-active"
-                : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover"
+            onClick={() => setActiveTab("chat")}
+            className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
+              activeTab === "chat"
+                ? "bg-cc-card text-cc-fg shadow-sm"
+                : "text-cc-muted hover:text-cc-fg"
             }`}
-            title="Toggle session panel"
           >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 3a1 1 0 000 2h6a1 1 0 100-2H7zm0 4a1 1 0 000 2h6a1 1 0 100-2H7zm0 4a1 1 0 000 2h4a1 1 0 100-2H7z" clipRule="evenodd" />
-            </svg>
+            Chat
+          </button>
+          <button
+            onClick={() => setActiveTab("editor")}
+            className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
+              activeTab === "editor"
+                ? "bg-cc-card text-cc-fg shadow-sm"
+                : "text-cc-muted hover:text-cc-fg"
+            }`}
+          >
+            Editor
           </button>
         </div>
-      )}
+
+        {/* Terminal toggle */}
+        <button
+          onClick={() => setTerminalOpen(!terminalOpen)}
+          className={`flex items-center justify-center w-7 h-7 rounded-lg transition-colors ${
+            terminalOpen
+              ? "text-cc-primary bg-cc-active cursor-pointer"
+              : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover cursor-pointer"
+          }`}
+          title="Toggle terminal"
+        >
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
+            <polyline points="3 11 6 8 3 5" />
+            <line x1="8" y1="11" x2="13" y2="11" />
+          </svg>
+        </button>
+
+        {/* Session panel toggle */}
+        <button
+          onClick={() => currentSessionId && setTaskPanelOpen(!taskPanelOpen)}
+          className={`flex items-center justify-center w-7 h-7 rounded-lg transition-colors ${
+            !currentSessionId
+              ? "text-cc-muted opacity-40 cursor-default"
+              : taskPanelOpen
+                ? "text-cc-primary bg-cc-active cursor-pointer"
+                : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover cursor-pointer"
+          }`}
+          title="Toggle session panel"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+            <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 3a1 1 0 000 2h6a1 1 0 100-2H7zm0 4a1 1 0 000 2h6a1 1 0 100-2H7zm0 4a1 1 0 000 2h4a1 1 0 100-2H7z" clipRule="evenodd" />
+          </svg>
+        </button>
+      </div>
     </header>
   );
 }

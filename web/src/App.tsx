@@ -8,6 +8,8 @@ import { HomePage } from "./components/HomePage.js";
 import { TaskPanel } from "./components/TaskPanel.js";
 import { EditorPanel } from "./components/EditorPanel.js";
 import { Playground } from "./components/Playground.js";
+import { ProjectTabBar } from "./components/ProjectTabBar.js";
+import { TerminalPanel } from "./components/TerminalPanel.js";
 
 function useHash() {
   return useSyncExternalStore(
@@ -23,6 +25,9 @@ export default function App() {
   const taskPanelOpen = useStore((s) => s.taskPanelOpen);
   const homeResetKey = useStore((s) => s.homeResetKey);
   const activeTab = useStore((s) => s.activeTab);
+  const terminalOpen = useStore((s) => s.terminalOpen);
+  const activeProjectCwd = useStore((s) => s.activeProjectCwd);
+  const sdkSessions = useStore((s) => s.sdkSessions);
   const hash = useHash();
 
   useEffect(() => {
@@ -65,6 +70,7 @@ export default function App() {
 
       {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <ProjectTabBar />
         <TopBar />
         <div className="flex-1 overflow-hidden relative">
           {/* Chat tab — visible when activeTab is "chat" or no session */}
@@ -108,6 +114,23 @@ export default function App() {
           </div>
         </>
       )}
+      {/* Terminal panel — always mounted to preserve session across open/close */}
+      {(() => {
+        const currentSession = sdkSessions.find((s) => s.sessionId === currentSessionId);
+        const termCwd = activeProjectCwd || currentSession?.cwd || undefined;
+        return (
+          <div
+            className={`
+              fixed lg:relative z-40 lg:z-auto right-0 top-0
+              h-full shrink-0 transition-all duration-200
+              ${terminalOpen ? "w-[340px] translate-x-0" : "w-0 translate-x-full lg:w-0 lg:translate-x-full"}
+              overflow-hidden
+            `}
+          >
+            <TerminalPanel cwd={termCwd} />
+          </div>
+        );
+      })()}
     </div>
   );
 }

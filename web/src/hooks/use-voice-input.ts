@@ -1,47 +1,25 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useWhisper } from "./use-whisper.js";
+import { STTEngine } from "@tekyzinc/stt-component";
+import type { STTState, STTError } from "@tekyzinc/stt-component";
+import { emitVoiceEvent } from "./voice-events.js";
 
-/* ─── Web Speech API types ──────────────────────────────── */
-
-interface SpeechRecognitionEvent {
-  results: SpeechRecognitionResultList;
-  resultIndex: number;
-}
-
-interface SpeechRecognitionErrorEvent {
-  error: string;
-}
-
-interface SpeechRecognitionInstance {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  onresult: ((e: SpeechRecognitionEvent) => void) | null;
-  onerror: ((e: SpeechRecognitionErrorEvent) => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-  abort: () => void;
-}
-
-type SpeechRecognitionCtor = new () => SpeechRecognitionInstance;
-
-function getSpeechRecognition(): SpeechRecognitionCtor | null {
-  const w = window as unknown as Record<string, unknown>;
-  return (w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null) as
-    SpeechRecognitionCtor | null;
-}
-
-/* ─── Constants ─────────────────────────────────────────── */
-
-const PAUSE_THRESHOLD_MS = 3_000;
-const FORCED_INTERVAL_MS = 5_000;
-
-/* ─── Unified voice hook ────────────────────────────────── */
+/* ─── Voice input hook (STTEngine-based) ────────────────
+ * STTEngine handles everything:
+ *   - Mic capture + audio buffering
+ *   - Whisper transcription + corrections (via Web Worker)
+ *   - Streaming text preview (via internal Web Speech API)
+ *
+ * Events:
+ *   transcript → real-time interim text (streaming preview)
+ *   correction → Whisper-corrected accumulated text
+ *   status     → engine lifecycle (loading, recording, etc.)
+ *   error      → actionable errors
+ */
 
 export interface UseVoiceReturn {
   isSupported: boolean;
   isListening: boolean;
+  isStarting: boolean;
   isProcessing: boolean;
   interimText: string;
   correctedText: string;
@@ -55,219 +33,168 @@ export interface UseVoiceReturn {
   clearState: () => void;
 }
 
-type ActiveBackend = "whisper" | "speech" | null;
+function checkWorkerSupport(): boolean {
+  return typeof Worker !== "undefined";
+}
 
 export function useVoiceInput(): UseVoiceReturn {
-  const whisper = useWhisper();
+  const engineRef = useRef<STTEngine | null>(null);
+  const initedRef = useRef(false);
+  const isActiveRef = useRef(false);
+  // Tracks the last Whisper correction received during recording.
+  // Used as fallback return value in stop() when engine transcription times out.
+  const correctedTextRef = useRef("");
 
   const [isListening, setIsListening] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [interimText, setInterimText] = useState("");
   const [correctedText, setCorrectedText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isModelLoaded, setIsModelLoaded] = useState(false);
+  const [isModelLoading, setIsModelLoading] = useState(false);
+  const [loadProgress, setLoadProgress] = useState(0);
 
-  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  const accumulatedRef = useRef<string>("");
-  const activeBackendRef = useRef<ActiveBackend>(null);
-  const lastCorrectionRef = useRef<number>(0);
-  const forcedTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const correctionFnRef = useRef<() => void>(() => {});
+  const isSupported = checkWorkerSupport();
 
-  const hasSpeechApi = getSpeechRecognition() !== null;
-  const canUseWhisper = whisper.state.isSupported;
-  const isSupported = canUseWhisper || hasSpeechApi;
-  const activeWhisper = canUseWhisper && whisper.state.isModelLoaded;
+  /* ─── Lazy engine creation ──────────────────────────── */
 
-  /* ─── Mid-recording correction ────────────────────────── */
+  const getEngine = useCallback((): STTEngine => {
+    if (engineRef.current) return engineRef.current;
+    const workerUrl = new URL(
+      "../utils/stt-component-worker.ts",
+      import.meta.url,
+    );
+    // Increase forcedInterval from the default 3 s to 10 s.
+    // With the default 3 s interval, `performCorrection()` calls
+    // `workerManager.cancel()` every 3 s.  Whisper on CPU/WASM typically takes
+    // 3–10 s per clip, so the result is cancelled before it can resolve and
+    // the `correction` event never fires.  10 s gives Whisper enough headroom
+    // to finish.  The pause-based correction (pauseThreshold: 1.5 s) still
+    // fires quickly whenever the user stops speaking briefly.
+    const engine = new STTEngine(
+      { correction: { forcedInterval: 10_000, pauseThreshold: 1_500 } },
+      workerUrl,
+    );
+    engineRef.current = engine;
 
-  const triggerCorrection = useCallback(async () => {
-    if (activeBackendRef.current !== "whisper") return;
-    if (!whisper.state.isModelLoaded) return;
+    // Streaming preview — engine's SpeechStreamingManager already
+    // accumulates Speech API finals internally, so the text param
+    // is the full accumulated transcript (finals + current interim).
+    // Show it directly — no prepending needed.
+    engine.on("transcript", (text: string) => {
+      if (!isActiveRef.current) return;
+      setInterimText(text);
+      emitVoiceEvent({ source: "app", type: "speech-interim", detail: text });
+    });
 
-    const now = Date.now();
-    if (now - lastCorrectionRef.current < PAUSE_THRESHOLD_MS) return;
+    // Whisper correction — higher-quality replacement for the
+    // Speech API text. Update both correctedText (for overlay styling)
+    // and interimText (ensures display stays populated even if Speech
+    // API is between restarts when the correction arrives).
+    engine.on("correction", (text: string) => {
+      if (!isActiveRef.current) return;
+      const trimmed = text.trim();
+      correctedTextRef.current = trimmed;
+      setCorrectedText(trimmed);
+      setInterimText(trimmed);
+      emitVoiceEvent({
+        source: "app",
+        type: "whisper-correction",
+        detail: trimmed,
+      });
+    });
 
-    whisper.cancelTranscription();
-    lastCorrectionRef.current = now;
+    engine.on("error", (err: STTError) => {
+      setError(err.message);
+      emitVoiceEvent({
+        source: "app",
+        type: "whisper-status",
+        detail: `ERROR: ${err.code} — ${err.message}`,
+      });
+    });
 
-    const text = await whisper.transcribeSnapshot();
-    if (activeBackendRef.current === "whisper" && text.trim()) {
-      accumulatedRef.current = text.trim();
-      setInterimText(text.trim());
-      setCorrectedText(text.trim());
-    }
-  }, [whisper]);
+    // v0.2.3 debug events — SSM lifecycle logs to SpeechMonitor.
+    // "debug" is not in the public STTEvents type, so cast to access it.
+    (engine as unknown as { on(e: string, fn: (m: string) => void): void })
+      .on("debug", (msg: string) => {
+        emitVoiceEvent({ source: "app", type: "whisper-status", detail: msg });
+      });
 
-  // Keep ref in sync so onend closure can access latest version
-  correctionFnRef.current = triggerCorrection;
-
-  /* ─── Speech API helpers (used for streaming preview) ─── */
-
-  const startSpeechPreview = useCallback(() => {
-    const SR = getSpeechRecognition();
-    if (!SR) return;
-
-    accumulatedRef.current = "";
-    const recognition = new SR();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
-
-    let lastFinalIndex = -1;
-    let lastFinalText = "";
-
-    recognition.onresult = (e: SpeechRecognitionEvent) => {
-      if (recognitionRef.current !== recognition) return;
-
-      let final_ = "";
-      let interim = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) {
-          if (i > lastFinalIndex) {
-            final_ += t;
-            lastFinalIndex = i;
-          }
-        } else {
-          interim += t;
-        }
+    engine.on("status", (state: STTState) => {
+      setIsModelLoaded(state.isModelLoaded);
+      setLoadProgress(state.loadProgress);
+      setIsModelLoading(state.status === "loading");
+      setIsProcessing(state.status === "processing");
+      if (state.status !== "loading") {
+        emitVoiceEvent({
+          source: "app",
+          type: "whisper-status",
+          detail: `status: ${state.status}`,
+        });
       }
-      if (final_ && final_.trim() !== lastFinalText) {
-        lastFinalText = final_.trim();
-        accumulatedRef.current = accumulatedRef.current
-          ? accumulatedRef.current + " " + final_.trim()
-          : final_.trim();
-        setInterimText(accumulatedRef.current);
-      } else if (interim) {
-        setInterimText(
-          accumulatedRef.current
-            ? accumulatedRef.current + " " + interim
-            : interim,
-        );
-      }
-    };
+    });
 
-    recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
-      if (recognitionRef.current !== recognition) return;
-      if (activeBackendRef.current === "speech") {
-        setError(e.error);
-        setIsListening(false);
-        activeBackendRef.current = null;
-        recognitionRef.current = null;
-      }
-    };
+    return engine;
+  }, []);
 
-    recognition.onend = () => {
-      if (recognitionRef.current !== recognition) return;
+  /* ─── Init engine (once) ───────────────────────────── */
 
-      if (activeBackendRef.current === "speech") {
-        setIsListening(false);
-        activeBackendRef.current = null;
-        setInterimText("");
-        recognitionRef.current = null;
-      } else if (activeBackendRef.current === "whisper") {
-        // Speech API paused — trigger mid-recording correction via ref
-        correctionFnRef.current();
-        // Restart Speech API preview for continued streaming
-        try {
-          recognition.start();
-        } catch {
-          recognitionRef.current = null;
-        }
-      } else {
-        setInterimText("");
-        recognitionRef.current = null;
-      }
-    };
-
-    recognitionRef.current = recognition;
+  const initEngine = useCallback(async (): Promise<void> => {
+    if (initedRef.current) return;
+    initedRef.current = true;
+    const engine = getEngine();
     try {
-      recognition.start();
+      await engine.init();
     } catch {
-      recognitionRef.current = null;
+      initedRef.current = false;
     }
-  }, []);
+  }, [getEngine]);
 
-  const stopSpeechPreview = useCallback((): string => {
-    if (recognitionRef.current) {
-      const rec = recognitionRef.current;
-      recognitionRef.current = null;
-      rec.stop();
-    }
-    // Don't clear interimText here — let it persist during Whisper processing
-    // so the prompt field doesn't flash empty. Cleared on next start().
-    const result = accumulatedRef.current;
-    accumulatedRef.current = "";
-    return result;
-  }, []);
+  /* ─── Start recording ──────────────────────────────── */
 
-  /* ─── Timer helpers ──────────────────────────────────── */
-
-  const startForcedTimer = useCallback(() => {
-    if (forcedTimerRef.current) clearInterval(forcedTimerRef.current);
-    forcedTimerRef.current = setInterval(() => {
-      correctionFnRef.current();
-    }, FORCED_INTERVAL_MS);
-  }, []);
-
-  const stopForcedTimer = useCallback(() => {
-    if (forcedTimerRef.current) {
-      clearInterval(forcedTimerRef.current);
-      forcedTimerRef.current = null;
-    }
-  }, []);
-
-  /* ─── Whisper path (with Speech API streaming preview) ── */
-
-  const startWhisper = useCallback(async () => {
+  const start = useCallback(() => {
     setError(null);
     setInterimText("");
     setCorrectedText("");
-    setIsListening(true);
-    activeBackendRef.current = "whisper";
-    lastCorrectionRef.current = Date.now();
+    correctedTextRef.current = "";
+    isActiveRef.current = true;
 
-    try { startSpeechPreview(); } catch { /* preview is optional */ }
-
-    startForcedTimer();
-    await whisper.startRecording();
-  }, [whisper, startSpeechPreview, startForcedTimer]);
-
-  const stopWhisper = useCallback(async (): Promise<string> => {
-    setIsListening(false);
-    activeBackendRef.current = null;
-    stopForcedTimer();
-    whisper.cancelTranscription();
-
-    const speechText = stopSpeechPreview();
-
-    if (whisper.state.isModelLoaded) {
-      setIsProcessing(true);
-      const whisperText = await whisper.stopRecording();
-      // Don't clear isProcessing here — consumer calls clearState()
-      // after inserting text, so the display doesn't flash empty.
-      return whisperText || speechText;
+    // Check engine's actual state — not just a ref flag.
+    // When "ready", we can call engine.start() synchronously
+    // to preserve user gesture context (required for Chrome's
+    // SpeechRecognition.start()). Any preceding `await` breaks
+    // the gesture chain, causing silent streaming failure.
+    const engine = engineRef.current;
+    if (engine && engine.getState().status === "ready") {
+      setIsListening(true);
+      engine.start().catch(() => {
+        setIsListening(false);
+        isActiveRef.current = false;
+      });
+    } else {
+      // Engine not ready — async init + start (first recording).
+      // SpeechRecognition won't activate (user gesture lost after
+      // await), but Whisper corrections will still work.
+      setIsStarting(true);
+      const doStart = async (): Promise<void> => {
+        await initEngine();
+        const eng = getEngine();
+        setIsStarting(false);
+        setIsListening(true);
+        try {
+          await eng.start();
+        } catch {
+          setIsListening(false);
+          isActiveRef.current = false;
+        }
+      };
+      doStart().catch(() => {
+        setIsStarting(false);
+        isActiveRef.current = false;
+      });
     }
-
-    whisper.cancelRecording();
-    return speechText;
-  }, [whisper, stopSpeechPreview, stopForcedTimer]);
-
-  /* ─── Speech-only path (no Whisper available) ─────────── */
-
-  const startSpeechOnly = useCallback(() => {
-    setError(null);
-    setInterimText("");
-    setIsListening(true);
-    activeBackendRef.current = "speech";
-    startSpeechPreview();
-  }, [startSpeechPreview]);
-
-  const stopSpeechOnly = useCallback(async (): Promise<string> => {
-    setIsListening(false);
-    activeBackendRef.current = null;
-    return stopSpeechPreview();
-  }, [stopSpeechPreview]);
+  }, [initEngine, getEngine]);
 
   /* ─── Clear state (called by consumer after inserting text) */
 
@@ -277,58 +204,63 @@ export function useVoiceInput(): UseVoiceReturn {
     setIsProcessing(false);
   }, []);
 
-  /* ─── Unified interface ─────────────────────────────── */
-
-  const start = useCallback(() => {
-    if (canUseWhisper) {
-      if (!whisper.state.isModelLoaded && !whisper.state.isModelLoading) {
-        whisper.loadModel();
-      }
-      startWhisper().catch(() => {});
-      return;
-    }
-    if (hasSpeechApi) {
-      startSpeechOnly();
-    }
-  }, [canUseWhisper, hasSpeechApi, whisper, startWhisper, startSpeechOnly]);
+  /* ─── Stop recording ───────────────────────────────── */
 
   const stop = useCallback(async (): Promise<string> => {
-    const backend = activeBackendRef.current;
-    if (backend === "whisper") {
-      return stopWhisper();
-    }
-    return stopSpeechOnly();
-  }, [stopWhisper, stopSpeechOnly]);
+    const engine = engineRef.current;
+    if (!engine) return "";
 
-  // Keep latest whisper ref for unmount cleanup
-  const whisperRef = useRef(whisper);
-  whisperRef.current = whisper;
+    isActiveRef.current = false;
+    setIsListening(false);
+    setIsProcessing(true);
+
+    // After page idle, Chrome throttles the correction timers, letting the
+    // audio buffer grow unboundedly. It also throttles the Whisper worker,
+    // causing engine.stop() to hang for 20-30 seconds. We cap the wait at
+    // 2 s — if it times out, the engine is in a bad state so we destroy it
+    // so the next recording starts fresh with a clean worker.
+    let timedOut = false;
+    const text = await Promise.race([
+      engine.stop(),
+      new Promise<string>((resolve) =>
+        setTimeout(() => { timedOut = true; resolve(""); }, 2000)
+      ),
+    ]);
+
+    if (timedOut) {
+      engine.destroy();
+      engineRef.current = null;
+      initedRef.current = false;
+    }
+
+    return text;
+  }, []);
+
+  /* ─── Cleanup on unmount ───────────────────────────── */
 
   useEffect(() => {
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-        recognitionRef.current = null;
+      isActiveRef.current = false;
+      initedRef.current = false;
+      if (engineRef.current) {
+        engineRef.current.destroy();
+        engineRef.current = null;
       }
-      if (forcedTimerRef.current) {
-        clearInterval(forcedTimerRef.current);
-        forcedTimerRef.current = null;
-      }
-      whisperRef.current.cancelRecording();
     };
   }, []);
 
   return {
     isSupported,
     isListening,
-    isProcessing: isProcessing || whisper.state.isTranscribing,
+    isStarting,
+    isProcessing,
     interimText,
     correctedText,
-    error: error || whisper.state.error,
-    isModelLoaded: whisper.state.isModelLoaded,
-    isModelLoading: whisper.state.isModelLoading,
-    loadProgress: whisper.state.loadProgress,
-    useWhisper: activeWhisper,
+    error,
+    isModelLoaded,
+    isModelLoading,
+    loadProgress,
+    useWhisper: isModelLoaded,
     start,
     stop,
     clearState,

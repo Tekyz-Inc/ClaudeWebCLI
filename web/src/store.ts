@@ -108,6 +108,14 @@ interface AppState {
   setEditorUrl: (sessionId: string, url: string) => void;
   setEditorLoading: (sessionId: string, loading: boolean) => void;
 
+  // Project tab bar
+  activeProjectCwd: string | null;
+  setActiveProjectCwd: (cwd: string | null) => void;
+
+  // Terminal panel
+  terminalOpen: boolean;
+  setTerminalOpen: (open: boolean) => void;
+
   reset: () => void;
 }
 
@@ -122,7 +130,8 @@ function getInitialSessionNames(): Map<string, string> {
 
 function getInitialSessionId(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("cc-current-session") || null;
+  // sessionStorage is per-tab: new tabs start fresh, refresh restores the session
+  return sessionStorage.getItem("cc-current-session") || null;
 }
 
 function getInitialPromptHistory(): Map<string, string[]> {
@@ -167,6 +176,8 @@ export const useStore = create<AppState>((set) => ({
   editorOpenFile: new Map(),
   editorUrl: new Map(),
   editorLoading: new Map(),
+  activeProjectCwd: null,
+  terminalOpen: false,
 
   setDarkMode: (v) => {
     localStorage.setItem("cc-dark-mode", String(v));
@@ -181,15 +192,15 @@ export const useStore = create<AppState>((set) => ({
   setSidebarOpen: (v) => set({ sidebarOpen: v }),
   setTaskPanelOpen: (open) => set({ taskPanelOpen: open }),
   newSession: () => {
-    localStorage.removeItem("cc-current-session");
+    sessionStorage.removeItem("cc-current-session");
     set((s) => ({ currentSessionId: null, homeResetKey: s.homeResetKey + 1 }));
   },
 
   setCurrentSession: (id) => {
     if (id) {
-      localStorage.setItem("cc-current-session", id);
+      sessionStorage.setItem("cc-current-session", id);
     } else {
-      localStorage.removeItem("cc-current-session");
+      sessionStorage.removeItem("cc-current-session");
     }
     set({ currentSessionId: id });
   },
@@ -249,7 +260,7 @@ export const useStore = create<AppState>((set) => ({
       editorLoading.delete(sessionId);
       localStorage.setItem("cc-session-names", JSON.stringify(Array.from(sessionNames.entries())));
       if (s.currentSessionId === sessionId) {
-        localStorage.removeItem("cc-current-session");
+        sessionStorage.removeItem("cc-current-session");
       }
       return {
         sessions,
@@ -457,6 +468,8 @@ export const useStore = create<AppState>((set) => ({
     }),
 
   setActiveTab: (tab) => set({ activeTab: tab }),
+  setActiveProjectCwd: (cwd) => set({ activeProjectCwd: cwd }),
+  setTerminalOpen: (open) => set({ terminalOpen: open }),
 
   setEditorOpenFile: (sessionId, filePath) =>
     set((s) => {
