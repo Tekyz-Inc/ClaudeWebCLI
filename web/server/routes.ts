@@ -10,6 +10,7 @@ import type { WorktreeTracker } from "./worktree-tracker.js";
 import * as envManager from "./env-manager.js";
 import * as gitUtils from "./git-utils.js";
 import * as sessionNames from "./session-names.js";
+import { readClaudeSessions } from "./claude-sessions.js";
 
 export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionStore: SessionStore, worktreeTracker: WorktreeTracker) {
   const api = new Hono();
@@ -68,6 +69,7 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
         allowedTools: body.allowedTools,
         env: envVars,
         worktreeInfo,
+        resumeCliId: body.resumeCliId,
       });
 
       // Track the worktree mapping
@@ -87,6 +89,17 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
       const msg = e instanceof Error ? e.message : String(e);
       console.error("[routes] Failed to create session:", msg);
       return c.json({ error: msg }, 500);
+    }
+  });
+
+  api.get("/claude-sessions", async (c) => {
+    const cwd = c.req.query("cwd");
+    if (!cwd) return c.json({ error: "cwd is required" }, 400);
+    try {
+      const sessions = await readClaudeSessions(cwd);
+      return c.json(sessions);
+    } catch (err) {
+      return c.json({ error: String(err) }, 500);
     }
   });
 
