@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.9.11] - 2026-03-04
+
+### Added
+- Session panel: Files Read section (from Read tool calls) and Commands Executed section (Bash tool calls, most recent first)
+- Session panel: context bar now color-coded green→yellow→orange→red based on remaining%, with "X% left until compact" label
+
+### Changed
+- Session panel Tasks section: smaller fonts, tighter row spacing
+- ProjectTabBar running indicator: pulsing dot that grows/shrinks and alternates green↔blue
+
 ## [0.9.10] - 2026-03-04
 
 ### Added
