@@ -80,6 +80,7 @@ ClaudeWebCLI/
     │   ├── session-types.ts        # All WebSocket protocol types (CLI + Browser messages)
     │   ├── session-names.ts        # Session name persistence (~/.companion/session-names.json)
     │   ├── auto-namer.ts           # One-shot Claude CLI to generate 3-5 word session title
+    │   ├── claude-sessions.ts      # Read native Claude session history from ~/.claude/projects/<slug>/*.jsonl
     │   ├── env-manager.ts          # Environment variable sets CRUD (~/.companion/envs/)
     │   ├── git-utils.ts            # Git operations: branches, worktrees, fetch, pull, checkout
     │   ├── worktree-tracker.ts     # Session-to-worktree mapping (~/.companion/worktrees.json)
@@ -100,7 +101,7 @@ ClaudeWebCLI/
     │   │   ├── MessageBubble.tsx   # Renders messages: markdown, code blocks, tool blocks, thinking
     │   │   ├── MessageFeed.tsx     # Message list: auto-scroll, grouping, subagent nesting
     │   │   ├── PermissionBanner.tsx # Tool approval UI (Bash/Edit/Write/Read/Glob/Grep/etc.)
-    │   │   ├── Sidebar.tsx         # Session list: polling, rename, archive, branch display
+    │   │   ├── Sidebar.tsx         # Session list: polling, rename, archive, branch display; native CLI session resume (project-scoped)
     │   │   ├── TopBar.tsx          # Connection status, tab toggle, task panel toggle
     │   │   ├── HomePage.tsx        # Session creation: model, 4 permission modes, folder, project detect, branch, env
     │   │   ├── ToolBlock.tsx       # Collapsible tool call visualization with per-tool icons

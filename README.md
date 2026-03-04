@@ -1,6 +1,6 @@
 # ClaudeWebCLI
 
-**Version:** 0.3.0
+**Version:** 0.8.10
 **Forked from:** [The Vibe Companion](https://github.com/The-Vibe-Company/companion) v0.14.1
 
 Claude Code in your browser. We reverse-engineered the undocumented WebSocket protocol hidden inside the CLI and built a web UI on top of it. No API key needed — it runs on your existing Claude Code subscription.
@@ -13,11 +13,12 @@ Open [localhost:3456](http://localhost:3456). That's it.
 
 ## Features
 
-- **Multiple sessions.** Run several Claude Code instances side by side. Each gets its own process, model, and permission settings.
+- **Multiple sessions.** Run several Claude Code instances side by side. Each gets its own process, model, and permission settings. Project tabs scope the session list to one project at a time.
 - **Streaming.** Responses render token by token. You see what the agent is writing as it writes it.
 - **Tool call visibility.** Every Bash command, file read, edit, grep — visible in collapsible blocks with syntax highlighting.
 - **Subagent nesting.** When an agent spawns sub-agents, their work renders hierarchically.
 - **Permission control.** Four modes: Agent (auto-approve), Accept Edits, Plan, and Manual.
+- **Session resume list.** The sidebar shows all past conversations per project — both web-created sessions and native terminal sessions. Click "Resume" on any native session to continue it in the browser via `--resume`.
 - **Session persistence.** Sessions save to disk and auto-recover with `--resume` after server restarts or CLI crashes.
 - **Environment profiles.** Store API keys and config per-project in `~/.companion/envs/`.
 - **Smart voice dictation.** Push-to-talk with AI-powered formatting — spoken text is contextually punctuated and capitalized using Claude ("school period" stays as words, "head home period" becomes "."). Ghost text appears muted while processing, then solidifies.
