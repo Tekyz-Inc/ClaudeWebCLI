@@ -84,7 +84,7 @@ export function ProjectTabBar() {
 
   useEffect(() => {
     api.listProjects().then((res) => {
-      // Deduplicate by normalized path (handles same project listed multiple times)
+      // Deduplicate by normalized path
       const seen = new Set<string>();
       const unique = res.projects.filter((p) => {
         const key = p.path.replace(/\\/g, "/").toLowerCase();
@@ -93,8 +93,17 @@ export function ProjectTabBar() {
         return true;
       });
       setProjects(unique);
+      // Auto-select the last used project on load
+      const saved = localStorage.getItem("cc-active-project");
+      if (saved && !activeProjectCwd) {
+        const match = unique.find((p) => p.path === saved);
+        if (match) setActiveProjectCwd(match.path);
+        else if (unique.length > 0) setActiveProjectCwd(unique[0].path);
+      } else if (!activeProjectCwd && unique.length > 0) {
+        setActiveProjectCwd(unique[0].path);
+      }
     }).catch(() => {});
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (projects.length === 0) return null;
 
@@ -104,22 +113,15 @@ export function ProjectTabBar() {
         className="flex items-center gap-0.5 px-2 py-1 overflow-x-auto"
         style={{ scrollbarWidth: "none" }}
       >
-        <button
-          onClick={() => setActiveProjectCwd(null)}
-          className={`flex items-center px-2.5 py-1 rounded-md text-[11px] font-medium whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
-            activeProjectCwd === null
-              ? "bg-cc-card text-cc-fg shadow-sm"
-              : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover"
-          }`}
-        >
-          All
-        </button>
         {projects.map((project) => (
           <ProjectTabItem
             key={project.path}
             project={project}
             isActive={activeProjectCwd === project.path}
-            onClick={() => setActiveProjectCwd(project.path)}
+            onClick={() => {
+              setActiveProjectCwd(project.path);
+              localStorage.setItem("cc-active-project", project.path);
+            }}
           />
         ))}
       </div>

@@ -12,6 +12,7 @@ export function Sidebar() {
   const [showArchived, setShowArchived] = useState(false);
   const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null);
   const [nativeSessions, setNativeSessions] = useState<ClaudeSession[]>([]);
+  const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
   const sessions = useStore((s) => s.sessions);
   const sdkSessions = useStore((s) => s.sdkSessions);
@@ -247,26 +248,24 @@ export function Sidebar() {
   }
 
   function renderNativeSessionItem(s: ClaudeSession) {
-    const preview = s.firstMessage
-      ? s.firstMessage.slice(0, 60) + (s.firstMessage.length > 60 ? "…" : "")
-      : "(no message)";
+    const preview = s.firstMessage || "(no message)";
+    const timeStr = formatRelativeTime(s.lastActiveAt);
     return (
-      <div key={s.id} className="relative group opacity-70 hover:opacity-100 transition-opacity">
-        <div className="w-full px-3 py-2.5 rounded-[10px] hover:bg-cc-hover transition-colors">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-cc-border text-cc-muted uppercase tracking-wide">
-              CLI
-            </span>
-            <span className="text-[11px] text-cc-muted">{formatRelativeTime(s.lastActiveAt)}</span>
+      <div key={s.id}>
+        <button
+          onClick={() => resumeNativeSession(s.id, s.cwd)}
+          onMouseEnter={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            setTooltip({ text: `${preview}\n${timeStr}`, x: rect.right + 8, y: rect.top });
+          }}
+          onMouseLeave={() => setTooltip(null)}
+          className="w-full px-2 py-px text-left rounded-[6px] hover:bg-cc-hover transition-colors cursor-pointer"
+        >
+          <div className="flex items-baseline gap-1.5 min-w-0">
+            <span className="text-[10px] text-cc-muted shrink-0 whitespace-nowrap">{timeStr}</span>
+            <span className="text-[10px] text-cc-fg/75 truncate">{preview}</span>
           </div>
-          <p className="text-xs text-cc-fg truncate">{preview}</p>
-          <button
-            onClick={() => resumeNativeSession(s.id, s.cwd)}
-            className="mt-1.5 text-[11px] font-medium text-cc-accent hover:text-cc-fg transition-colors cursor-pointer"
-          >
-            Resume →
-          </button>
-        </div>
+        </button>
       </div>
     );
   }
@@ -455,23 +454,6 @@ export function Sidebar() {
 
   return (
     <aside className="w-[260px] h-full flex flex-col bg-cc-sidebar border-r border-cc-border">
-      {/* Header */}
-      <div className="p-4 pb-3">
-        <div className="flex items-center gap-2 mb-4">
-          <img src="/logo.svg" alt="" className="w-7 h-7" />
-          <span className="text-sm font-semibold text-cc-fg tracking-tight">Claude Web CLI</span>
-        </div>
-
-        <button
-          onClick={handleNewSession}
-          className="w-full py-2 px-3 text-sm font-medium rounded-[10px] bg-cc-primary hover:bg-cc-primary-hover text-white transition-colors duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
-        >
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
-            <path d="M8 3v10M3 8h10" />
-          </svg>
-          New Session
-        </button>
-      </div>
 
       {/* Worktree archive confirmation */}
       {confirmArchiveId && (
@@ -503,88 +485,68 @@ export function Sidebar() {
         </div>
       )}
 
-      {/* Session list */}
+      {/* Session list — only native (resume) sessions */}
       <div className="flex-1 overflow-y-auto px-2 pb-2">
-        {filteredActiveSessions.length === 0 && archivedSessions.length === 0 && nativeSessions.length === 0 ? (
+        {nativeSessions.length === 0 ? (
           <p className="px-3 py-8 text-xs text-cc-muted text-center leading-relaxed">
-            {activeProjectCwd ? "No sessions for this project." : "No sessions yet."}
+            {activeProjectCwd ? "No sessions for this project." : "Select a project tab to see sessions."}
           </p>
         ) : (
-          <>
-            {(filteredActiveSessions.length > 0 || archivedSessions.length > 0) && (
-              <>
-                <div className="space-y-0.5">
-                  {filteredActiveSessions.map((s) => renderSessionItem(s))}
-                </div>
-
-                {archivedSessions.length > 0 && (
-                  <div className="mt-2 pt-2 border-t border-cc-border">
-                    <button
-                      onClick={() => setShowArchived(!showArchived)}
-                      className="w-full px-3 py-1.5 text-[11px] font-medium text-cc-muted uppercase tracking-wider flex items-center gap-1.5 hover:text-cc-fg transition-colors cursor-pointer"
-                    >
-                      <svg viewBox="0 0 16 16" fill="currentColor" className={`w-3 h-3 transition-transform ${showArchived ? "rotate-90" : ""}`}>
-                        <path d="M6 4l4 4-4 4" />
-                      </svg>
-                      Archived ({archivedSessions.length})
-                    </button>
-                    {showArchived && (
-                      <div className="space-y-0.5 mt-1">
-                        {archivedSessions.map((s) => renderSessionItem(s, { isArchived: true }))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-            {activeProjectCwd && nativeSessions.length > 0 && (
-              <div className="mt-2 pt-2 border-t border-cc-border">
-                <p className="px-3 py-1.5 text-[11px] font-medium text-cc-muted uppercase tracking-wider">
-                  Native Sessions
-                </p>
-                <div className="space-y-0.5">
-                  {nativeSessions.map((s) => renderNativeSessionItem(s))}
-                </div>
-              </div>
-            )}
-          </>
+          <div className="pt-0.5">
+            <p className="px-2 py-0.5 text-[9px] font-semibold text-cc-muted uppercase tracking-widest">
+              Resume Sessions
+            </p>
+            <div>
+              {nativeSessions.map((s) => renderNativeSessionItem(s))}
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Footer */}
-      <div className="p-3 border-t border-cc-border space-y-0.5">
-        <button
-          onClick={() => setShowEnvManager(true)}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[10px] text-sm text-cc-muted hover:text-cc-fg hover:bg-cc-hover transition-colors cursor-pointer"
-        >
-          <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
-            <path d="M8 1a2 2 0 012 2v1h2a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2h2V3a2 2 0 012-2zm0 1.5a.5.5 0 00-.5.5v1h1V3a.5.5 0 00-.5-.5zM4 5.5a.5.5 0 00-.5.5v6a.5.5 0 00.5.5h8a.5.5 0 00.5-.5V6a.5.5 0 00-.5-.5H4z" />
-          </svg>
-          <span>Environments</span>
-        </button>
-        <button
-          onClick={toggleDarkMode}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[10px] text-sm text-cc-muted hover:text-cc-fg hover:bg-cc-hover transition-colors cursor-pointer"
-        >
-          {darkMode ? (
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+      {/* Footer — compact icon row */}
+      <div className="px-3 py-1.5 border-t border-cc-border flex items-center justify-between">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setShowEnvManager(true)}
+            title="Environments"
+            className="p-1.5 rounded-[8px] text-cc-muted hover:text-cc-fg hover:bg-cc-hover transition-colors cursor-pointer"
+          >
+            <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+              <path d="M8 1a2 2 0 012 2v1h2a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2h2V3a2 2 0 012-2zm0 1.5a.5.5 0 00-.5.5v1h1V3a.5.5 0 00-.5-.5zM4 5.5a.5.5 0 00-.5.5v6a.5.5 0 00.5.5h8a.5.5 0 00.5-.5V6a.5.5 0 00-.5-.5H4z" />
             </svg>
-          ) : (
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-            </svg>
-          )}
-          <span>{darkMode ? "Light mode" : "Dark mode"}</span>
-        </button>
-        <p className="text-[10px] text-cc-muted/40 text-center pt-2">
-          v0.7.0
-        </p>
+          </button>
+          <button
+            onClick={toggleDarkMode}
+            title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+            className="p-1.5 rounded-[8px] text-cc-muted hover:text-cc-fg hover:bg-cc-hover transition-colors cursor-pointer"
+          >
+            {darkMode ? (
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+              </svg>
+            )}
+          </button>
+        </div>
+        <p className="text-[10px] text-cc-muted/40">v0.8.10</p>
       </div>
 
       {/* Environment manager modal */}
       {showEnvManager && (
         <EnvManager onClose={() => setShowEnvManager(false)} />
+      )}
+
+      {/* Instant hover tooltip (fixed position escapes overflow clip) */}
+      {tooltip && (
+        <div
+          className="fixed z-[9999] bg-cc-card border border-cc-border rounded-lg shadow-lg px-3 py-2 text-[11px] text-cc-fg max-w-[280px] whitespace-pre-wrap pointer-events-none leading-relaxed"
+          style={{ left: tooltip.x, top: tooltip.y }}
+        >
+          {tooltip.text}
+        </div>
       )}
     </aside>
   );

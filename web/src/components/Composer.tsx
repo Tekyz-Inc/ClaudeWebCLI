@@ -3,8 +3,6 @@ import { useStore } from "../store.js";
 import { sendToSession } from "../ws.js";
 import { api } from "../api.js";
 import { usePromptHistory } from "../hooks/use-prompt-history.js";
-import { useVoiceInput } from "../hooks/use-voice-input.js";
-import { SpeechMonitor } from "./SpeechMonitor.js";
 import { requestNotificationPermission } from "../utils/notifications.js";
 
 let idCounter = 0;
@@ -56,57 +54,6 @@ export function Composer({ sessionId }: { sessionId: string }) {
 
   const { navigateUp, navigateDown, addToHistory, resetNavigation, saveDraft } =
     usePromptHistory(sessionId);
-
-  const voice = useVoiceInput();
-  const voiceCursorRef = useRef<number>(-1);
-
-  const handleStartVoice = useCallback(() => {
-    voiceCursorRef.current = textareaRef.current?.selectionStart ?? text.length;
-    voice.start();
-  }, [voice, text]);
-
-  const handleStopVoice = useCallback(async () => {
-    const transcribed = await voice.stop();
-    if (transcribed) {
-      const pos = voiceCursorRef.current;
-      setText((prev) => {
-        const at = pos >= 0 ? Math.min(pos, prev.length) : prev.length;
-        const before = prev.slice(0, at);
-        const after = prev.slice(at);
-        const sB = before.length > 0 && !before.endsWith(" ");
-        const sA = after.length > 0 && !after.startsWith(" ");
-        return before + (sB ? " " : "") + transcribed + (sA ? " " : "") + after;
-      });
-    }
-    voice.clearState();
-    voiceCursorRef.current = -1;
-  }, [voice]);
-
-  // Insert voice text at cursor position (or end if -1)
-  const voiceActive = !!voice.interimText;
-  const vCursor = voiceCursorRef.current >= 0 ? Math.min(voiceCursorRef.current, text.length) : text.length;
-  const vBefore = voiceActive ? text.slice(0, vCursor) : "";
-  const vAfter = voiceActive ? text.slice(vCursor) : "";
-  const vSpaceB = voiceActive && vBefore.length > 0 && !vBefore.endsWith(" ");
-  const vSpaceA = voiceActive && vAfter.length > 0 && !vAfter.startsWith(" ");
-
-  const displayText = voiceActive
-    ? vBefore + (vSpaceB ? " " : "") + voice.interimText + (vSpaceA ? " " : "") + vAfter
-    : text;
-
-  // Overlay: split voice portion into corrected (normal) + pending (ghost)
-  const showVoiceOverlay = voice.isListening && !!voice.interimText;
-  let overlayLeft = "";
-  let overlayGhost = "";
-  let overlayRight = "";
-  if (showVoiceOverlay) {
-    const voiceStart = vBefore.length + (vSpaceB ? 1 : 0);
-    const voiceEnd = voiceStart + voice.interimText.length;
-    const corrLen = voice.correctedText ? voice.correctedText.length : 0;
-    overlayLeft = displayText.slice(0, voiceStart + corrLen);
-    overlayGhost = displayText.slice(voiceStart + corrLen, voiceEnd);
-    overlayRight = displayText.slice(voiceEnd);
-  }
 
   const isConnected = cliConnected.get(sessionId) ?? false;
   const currentMode = sessionData?.permissionMode || "acceptEdits";
@@ -174,25 +121,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
   }, []);
 
   async function handleSend() {
-    let msg = text;
-
-    // Stop voice and include transcription if mic is on
-    if (voice.isListening) {
-      const transcribed = await voice.stop();
-      voice.clearState();
-      if (transcribed) {
-        const pos = voiceCursorRef.current;
-        const at = pos >= 0 ? Math.min(pos, msg.length) : msg.length;
-        const before = msg.slice(0, at);
-        const after = msg.slice(at);
-        const sB = before.length > 0 && !before.endsWith(" ");
-        const sA = after.length > 0 && !after.startsWith(" ");
-        msg = before + (sB ? " " : "") + transcribed + (sA ? " " : "") + after;
-      }
-      voiceCursorRef.current = -1;
-    }
-
-    msg = msg.trim();
+    const msg = text.trim();
     if (!msg || !isConnected) return;
 
     sendToSession(sessionId, {
@@ -294,10 +223,9 @@ export function Composer({ sessionId }: { sessionId: string }) {
     if (!ta) return;
     ta.style.height = "auto";
     ta.style.height = Math.min(ta.scrollHeight, 200) + "px";
-  }, [displayText]);
+  }, [text]);
 
   function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    if (voice.isListening || voice.isProcessing || voice.isStarting) return;
     setText(e.target.value);
   }
 
@@ -382,11 +310,10 @@ export function Composer({ sessionId }: { sessionId: string }) {
 
   const sessionStatus = useStore((s) => s.sessionStatus);
   const isRunning = sessionStatus.get(sessionId) === "running";
-  const canSend = displayText.trim().length > 0 && isConnected;
+  const canSend = text.trim().length > 0 && isConnected;
 
   return (
-  <>
-    <div
+  <div
       className="shrink-0 border-t border-cc-border bg-cc-card px-2 sm:px-4 py-2 sm:py-3 relative"
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
@@ -478,27 +405,16 @@ export function Composer({ sessionId }: { sessionId: string }) {
           <div className="relative">
             <textarea
               ref={textareaRef}
-              value={displayText}
+              value={text}
               onChange={handleInput}
               onKeyDown={handleKeyDown}
               onPaste={handlePaste}
               placeholder={isConnected ? "Type a message... (/ for commands)" : "Waiting for CLI connection..."}
               disabled={!isConnected}
               rows={1}
-              className={`w-full px-4 pt-3 pb-1 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted disabled:opacity-50${showVoiceOverlay ? " voice-overlay-active" : ""}`}
+              className="w-full px-4 pt-3 pb-1 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted disabled:opacity-50"
               style={{ minHeight: "36px", maxHeight: "200px" }}
             />
-            {showVoiceOverlay && (
-              <div
-                className="absolute top-0 left-0 right-0 px-4 pt-3 pb-1 text-sm font-sans-ui pointer-events-none whitespace-pre-wrap break-words overflow-hidden"
-                style={{ maxHeight: "200px" }}
-                aria-hidden="true"
-              >
-                <span className="text-cc-fg">{overlayLeft}</span>
-                <span className="voice-ghost">{overlayGhost}</span>
-                <span className="text-cc-fg">{overlayRight}</span>
-              </div>
-            )}
           </div>
 
           {/* Git branch + lines info */}
@@ -565,52 +481,8 @@ export function Composer({ sessionId }: { sessionId: string }) {
               <span>{COMPOSER_MODES.find((m) => m.value === currentMode)?.label || "Bypass"}</span>
             </button>
 
-            {/* Right: voice + image + send/stop */}
+            {/* Right: image + send/stop */}
             <div className="flex items-center gap-1">
-              {voice.isSupported && (
-                <button
-                  onClick={voice.isListening ? handleStopVoice : (voice.isProcessing || voice.isStarting) ? undefined : handleStartVoice}
-                  disabled={!isConnected || voice.isProcessing || voice.isStarting || voice.isModelLoading}
-                  className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
-                    !isConnected || voice.isModelLoading
-                      ? "text-cc-muted opacity-30 cursor-not-allowed"
-                      : voice.isProcessing || voice.isStarting
-                      ? "text-cc-primary opacity-60 cursor-wait"
-                      : voice.isListening
-                      ? "text-cc-error hover:bg-cc-error/10 cursor-pointer"
-                      : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover cursor-pointer"
-                  }`}
-                  title={
-                    voice.isModelLoading ? `Loading voice model (${Math.round(voice.loadProgress)}%)`
-                    : voice.isStarting ? "Starting..."
-                    : voice.isProcessing ? "Transcribing..."
-                    : voice.isListening ? "Stop recording"
-                    : "Voice input"
-                  }
-                >
-                  {voice.isProcessing || voice.isStarting ? (
-                    <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 animate-spin">
-                      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" strokeDasharray="28" strokeDashoffset="8" strokeLinecap="round" />
-                    </svg>
-                  ) : voice.isListening ? (
-                    <span className="relative flex items-center justify-center w-4 h-4">
-                      <span className="absolute inline-flex h-full w-full rounded-full bg-cc-error opacity-30 animate-ping" />
-                      <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4 relative">
-                        <rect x="5" y="2" width="6" height="8" rx="3" />
-                        <path d="M3 7v1a5 5 0 0010 0V7" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                        <line x1="8" y1="13" x2="8" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                      </svg>
-                    </span>
-                  ) : (
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4">
-                      <rect x="5" y="2" width="6" height="8" rx="3" />
-                      <path d="M3 7v1a5 5 0 0010 0V7" strokeLinecap="round" />
-                      <line x1="8" y1="13" x2="8" y2="15" strokeLinecap="round" />
-                    </svg>
-                  )}
-                </button>
-              )}
-
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={!isConnected}
@@ -657,7 +529,5 @@ export function Composer({ sessionId }: { sessionId: string }) {
         </div>
       </div>
     </div>
-    <SpeechMonitor />
-  </>
   );
 }

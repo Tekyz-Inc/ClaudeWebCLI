@@ -212,4 +212,9 @@ export const api = {
   getClaudeSessions: (cwd: string) =>
     get<ClaudeSession[]>(`/claude-sessions?cwd=${encodeURIComponent(cwd)}`),
 
+  getClaudeSessionMessages: (cwd: string, sessionId: string) =>
+    get<{ role: "user" | "assistant"; content: string; timestamp: string }[]>(
+      `/claude-sessions/${encodeURIComponent(sessionId)}/messages?cwd=${encodeURIComponent(cwd)}`
+    ),
+
 };

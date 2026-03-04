@@ -1,10 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useStore } from "../store.js";
 import { api, type CompanionEnv, type GitRepoInfo, type GitBranchInfo } from "../api.js";
 import { connectSession, waitForConnection, sendToSession } from "../ws.js";
 import { disconnectSession } from "../ws.js";
-import { useVoiceInput } from "../hooks/use-voice-input.js";
-import { SpeechMonitor } from "./SpeechMonitor.js";
 import { getRecentDirs, addRecentDir } from "../utils/recent-dirs.js";
 import { EnvManager } from "./EnvManager.js";
 import { FolderPicker } from "./FolderPicker.js";
@@ -60,58 +58,6 @@ export function HomePage() {
   const [showEnvManager, setShowEnvManager] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Voice input
-  const voice = useVoiceInput();
-  const voiceCursorRef = useRef<number>(-1);
-
-  const handleStartVoice = useCallback(() => {
-    voiceCursorRef.current = textareaRef.current?.selectionStart ?? text.length;
-    voice.start();
-  }, [voice, text]);
-
-  const handleStopVoice = useCallback(async () => {
-    const transcribed = await voice.stop();
-    if (transcribed) {
-      const pos = voiceCursorRef.current;
-      setText((prev) => {
-        const at = pos >= 0 ? Math.min(pos, prev.length) : prev.length;
-        const before = prev.slice(0, at);
-        const after = prev.slice(at);
-        const sB = before.length > 0 && !before.endsWith(" ");
-        const sA = after.length > 0 && !after.startsWith(" ");
-        return before + (sB ? " " : "") + transcribed + (sA ? " " : "") + after;
-      });
-    }
-    voice.clearState();
-    voiceCursorRef.current = -1;
-  }, [voice]);
-
-  // Insert voice text at cursor position (or end if -1)
-  const voiceActive = !!voice.interimText;
-  const vCursor = voiceCursorRef.current >= 0 ? Math.min(voiceCursorRef.current, text.length) : text.length;
-  const vBefore = voiceActive ? text.slice(0, vCursor) : "";
-  const vAfter = voiceActive ? text.slice(vCursor) : "";
-  const vSpaceB = voiceActive && vBefore.length > 0 && !vBefore.endsWith(" ");
-  const vSpaceA = voiceActive && vAfter.length > 0 && !vAfter.startsWith(" ");
-
-  const displayText = voiceActive
-    ? vBefore + (vSpaceB ? " " : "") + voice.interimText + (vSpaceA ? " " : "") + vAfter
-    : text;
-
-  // Overlay: split voice portion into corrected (normal) + pending (ghost)
-  const showVoiceOverlay = voice.isListening && !!voice.interimText;
-  let overlayLeft = "";
-  let overlayGhost = "";
-  let overlayRight = "";
-  if (showVoiceOverlay) {
-    const voiceStart = vBefore.length + (vSpaceB ? 1 : 0);
-    const voiceEnd = voiceStart + voice.interimText.length;
-    const corrLen = voice.correctedText ? voice.correctedText.length : 0;
-    overlayLeft = displayText.slice(0, voiceStart + corrLen);
-    overlayGhost = displayText.slice(voiceStart + corrLen, voiceEnd);
-    overlayRight = displayText.slice(voiceEnd);
-  }
 
   // Dropdown states
   const [showFolderPicker, setShowFolderPicker] = useState(false);
@@ -255,10 +201,9 @@ export function HomePage() {
     if (!ta) return;
     ta.style.height = "auto";
     ta.style.height = Math.min(ta.scrollHeight, 300) + "px";
-  }, [displayText]);
+  }, [text]);
 
   function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    if (voice.isListening || voice.isProcessing) return;
     setText(e.target.value);
   }
 
@@ -276,25 +221,7 @@ export function HomePage() {
   }
 
   async function handleSend() {
-    let msg = text;
-
-    // Stop voice and include transcription if mic is on
-    if (voice.isListening) {
-      const transcribed = await voice.stop();
-      voice.clearState();
-      if (transcribed) {
-        const pos = voiceCursorRef.current;
-        const at = pos >= 0 ? Math.min(pos, msg.length) : msg.length;
-        const before = msg.slice(0, at);
-        const after = msg.slice(at);
-        const sB = before.length > 0 && !before.endsWith(" ");
-        const sA = after.length > 0 && !after.startsWith(" ");
-        msg = before + (sB ? " " : "") + transcribed + (sA ? " " : "") + after;
-      }
-      voiceCursorRef.current = -1;
-    }
-
-    msg = msg.trim();
+    const msg = text.trim();
     if (!msg || sending) return;
 
     setSending(true);
@@ -358,7 +285,7 @@ export function HomePage() {
     }
   }
 
-  const canSend = displayText.trim().length > 0 && !sending;
+  const canSend = text.trim().length > 0 && !sending;
 
   return (
   <div className="flex flex-col h-full">
@@ -410,26 +337,15 @@ export function HomePage() {
           <div className="relative">
             <textarea
               ref={textareaRef}
-              value={displayText}
+              value={text}
               onChange={handleInput}
               onKeyDown={handleKeyDown}
               onPaste={handlePaste}
               placeholder="Fix a bug, build a feature, refactor code..."
               rows={4}
-              className={`w-full px-4 pt-4 pb-2 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted${showVoiceOverlay ? " voice-overlay-active" : ""}`}
+              className="w-full px-4 pt-4 pb-2 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted"
               style={{ minHeight: "100px", maxHeight: "300px" }}
             />
-            {showVoiceOverlay && (
-              <div
-                className="absolute top-0 left-0 right-0 px-4 pt-4 pb-2 text-sm font-sans-ui pointer-events-none whitespace-pre-wrap break-words overflow-hidden"
-                style={{ maxHeight: "300px" }}
-                aria-hidden="true"
-              >
-                <span className="text-cc-fg">{overlayLeft}</span>
-                <span className="voice-ghost">{overlayGhost}</span>
-                <span className="text-cc-fg">{overlayRight}</span>
-              </div>
-            )}
           </div>
 
           {/* Bottom toolbar — matches Composer layout */}
@@ -456,33 +372,8 @@ export function HomePage() {
               </button>
             </div>
 
-            {/* Right: voice + image + send */}
+            {/* Right: image + send */}
             <div className="flex items-center gap-1">
-              {voice.isSupported && (
-                <button
-                  onClick={voice.isListening ? handleStopVoice : voice.isProcessing ? undefined : handleStartVoice}
-                  disabled={voice.isProcessing || voice.isModelLoading}
-                  className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
-                    voice.isModelLoading
-                      ? "text-cc-muted opacity-30 cursor-not-allowed"
-                      : voice.isProcessing
-                      ? "text-cc-primary opacity-60 cursor-wait"
-                      : voice.isListening
-                      ? "text-cc-error hover:bg-cc-error/10 cursor-pointer"
-                      : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover cursor-pointer"
-                  }`}
-                  title={
-                    voice.isModelLoading ? `Loading voice model (${Math.round(voice.loadProgress)}%)`
-                    : voice.isProcessing ? "Transcribing..."
-                    : voice.isListening ? "Stop recording"
-                    : "Voice input"
-                  }
-                >
-                  <svg viewBox="0 0 16 16" fill="currentColor" className={`w-4 h-4 ${voice.isListening ? "animate-pulse" : ""}`}>
-                    <path d="M8 1a2.5 2.5 0 00-2.5 2.5v4a2.5 2.5 0 005 0v-4A2.5 2.5 0 008 1zM5 7a.5.5 0 00-1 0 4 4 0 003.5 3.969V13H6a.5.5 0 000 1h4a.5.5 0 000-1H8.5v-2.031A4 4 0 0012 7a.5.5 0 00-1 0 3 3 0 01-6 0z" />
-                  </svg>
-                </button>
-              )}
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="flex items-center justify-center w-8 h-8 rounded-lg text-cc-muted hover:text-cc-fg hover:bg-cc-hover transition-colors cursor-pointer"
@@ -796,7 +687,6 @@ export function HomePage() {
         />
       )}
     </div>
-    <SpeechMonitor />
   </div>
   );
 }

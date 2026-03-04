@@ -199,8 +199,25 @@ export const useStore = create<AppState>((set) => ({
   },
 
   resumeNativeSession: async (cliId, cwd) => {
-    const result = await api.createSession({ cwd, resumeCliId: cliId });
+    // Fetch history and create session in parallel
+    const [historyResult, result] = await Promise.all([
+      api.getClaudeSessionMessages(cwd, cliId).catch(() => []),
+      api.createSession({ cwd, resumeCliId: cliId }),
+    ]);
     const { sessionId } = result;
+
+    // Pre-populate message history before connecting so it shows immediately
+    if (historyResult.length > 0) {
+      let idSeq = 0;
+      const chatMessages = historyResult.map((m) => ({
+        id: `hist-${cliId}-${idSeq++}`,
+        role: m.role as "user" | "assistant",
+        content: m.content,
+        timestamp: new Date(m.timestamp).getTime() || Date.now(),
+      }));
+      useStore.getState().setMessages(sessionId, chatMessages);
+    }
+
     // Dynamic import avoids circular dependency (ws.ts imports store.ts)
     const { connectSession } = await import("./ws.js");
     connectSession(sessionId);

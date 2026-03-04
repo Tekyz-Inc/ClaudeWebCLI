@@ -107,3 +107,53 @@ export async function readClaudeSessions(cwd: string): Promise<ClaudeSession[]> 
   const dir = join(homedir(), ".claude", "projects", slug);
   return readClaudeSessionsFromDir(dir, cwd);
 }
+
+export interface SessionHistoryMessage {
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+}
+
+export async function readClaudeSessionMessages(
+  cwd: string,
+  sessionId: string
+): Promise<SessionHistoryMessage[]> {
+  const slug = encodeProjectSlug(cwd);
+  const filePath = join(homedir(), ".claude", "projects", slug, `${sessionId}.jsonl`);
+  let contents: string;
+  try {
+    contents = await readFile(filePath, "utf-8");
+  } catch {
+    return [];
+  }
+  const messages: SessionHistoryMessage[] = [];
+  const lines = contents.split("\n").filter((l) => l.trim());
+  for (const line of lines) {
+    try {
+      const entry = JSON.parse(line) as JsonlEntry;
+      if (entry.type === "user" && entry.message?.role === "user") {
+        const content = entry.message.content;
+        let text = "";
+        if (typeof content === "string") {
+          text = content.trim();
+        } else if (Array.isArray(content)) {
+          const block = content.find((b) => b.type === "text");
+          if (block?.text) text = block.text.trim();
+        }
+        if (text) messages.push({ role: "user", content: text, timestamp: entry.timestamp ?? new Date().toISOString() });
+      } else if (entry.type === "assistant" && entry.message?.role === "assistant") {
+        const content = entry.message.content;
+        let text = "";
+        if (typeof content === "string") {
+          text = content.trim();
+        } else if (Array.isArray(content)) {
+          text = content.filter((b) => b.type === "text").map((b) => b.text || "").filter(Boolean).join("\n");
+        }
+        if (text) messages.push({ role: "assistant", content: text, timestamp: entry.timestamp ?? new Date().toISOString() });
+      }
+    } catch {
+      continue;
+    }
+  }
+  return messages;
+}

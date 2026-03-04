@@ -40,3 +40,30 @@ Formats raw dictated text with contextual punctuation, capitalization, and numbe
 
 **Owner:** server-formatter domain
 **Consumers:** client-formatter domain (via `api.formatDictation()`)
+
+---
+
+# API Contract — Session History
+
+## GET /api/claude-sessions/:id/messages?cwd=\<path\>
+
+Returns parsed message history for a native CLI session `.jsonl` file.
+
+**Query params:**
+- `cwd` (required): Project working directory path (used to locate the project slug directory)
+- `:id`: Session ID (filename without `.jsonl`)
+
+**Response (success):**
+```typescript
+SessionHistoryMessage[]  // array of parsed messages
+interface SessionHistoryMessage {
+  role: "user" | "assistant";
+  content: string;
+  timestamp?: string;
+}
+```
+
+**Response (error):** `400` if `cwd` missing, `500` on read failure
+
+**Owner:** claude-sessions-api domain
+**Consumers:** `api.getClaudeSessionMessages()` → `store.resumeNativeSession()`

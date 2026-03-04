@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.9.10] - 2026-03-04
+
+### Added
+- Session history pre-population: resuming a native CLI session now loads previous chat messages into the center panel from `.jsonl` files
+- `GET /api/claude-sessions/:id/messages` endpoint — parses native `.jsonl` session files into `SessionHistoryMessage[]`
+- ProjectTabBar auto-selects the most recently used project on page load (localStorage persistence)
+
+### Changed
+- Sidebar redesigned: compact `time · message` inline format, instant fixed-position tooltip (no delay), "RESUME SESSIONS" heading, removed web SDK session list
+- Removed all voice/microphone input from Composer and HomePage (STTEngine/Whisper infrastructure retained in workers)
+
 ## [0.6.0] - 2026-02-17
 
 ### Added
