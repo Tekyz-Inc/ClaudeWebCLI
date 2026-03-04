@@ -210,6 +210,12 @@ Then open http://localhost:5174 (Vite frontend — proxies API to :3456)
 >     $env:PORT=3457; bun run dev
 > Then open http://localhost:5174 (backend moves to :3457; Vite still serves on :5174)
 
+> **Port strategy:**
+> - Dev: `:3456` (default) or `:3457` (Bitdefender workaround)
+> - E2E tests: always `:3458` — hardcoded in `playwright.config.ts`, never conflicts with dev
+> - Vite HMR: always `:5174`
+> - `global-teardown.ts` kills ports 3458 + 5174 after every Playwright run
+
 ### Production build:
 
     cd web

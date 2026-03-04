@@ -1,11 +1,14 @@
 import { defineConfig } from "@playwright/test";
 
-const PORT = Number(process.env.PORT) || 3457;
+// Test runs always use port 3458 — separate from dev ports (3456/3457)
+// so tests never conflict with a running dev server.
+const TEST_PORT = 3458;
 
 export default defineConfig({
   testDir: "./tests/e2e",
   timeout: 60_000,
   retries: 0,
+  globalTeardown: "./tests/global-teardown",
   use: {
     headless: true,
     baseURL: "http://localhost:5174",
@@ -14,7 +17,7 @@ export default defineConfig({
   },
   webServer: {
     command: "bun dev.ts",
-    env: { PORT: String(PORT) },
+    env: { PORT: String(TEST_PORT) },
     url: "http://localhost:5174",
     reuseExistingServer: true,
     timeout: 30_000,
