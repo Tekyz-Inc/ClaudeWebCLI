@@ -70,6 +70,8 @@ export interface CreateSessionOpts {
   branch?: string;
   createBranch?: boolean;
   useWorktree?: boolean;
+  /** Native Claude CLI session ID to resume via --resume <id> */
+  resumeCliId?: string;
 }
 
 export interface GitRepoInfo {

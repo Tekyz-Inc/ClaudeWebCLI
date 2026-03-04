@@ -44,6 +44,8 @@ export interface LaunchOptions {
     actualBranch: string;
     worktreePath: string;
   };
+  /** Native CLI session ID to resume via --resume <id> */
+  resumeCliId?: string;
 }
 
 /**
@@ -132,6 +134,11 @@ export class CliLauncher {
       info.repoRoot = options.worktreeInfo.repoRoot;
       info.branch = options.worktreeInfo.branch;
       info.actualBranch = options.worktreeInfo.actualBranch;
+    }
+
+    // Pre-populate cliSessionId so --resume is passed on first spawn
+    if (options.resumeCliId) {
+      info.cliSessionId = options.resumeCliId;
     }
 
     this.sessions.set(sessionId, info);
@@ -230,10 +237,11 @@ export class CliLauncher {
       );
     }
 
-    // Always pass -p "" for headless mode. When relaunching, also pass --resume
-    // to restore the CLI's conversation context.
-    if (options.resumeSessionId) {
-      args.push("--resume", options.resumeSessionId);
+    // Always pass -p "" for headless mode. When relaunching or resuming a native
+    // session, also pass --resume to restore the CLI's conversation context.
+    const resumeId = options.resumeSessionId ?? options.resumeCliId;
+    if (resumeId) {
+      args.push("--resume", resumeId);
     }
     args.push("-p", "");
 
@@ -270,7 +278,7 @@ export class CliLauncher {
         // If the process exited almost immediately with --resume, the resume likely failed.
         // Clear cliSessionId so the next relaunch starts fresh.
         const uptime = Date.now() - spawnedAt;
-        if (uptime < 5000 && options.resumeSessionId) {
+        if (uptime < 5000 && (options.resumeSessionId || options.resumeCliId)) {
           console.error(`[cli-launcher] Session ${sessionId} exited immediately after --resume (${uptime}ms). Clearing cliSessionId for fresh start.`);
           session.cliSessionId = undefined;
         }

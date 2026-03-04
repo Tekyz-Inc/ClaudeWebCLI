@@ -341,6 +341,21 @@ describe("launch", () => {
     expect(options.env.MY_VAR).toBe("hello");
     expect(options.env.CLAUDECODE).toBe("1");
   });
+
+  it("pre-populates cliSessionId when resumeCliId is provided", () => {
+    const info = launcher.launch({ cwd: "/tmp/project", resumeCliId: "native-cli-uuid" });
+
+    expect(info.cliSessionId).toBe("native-cli-uuid");
+  });
+
+  it("spawns CLI with --resume when resumeCliId is set", () => {
+    launcher.launch({ cwd: "/tmp/project", resumeCliId: "native-cli-uuid" });
+
+    const [cmdAndArgs] = mockSpawn.mock.calls[0];
+    const resumeIdx = cmdAndArgs.indexOf("--resume");
+    expect(resumeIdx).toBeGreaterThan(-1);
+    expect(cmdAndArgs[resumeIdx + 1]).toBe("native-cli-uuid");
+  });
 });
 
 // ─── state management ────────────────────────────────────────────────────────

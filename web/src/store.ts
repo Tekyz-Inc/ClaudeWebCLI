@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { SessionState, PermissionRequest, ChatMessage, SdkSessionInfo, TaskItem } from "./types.js";
+import { api } from "./api.js";
 
 interface AppState {
   // Sessions
@@ -57,6 +58,7 @@ interface AppState {
   setSidebarOpen: (v: boolean) => void;
   setTaskPanelOpen: (open: boolean) => void;
   newSession: () => void;
+  resumeNativeSession: (cliId: string, cwd: string) => Promise<void>;
 
   // Session actions
   setCurrentSession: (id: string | null) => void;
@@ -194,6 +196,15 @@ export const useStore = create<AppState>((set) => ({
   newSession: () => {
     sessionStorage.removeItem("cc-current-session");
     set((s) => ({ currentSessionId: null, homeResetKey: s.homeResetKey + 1 }));
+  },
+
+  resumeNativeSession: async (cliId, cwd) => {
+    const result = await api.createSession({ cwd, resumeCliId: cliId });
+    const { sessionId } = result;
+    // Dynamic import avoids circular dependency (ws.ts imports store.ts)
+    const { connectSession } = await import("./ws.js");
+    connectSession(sessionId);
+    set({ currentSessionId: sessionId });
   },
 
   setCurrentSession: (id) => {
