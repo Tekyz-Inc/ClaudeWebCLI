@@ -30,7 +30,7 @@ function useProjectStatus(projectPath: string): TabStatus {
 function StatusIndicator({ status, hasSessions }: { status: TabStatus; hasSessions: boolean }) {
   if (status === "running") {
     return (
-      <span className="w-1.5 h-1.5 rounded-full bg-cc-primary animate-[pulse-dot_1s_ease-in-out_infinite] shrink-0" />
+      <span className="w-2 h-2 rounded-full bg-green-500 animate-[pulse-dot_1.2s_ease-in-out_infinite] shrink-0" />
     );
   }
   if (status === "waiting") {

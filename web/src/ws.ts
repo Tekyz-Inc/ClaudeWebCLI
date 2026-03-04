@@ -90,6 +90,20 @@ function extractChangedFilesFromBlocks(sessionId: string, blocks: ContentBlock[]
   }
 }
 
+function extractActivityFromBlocks(sessionId: string, blocks: ContentBlock[]) {
+  const store = useStore.getState();
+  for (const block of blocks) {
+    if (block.type !== "tool_use") continue;
+    const { name, input } = block;
+    if (name === "Read" && typeof input.file_path === "string") {
+      store.addReadFile(sessionId, input.file_path);
+    }
+    if (name === "Bash" && typeof input.command === "string") {
+      store.addCommandExecuted(sessionId, input.command);
+    }
+  }
+}
+
 let idCounter = 0;
 function nextId(): string {
   return `msg-${Date.now()}-${++idCounter}`;
@@ -160,10 +174,11 @@ function handleMessage(sessionId: string, event: MessageEvent) {
         store.setStreamingStats(sessionId, { startedAt: Date.now() });
       }
 
-      // Extract tasks and changed files from tool_use content blocks
+      // Extract tasks, changed files, and activity from tool_use content blocks
       if (msg.content?.length) {
         extractTasksFromBlocks(sessionId, msg.content);
         extractChangedFilesFromBlocks(sessionId, msg.content);
+        extractActivityFromBlocks(sessionId, msg.content);
       }
 
       break;
@@ -355,10 +370,11 @@ function handleMessage(sessionId: string, event: MessageEvent) {
             model: msg.model,
             stopReason: msg.stop_reason,
           });
-          // Also extract tasks and changed files from history
+          // Also extract tasks, changed files, and activity from history
           if (msg.content?.length) {
             extractTasksFromBlocks(sessionId, msg.content);
             extractChangedFilesFromBlocks(sessionId, msg.content);
+            extractActivityFromBlocks(sessionId, msg.content);
           }
         } else if (histMsg.type === "result") {
           const r = histMsg.data;

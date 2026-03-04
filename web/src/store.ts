@@ -37,6 +37,12 @@ interface AppState {
   // Files changed by the agent per session (Edit/Write tool calls)
   changedFiles: Map<string, Set<string>>;
 
+  // Files read per session (Read tool calls)
+  filesRead: Map<string, Set<string>>;
+
+  // Commands executed per session (Bash tool calls), most recent first, capped at 20
+  commandsExecuted: Map<string, string[]>;
+
   // Session display names
   sessionNames: Map<string, string>;
   // Track sessions that were just renamed (for animation)
@@ -86,6 +92,10 @@ interface AppState {
   // Changed files actions
   addChangedFile: (sessionId: string, filePath: string) => void;
   clearChangedFiles: (sessionId: string) => void;
+
+  // Activity tracking actions
+  addReadFile: (sessionId: string, filePath: string) => void;
+  addCommandExecuted: (sessionId: string, cmd: string) => void;
 
   // Session name actions
   setSessionName: (sessionId: string, name: string) => void;
@@ -167,6 +177,8 @@ export const useStore = create<AppState>((set) => ({
   previousPermissionMode: new Map(),
   sessionTasks: new Map(),
   changedFiles: new Map(),
+  filesRead: new Map(),
+  commandsExecuted: new Map(),
   promptHistory: getInitialPromptHistory(),
   sessionNames: getInitialSessionNames(),
   recentlyRenamed: new Set(),
@@ -276,6 +288,10 @@ export const useStore = create<AppState>((set) => ({
       sessionTasks.delete(sessionId);
       const changedFiles = new Map(s.changedFiles);
       changedFiles.delete(sessionId);
+      const filesRead = new Map(s.filesRead);
+      filesRead.delete(sessionId);
+      const commandsExecuted = new Map(s.commandsExecuted);
+      commandsExecuted.delete(sessionId);
       const sessionNames = new Map(s.sessionNames);
       sessionNames.delete(sessionId);
       const recentlyRenamed = new Set(s.recentlyRenamed);
@@ -303,6 +319,8 @@ export const useStore = create<AppState>((set) => ({
         pendingPermissions,
         sessionTasks,
         changedFiles,
+        filesRead,
+        commandsExecuted,
         sessionNames,
         recentlyRenamed,
         editorOpenFile,
@@ -434,6 +452,23 @@ export const useStore = create<AppState>((set) => ({
       return { changedFiles };
     }),
 
+  addReadFile: (sessionId, filePath) =>
+    set((s) => {
+      const filesRead = new Map(s.filesRead);
+      const files = new Set(filesRead.get(sessionId) || []);
+      files.add(filePath);
+      filesRead.set(sessionId, files);
+      return { filesRead };
+    }),
+
+  addCommandExecuted: (sessionId, cmd) =>
+    set((s) => {
+      const commandsExecuted = new Map(s.commandsExecuted);
+      const cmds = commandsExecuted.get(sessionId) || [];
+      commandsExecuted.set(sessionId, [cmd, ...cmds].slice(0, 20));
+      return { commandsExecuted };
+    }),
+
   setSessionName: (sessionId, name) =>
     set((s) => {
       const sessionNames = new Map(s.sessionNames);
@@ -540,6 +575,8 @@ export const useStore = create<AppState>((set) => ({
       previousPermissionMode: new Map(),
       sessionTasks: new Map(),
       changedFiles: new Map(),
+      filesRead: new Map(),
+      commandsExecuted: new Map(),
       promptHistory: new Map(),
       sessionNames: new Map(),
       recentlyRenamed: new Set(),
