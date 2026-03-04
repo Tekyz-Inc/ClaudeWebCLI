@@ -33,7 +33,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
               ))}
             </div>
           )}
-          <pre className="text-[13px] sm:text-[14px] whitespace-pre-wrap break-words font-sans-ui leading-relaxed">
+          <pre className="text-[12px] whitespace-pre-wrap break-words font-sans-ui leading-snug">
             {message.content}
           </pre>
         </div>
@@ -131,12 +131,12 @@ function AssistantAvatar() {
 
 function MarkdownContent({ text }: { text: string }) {
   return (
-    <div className="markdown-body text-[14px] sm:text-[15px] text-cc-fg leading-relaxed overflow-hidden">
+    <div className="markdown-body text-[13px] text-cc-fg leading-snug overflow-hidden">
       <Markdown
         remarkPlugins={[remarkGfm]}
         components={{
           p: ({ children }) => (
-            <p className="mb-3 last:mb-0">{children}</p>
+            <p className="mb-1.5 last:mb-0">{children}</p>
           ),
           strong: ({ children }) => (
             <strong className="font-semibold text-cc-fg">{children}</strong>
@@ -145,19 +145,19 @@ function MarkdownContent({ text }: { text: string }) {
             <em className="italic">{children}</em>
           ),
           h1: ({ children }) => (
-            <h1 className="text-xl font-bold text-cc-fg mt-4 mb-2">{children}</h1>
+            <h1 className="text-base font-bold text-cc-fg mt-3 mb-1">{children}</h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-lg font-bold text-cc-fg mt-3 mb-2">{children}</h2>
+            <h2 className="text-sm font-bold text-cc-fg mt-2 mb-1">{children}</h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-base font-semibold text-cc-fg mt-3 mb-1">{children}</h3>
+            <h3 className="text-[13px] font-semibold text-cc-fg mt-2 mb-0.5">{children}</h3>
           ),
           ul: ({ children }) => (
-            <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>
+            <ul className="list-disc pl-4 mb-1.5 space-y-0.5">{children}</ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>
+            <ol className="list-decimal pl-4 mb-1.5 space-y-0.5">{children}</ol>
           ),
           li: ({ children }) => (
             <li className="text-cc-fg">{children}</li>

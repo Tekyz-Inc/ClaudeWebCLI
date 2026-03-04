@@ -95,31 +95,42 @@ export function ToolBlock({
   );
 }
 
+function DiffPane({ lines, type }: { lines: string[]; type: "removed" | "added" }) {
+  const isRemoved = type === "removed";
+  return (
+    <div className={`flex-1 min-w-0 overflow-hidden ${isRemoved ? "border-r border-cc-border" : ""}`}>
+      <div className={`px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider border-b border-cc-border/40 ${
+        isRemoved ? "bg-red-900/30 text-red-400" : "bg-green-900/30 text-green-400"
+      }`}>
+        {isRemoved ? "before" : "after"}
+      </div>
+      <div className="overflow-x-auto overflow-y-auto max-h-44">
+        {lines.map((line, i) => (
+          <div key={i} className={`flex ${isRemoved ? "bg-red-900/20" : "bg-green-900/20"}`}>
+            <span className={`shrink-0 w-4 text-center text-[9px] select-none ${isRemoved ? "text-red-500" : "text-green-500"}`}>
+              {isRemoved ? "−" : "+"}
+            </span>
+            <span className={`whitespace-pre flex-1 px-0.5 ${isRemoved ? "text-red-200/80" : "text-green-200/80"}`}>
+              {line}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function EditToolDetail({ input }: { input: Record<string, unknown> }) {
   const filePath = String(input.file_path || "");
-  const oldStr = String(input.old_string || "");
-  const newStr = String(input.new_string || "");
+  const oldLines = String(input.old_string || "").split("\n");
+  const newLines = String(input.new_string || "").split("\n");
 
   return (
-    <div className="space-y-2">
-      <div className="text-xs text-cc-muted font-mono-code">{filePath}</div>
-      <div className="rounded-lg overflow-hidden border border-cc-border flex">
-        <div className="flex-1 min-w-0 border-r border-cc-border overflow-hidden">
-          <div className="px-2 py-1 bg-cc-error/5 text-[10px] text-cc-error font-semibold border-b border-cc-border">
-            Before
-          </div>
-          <pre className="px-3 py-2 bg-cc-code-bg text-cc-error text-[11px] font-mono-code leading-relaxed overflow-x-auto max-h-40 overflow-y-auto whitespace-pre">
-            {oldStr || <span className="text-cc-muted italic">empty</span>}
-          </pre>
-        </div>
-        <div className="flex-1 min-w-0 overflow-hidden">
-          <div className="px-2 py-1 bg-cc-success/5 text-[10px] text-cc-success font-semibold border-b border-cc-border">
-            After
-          </div>
-          <pre className="px-3 py-2 bg-cc-code-bg text-cc-success text-[11px] font-mono-code leading-relaxed overflow-x-auto max-h-40 overflow-y-auto whitespace-pre">
-            {newStr || <span className="text-cc-muted italic">empty</span>}
-          </pre>
-        </div>
+    <div className="space-y-1.5">
+      <div className="text-[10px] text-cc-muted font-mono-code truncate">{filePath}</div>
+      <div className="rounded border border-cc-border overflow-hidden flex font-mono-code text-[11px] bg-cc-code-bg leading-[1.4rem]">
+        <DiffPane lines={oldLines} type="removed" />
+        <DiffPane lines={newLines} type="added" />
       </div>
     </div>
   );

@@ -425,9 +425,9 @@ export function MessageFeed({ sessionId }: { sessionId: string }) {
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="h-full overflow-y-auto scroll-smooth px-3 sm:px-4 py-4 sm:py-6"
+        className="h-full overflow-y-auto scroll-smooth px-1 py-2"
       >
-        <div className="max-w-3xl mx-auto space-y-3 sm:space-y-5">
+        <div className="space-y-2">
           <FeedEntries entries={grouped} />
 
           {/* Streaming indicator */}
@@ -440,7 +440,7 @@ export function MessageFeed({ sessionId }: { sessionId: string }) {
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <pre className="font-serif-assistant text-[15px] text-cc-fg whitespace-pre-wrap break-words leading-relaxed">
+                  <pre className="font-serif-assistant text-[13px] text-cc-fg whitespace-pre-wrap break-words leading-snug">
                     {streamingText}
                     <span className="inline-block w-0.5 h-4 bg-cc-primary ml-0.5 align-middle animate-[pulse-dot_0.8s_ease-in-out_infinite]" />
                   </pre>
