@@ -238,6 +238,19 @@
 | FR-17.4 | Notification permission requested on first message send (user gesture) | [DONE] | `requestNotificationPermission()` called in Composer `handleSend()` |
 | FR-17.5 | Context meter threshold: green 0-60%, yellow 61-80%, red 81%+ | [DONE] | TaskPanel.tsx threshold changed from 50% to 60% |
 
+### FR-18: Session Resume List (Milestone 7)
+
+| ID | Requirement | Status | Notes |
+|----|-------------|--------|-------|
+| FR-18.1 | Read native Claude session history from `~/.claude/projects/<slug>/*.jsonl` | [DONE] | `claude-sessions.ts`; slug = path with separators replaced by `--` |
+| FR-18.2 | Expose native sessions via `GET /api/claude-sessions?cwd=<path>` | [DONE] | Returns `ClaudeSession[]` with id, firstMessage, createdAt, lastActiveAt |
+| FR-18.3 | Sidebar shows sessions scoped to currently selected project tab | [DONE] | When no project tab selected, shows all web sessions (current behavior) |
+| FR-18.4 | Sidebar merges web sessions and native sessions for the active project | [DONE] | Unified sorted list; native sessions visually distinguished with CLI badge |
+| FR-18.5 | Clicking a native session creates a web session with `--resume <id>` | [DONE] | Resume button calls `resumeNativeSession(id, cwd)` → `POST /api/sessions` with `resumeCliId` |
+| FR-18.6 | Clicking a web session in the sidebar switches focus to that session | [DONE] | Existing behavior preserved; scoped to project when project tab active |
+| FR-18.7 | Multiple concurrent sessions per project tab are all visible and switchable | [DONE] | Sidebar shows all sessions for the active project, not just the "active" one |
+| FR-18.8 | `POST /api/sessions` accepts optional `resumeCliId` to resume native sessions | [DONE] | `cli-launcher.ts` passes as `--resume`; `cliSessionId` pre-populated |
+
 ---
 
 ## 2. Technical Requirements
@@ -381,3 +394,18 @@
 4. **Code size violations (TR-4.1 / TR-4.2):** 18 files over 200 lines, 27 functions over 30 lines. The worst offenders are 3-4x over their respective limits.
 5. **Windows compatibility (NFR-4):** Path handling uses Unix-specific checks in multiple locations. 5 tests fail on Windows.
 6. **Reliability gaps (NFR-2):** No React error boundary, no exponential backoff on reconnect, session state in temp directory subject to OS cleanup, no flush-on-shutdown for debounced writes.
+
+---
+
+## Requirements Traceability — Milestone 7 (updated by plan phase, 2026-03-04)
+
+| REQ-ID | Requirement Summary | Domain | Task(s) | Status |
+|--------|---------------------|--------|---------|--------|
+| FR-18.1 | Read native Claude session history from `~/.claude/projects/` | claude-sessions-api | Task 1, Task 2 | done |
+| FR-18.2 | Expose `GET /api/claude-sessions?cwd=` endpoint | claude-sessions-api | Task 3 | done |
+| FR-18.3 | Sidebar sessions scoped to active project tab | sidebar-ux | Task 2, Task 3 | done |
+| FR-18.4 | Sidebar merges web + native sessions for active project | sidebar-ux | Task 2, Task 3 | done |
+| FR-18.5 | Clicking native session resumes it via `--resume` | session-resume | Task 1, Task 2, Task 3; sidebar-ux Task 3 | done |
+| FR-18.6 | Clicking web session switches focus (existing behavior) | sidebar-ux | Task 3 (preserve existing `handleSelectSession`) | done |
+| FR-18.7 | Multiple concurrent sessions per project all visible | sidebar-ux | Task 2, Task 3 | done |
+| FR-18.8 | `POST /api/sessions/create` accepts `resumeCliId` | session-resume | Task 1, Task 2 | done |

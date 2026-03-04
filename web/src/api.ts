@@ -1,4 +1,4 @@
-import type { SdkSessionInfo } from "./types.js";
+import type { SdkSessionInfo, ClaudeSession } from "./types.js";
 
 const BASE = "/api";
 
@@ -207,5 +207,9 @@ export const api = {
   // GSD-T Projects
   listProjects: () =>
     get<{ projects: Array<{ name: string; path: string }> }>("/projects"),
+
+  // Native Claude sessions
+  getClaudeSessions: (cwd: string) =>
+    get<ClaudeSession[]>(`/claude-sessions?cwd=${encodeURIComponent(cwd)}`),
 
 };

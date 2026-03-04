@@ -47,3 +47,12 @@ export interface SdkSessionInfo {
   actualBranch?: string;
   name?: string;
 }
+
+export interface ClaudeSession {
+  id: string;
+  cwd: string;
+  firstMessage: string | null;
+  createdAt: string;
+  lastActiveAt: string;
+  isNative: true;
+}

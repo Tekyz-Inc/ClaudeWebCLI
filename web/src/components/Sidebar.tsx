@@ -3,6 +3,7 @@ import { useStore } from "../store.js";
 import { api } from "../api.js";
 import { connectSession, disconnectSession } from "../ws.js";
 import { EnvManager } from "./EnvManager.js";
+import type { ClaudeSession } from "../types.js";
 
 export function Sidebar() {
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
@@ -10,6 +11,7 @@ export function Sidebar() {
   const [showEnvManager, setShowEnvManager] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null);
+  const [nativeSessions, setNativeSessions] = useState<ClaudeSession[]>([]);
   const editInputRef = useRef<HTMLInputElement>(null);
   const sessions = useStore((s) => s.sessions);
   const sdkSessions = useStore((s) => s.sdkSessions);
@@ -23,6 +25,8 @@ export function Sidebar() {
   const sessionNames = useStore((s) => s.sessionNames);
   const recentlyRenamed = useStore((s) => s.recentlyRenamed);
   const pendingPermissions = useStore((s) => s.pendingPermissions);
+  const activeProjectCwd = useStore((s) => s.activeProjectCwd);
+  const resumeNativeSession = useStore((s) => s.resumeNativeSession);
 
   // Poll for SDK sessions on mount
   useEffect(() => {
@@ -58,6 +62,29 @@ export function Sidebar() {
       clearInterval(interval);
     };
   }, []);
+
+  // Fetch native Claude sessions when project tab is active
+  useEffect(() => {
+    if (!activeProjectCwd) {
+      setNativeSessions([]);
+      return;
+    }
+    let active = true;
+    async function fetchNative() {
+      try {
+        const list = await api.getClaudeSessions(activeProjectCwd!);
+        if (active) setNativeSessions(list);
+      } catch {
+        // server not ready
+      }
+    }
+    fetchNative();
+    const interval = setInterval(fetchNative, 10000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [activeProjectCwd]);
 
   function handleSelectSession(sessionId: string) {
     if (currentSessionId === sessionId) return;
@@ -202,7 +229,6 @@ export function Sidebar() {
   const activeSessions = allSessionList.filter((s) => !s.archived);
   const archivedSessions = allSessionList.filter((s) => s.archived);
 
-  const activeProjectCwd = useStore((s) => s.activeProjectCwd);
   const filteredActiveSessions = activeProjectCwd
     ? activeSessions.filter((s) => {
         const cwd = (s.cwd || "").replace(/\\/g, "/");
@@ -210,6 +236,40 @@ export function Sidebar() {
         return cwd === p || cwd.startsWith(p + "/");
       })
     : activeSessions;
+
+  function formatRelativeTime(isoString: string): string {
+    const diff = Date.now() - new Date(isoString).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  }
+
+  function renderNativeSessionItem(s: ClaudeSession) {
+    const preview = s.firstMessage
+      ? s.firstMessage.slice(0, 60) + (s.firstMessage.length > 60 ? "…" : "")
+      : "(no message)";
+    return (
+      <div key={s.id} className="relative group opacity-70 hover:opacity-100 transition-opacity">
+        <div className="w-full px-3 py-2.5 rounded-[10px] hover:bg-cc-hover transition-colors">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-cc-border text-cc-muted uppercase tracking-wide">
+              CLI
+            </span>
+            <span className="text-[11px] text-cc-muted">{formatRelativeTime(s.lastActiveAt)}</span>
+          </div>
+          <p className="text-xs text-cc-fg truncate">{preview}</p>
+          <button
+            onClick={() => resumeNativeSession(s.id, s.cwd)}
+            className="mt-1.5 text-[11px] font-medium text-cc-accent hover:text-cc-fg transition-colors cursor-pointer"
+          >
+            Resume →
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   function renderSessionItem(s: typeof allSessionList[number], options?: { isArchived?: boolean }) {
     const isActive = currentSessionId === s.id;
@@ -445,32 +505,46 @@ export function Sidebar() {
 
       {/* Session list */}
       <div className="flex-1 overflow-y-auto px-2 pb-2">
-        {filteredActiveSessions.length === 0 && archivedSessions.length === 0 ? (
+        {filteredActiveSessions.length === 0 && archivedSessions.length === 0 && nativeSessions.length === 0 ? (
           <p className="px-3 py-8 text-xs text-cc-muted text-center leading-relaxed">
             {activeProjectCwd ? "No sessions for this project." : "No sessions yet."}
           </p>
         ) : (
           <>
-            <div className="space-y-0.5">
-              {filteredActiveSessions.map((s) => renderSessionItem(s))}
-            </div>
+            {(filteredActiveSessions.length > 0 || archivedSessions.length > 0) && (
+              <>
+                <div className="space-y-0.5">
+                  {filteredActiveSessions.map((s) => renderSessionItem(s))}
+                </div>
 
-            {archivedSessions.length > 0 && (
-              <div className="mt-2 pt-2 border-t border-cc-border">
-                <button
-                  onClick={() => setShowArchived(!showArchived)}
-                  className="w-full px-3 py-1.5 text-[11px] font-medium text-cc-muted uppercase tracking-wider flex items-center gap-1.5 hover:text-cc-fg transition-colors cursor-pointer"
-                >
-                  <svg viewBox="0 0 16 16" fill="currentColor" className={`w-3 h-3 transition-transform ${showArchived ? "rotate-90" : ""}`}>
-                    <path d="M6 4l4 4-4 4" />
-                  </svg>
-                  Archived ({archivedSessions.length})
-                </button>
-                {showArchived && (
-                  <div className="space-y-0.5 mt-1">
-                    {archivedSessions.map((s) => renderSessionItem(s, { isArchived: true }))}
+                {archivedSessions.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-cc-border">
+                    <button
+                      onClick={() => setShowArchived(!showArchived)}
+                      className="w-full px-3 py-1.5 text-[11px] font-medium text-cc-muted uppercase tracking-wider flex items-center gap-1.5 hover:text-cc-fg transition-colors cursor-pointer"
+                    >
+                      <svg viewBox="0 0 16 16" fill="currentColor" className={`w-3 h-3 transition-transform ${showArchived ? "rotate-90" : ""}`}>
+                        <path d="M6 4l4 4-4 4" />
+                      </svg>
+                      Archived ({archivedSessions.length})
+                    </button>
+                    {showArchived && (
+                      <div className="space-y-0.5 mt-1">
+                        {archivedSessions.map((s) => renderSessionItem(s, { isArchived: true }))}
+                      </div>
+                    )}
                   </div>
                 )}
+              </>
+            )}
+            {activeProjectCwd && nativeSessions.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-cc-border">
+                <p className="px-3 py-1.5 text-[11px] font-medium text-cc-muted uppercase tracking-wider">
+                  Native Sessions
+                </p>
+                <div className="space-y-0.5">
+                  {nativeSessions.map((s) => renderNativeSessionItem(s))}
+                </div>
               </div>
             )}
           </>

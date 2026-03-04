@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import type { SessionState, SdkSessionInfo } from "../types.js";
 
@@ -18,6 +18,7 @@ const mockApi = {
   deleteSession: vi.fn().mockResolvedValue({}),
   archiveSession: vi.fn().mockResolvedValue({}),
   unarchiveSession: vi.fn().mockResolvedValue({}),
+  getClaudeSessions: vi.fn().mockResolvedValue([]),
 };
 
 vi.mock("../api.js", () => ({
@@ -26,6 +27,7 @@ vi.mock("../api.js", () => ({
     deleteSession: (...args: unknown[]) => mockApi.deleteSession(...args),
     archiveSession: (...args: unknown[]) => mockApi.archiveSession(...args),
     unarchiveSession: (...args: unknown[]) => mockApi.unarchiveSession(...args),
+    getClaudeSessions: (...args: unknown[]) => mockApi.getClaudeSessions(...args),
   },
 }));
 
@@ -49,6 +51,7 @@ interface MockStoreState {
   sessionNames: Map<string, string>;
   recentlyRenamed: Set<string>;
   pendingPermissions: Map<string, Map<string, unknown>>;
+  activeProjectCwd: string | null;
   setCurrentSession: ReturnType<typeof vi.fn>;
   toggleDarkMode: ReturnType<typeof vi.fn>;
   removeSession: ReturnType<typeof vi.fn>;
@@ -58,6 +61,7 @@ interface MockStoreState {
   markRecentlyRenamed: ReturnType<typeof vi.fn>;
   clearRecentlyRenamed: ReturnType<typeof vi.fn>;
   setSdkSessions: ReturnType<typeof vi.fn>;
+  resumeNativeSession: ReturnType<typeof vi.fn>;
 }
 
 function makeSession(id: string, overrides: Partial<SessionState> = {}): SessionState {
@@ -111,6 +115,7 @@ function createMockState(overrides: Partial<MockStoreState> = {}): MockStoreStat
     sessionNames: new Map(),
     recentlyRenamed: new Set(),
     pendingPermissions: new Map(),
+    activeProjectCwd: null,
     setCurrentSession: vi.fn(),
     toggleDarkMode: vi.fn(),
     removeSession: vi.fn(),
@@ -120,6 +125,7 @@ function createMockState(overrides: Partial<MockStoreState> = {}): MockStoreStat
     markRecentlyRenamed: vi.fn(),
     clearRecentlyRenamed: vi.fn(),
     setSdkSessions: vi.fn(),
+    resumeNativeSession: vi.fn(),
     ...overrides,
   };
 }
@@ -465,5 +471,127 @@ describe("Sidebar", () => {
     render(<Sidebar />);
     // The permission count badge shows "2"
     expect(screen.getByText("2")).toBeInTheDocument();
+  });
+
+  describe("native sessions", () => {
+    const fakeNativeSession = {
+      id: "native-session-id",
+      cwd: "/test/project",
+      firstMessage: "Hello from terminal",
+      createdAt: new Date().toISOString(),
+      lastActiveAt: new Date().toISOString(),
+      isNative: true as const,
+    };
+
+    it("renders 'Native Sessions' section when project active and api returns sessions", async () => {
+      mockApi.getClaudeSessions.mockResolvedValue([fakeNativeSession]);
+      mockState = createMockState({
+        activeProjectCwd: "/test/project",
+      });
+
+      await act(async () => {
+        render(<Sidebar />);
+        await new Promise((r) => setTimeout(r, 50));
+      });
+      expect(screen.queryByText("Native Sessions")).toBeTruthy();
+    });
+
+    it("renders native session first message preview", async () => {
+      mockApi.getClaudeSessions.mockResolvedValue([fakeNativeSession]);
+      mockState = createMockState({
+        activeProjectCwd: "/test/project",
+      });
+
+      await act(async () => {
+        render(<Sidebar />);
+        await new Promise((r) => setTimeout(r, 50));
+      });
+      expect(screen.queryByText("Hello from terminal")).toBeTruthy();
+    });
+
+    it("renders CLI badge on native session", async () => {
+      mockApi.getClaudeSessions.mockResolvedValue([fakeNativeSession]);
+      mockState = createMockState({
+        activeProjectCwd: "/test/project",
+      });
+
+      await act(async () => {
+        render(<Sidebar />);
+        await new Promise((r) => setTimeout(r, 50));
+      });
+      expect(screen.queryByText("CLI")).toBeTruthy();
+    });
+
+    it("renders Resume button on native session", async () => {
+      mockApi.getClaudeSessions.mockResolvedValue([fakeNativeSession]);
+      mockState = createMockState({
+        activeProjectCwd: "/test/project",
+      });
+
+      await act(async () => {
+        render(<Sidebar />);
+        await new Promise((r) => setTimeout(r, 50));
+      });
+      expect(screen.queryByText("Resume →")).toBeTruthy();
+    });
+
+    it("Resume button calls resumeNativeSession with id and cwd", async () => {
+      mockApi.getClaudeSessions.mockResolvedValue([fakeNativeSession]);
+      mockState = createMockState({
+        activeProjectCwd: "/test/project",
+      });
+
+      await act(async () => {
+        render(<Sidebar />);
+        await new Promise((r) => setTimeout(r, 50));
+      });
+      const resumeBtn = screen.queryByText("Resume →");
+      expect(resumeBtn).toBeTruthy();
+      fireEvent.click(resumeBtn!);
+      expect(mockState.resumeNativeSession).toHaveBeenCalledWith("native-session-id", "/test/project");
+    });
+
+    it("does NOT show native sessions section when no project active", async () => {
+      mockApi.getClaudeSessions.mockResolvedValue([fakeNativeSession]);
+      mockState = createMockState({
+        activeProjectCwd: null,
+      });
+
+      await act(async () => {
+        render(<Sidebar />);
+        await new Promise((r) => setTimeout(r, 50));
+      });
+      expect(screen.queryByText("Native Sessions")).toBeNull();
+    });
+
+    it("shows '(no message)' when firstMessage is null", async () => {
+      mockApi.getClaudeSessions.mockResolvedValue([{
+        ...fakeNativeSession,
+        firstMessage: null,
+      }]);
+      mockState = createMockState({
+        activeProjectCwd: "/test/project",
+      });
+
+      await act(async () => {
+        render(<Sidebar />);
+        await new Promise((r) => setTimeout(r, 50));
+      });
+      expect(screen.queryByText("(no message)")).toBeTruthy();
+    });
+
+    it("native sessions have no rename or archive buttons", async () => {
+      mockApi.getClaudeSessions.mockResolvedValue([fakeNativeSession]);
+      mockState = createMockState({
+        activeProjectCwd: "/test/project",
+      });
+
+      await act(async () => {
+        render(<Sidebar />);
+        await new Promise((r) => setTimeout(r, 50));
+      });
+      expect(screen.queryByTitle("Rename session")).toBeNull();
+      expect(screen.queryByTitle("Archive session")).toBeNull();
+    });
   });
 });
