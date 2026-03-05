@@ -222,4 +222,9 @@ export const api = {
       `/claude-sessions/${encodeURIComponent(sessionId)}/activity?cwd=${encodeURIComponent(cwd)}`
     ),
 
+  getSlashCommands: (cwd?: string) =>
+    get<{ commands: string[]; skills: string[] }>(
+      `/slash-commands${cwd ? `?cwd=${encodeURIComponent(cwd)}` : ""}`
+    ),
+
 };

@@ -136,6 +136,9 @@ function handleMessage(sessionId: string, event: MessageEvent) {
 
   switch (data.type) {
     case "session_init": {
+      if (import.meta.env.DEV) {
+        console.log("[ws] session_init slash_commands:", data.session.slash_commands, "skills:", data.session.skills);
+      }
       store.addSession(data.session);
       store.setCliConnected(sessionId, true);
       store.setSessionStatus(sessionId, "idle");

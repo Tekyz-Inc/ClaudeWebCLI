@@ -127,6 +127,43 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
     }
   });
 
+  // ─── Slash commands ───────────────────────────────────────────────
+  // Returns built-in Claude commands + user skills from ~/.claude/commands/
+  api.get("/slash-commands", async (c) => {
+    const builtins = [
+      "help", "clear", "compact", "cost", "config",
+      "exit", "quit", "vim", "multiline", "review",
+      "init", "doctor", "bug", "login", "logout",
+      "resume", "release-notes", "status", "approve", "reject",
+    ];
+
+    // User-global skills from ~/.claude/commands/*.md → invoked as /user:<name>
+    const userCommandsDir = join(homedir(), ".claude", "commands");
+    let userSkills: string[] = [];
+    try {
+      const files = await readdir(userCommandsDir);
+      userSkills = files
+        .filter((f) => f.endsWith(".md"))
+        .map((f) => `user:${f.slice(0, -3)}`)
+        .sort();
+    } catch { /* no commands dir */ }
+
+    // Project-local skills from .claude/commands/*.md in cwd → invoked as /<name>
+    const cwd = c.req.query("cwd");
+    let projectSkills: string[] = [];
+    if (cwd) {
+      try {
+        const files = await readdir(join(cwd, ".claude", "commands"));
+        projectSkills = files
+          .filter((f) => f.endsWith(".md"))
+          .map((f) => f.slice(0, -3))
+          .sort();
+      } catch { /* no project commands dir */ }
+    }
+
+    return c.json({ commands: builtins, skills: [...userSkills, ...projectSkills] });
+  });
+
   api.get("/sessions", (c) => {
     const sessions = launcher.listSessions();
     const names = sessionNames.getAllNames();

@@ -7,6 +7,9 @@ import { requestNotificationPermission } from "../utils/notifications.js";
 
 let idCounter = 0;
 
+// Module-level cache: fetched once on first Composer mount, reused on remounts
+let _cachedSlashCommands: { commands: string[]; skills: string[] } | null = null;
+
 interface ImageAttachment {
   name: string;
   base64: string;
@@ -37,6 +40,9 @@ export function Composer({ sessionId }: { sessionId: string }) {
   const [slashMenuOpen, setSlashMenuOpen] = useState(false);
   const [slashMenuIndex, setSlashMenuIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [fetchedCommands, setFetchedCommands] = useState<{ commands: string[]; skills: string[] } | null>(
+    _cachedSlashCommands
+  );
   const dragCounterRef = useRef(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -55,31 +61,48 @@ export function Composer({ sessionId }: { sessionId: string }) {
   const { navigateUp, navigateDown, addToHistory, resetNavigation, saveDraft } =
     usePromptHistory(sessionId);
 
+  // Fetch available commands from server once at mount (module-level cache reused on remounts)
+  useEffect(() => {
+    if (_cachedSlashCommands) return;
+    api.getSlashCommands()
+      .then((data) => {
+        _cachedSlashCommands = data;
+        setFetchedCommands(data);
+      })
+      .catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const isConnected = cliConnected.get(sessionId) ?? false;
   const currentMode = sessionData?.permissionMode || "acceptEdits";
   const isPlan = currentMode === "plan";
 
-  // Build command list from session data
-  // Strip leading "/" if CLI sends commands as "/commit" style
+  // Build command list: prefer CLI-provided commands, fall back to server-fetched built-ins
   const allCommands = useMemo<CommandItem[]>(() => {
     const cmds: CommandItem[] = [];
-    if (sessionData?.slash_commands) {
-      for (const cmd of sessionData.slash_commands) {
-        const name = cmd.startsWith("/") ? cmd.slice(1) : cmd;
-        cmds.push({ name, type: "command" });
-      }
+
+    // Commands: use session's if CLI sent them, else use fetched built-ins
+    const slashCmds = sessionData?.slash_commands?.length
+      ? sessionData.slash_commands
+      : (fetchedCommands?.commands ?? []);
+    for (const cmd of slashCmds) {
+      const name = cmd.startsWith("/") ? cmd.slice(1) : cmd;
+      cmds.push({ name, type: "command" });
     }
-    if (sessionData?.skills) {
-      for (const skill of sessionData.skills) {
-        const name = skill.startsWith("/") ? skill.slice(1) : skill;
-        cmds.push({ name, type: "skill" });
-      }
+
+    // Skills: use session's if CLI sent them, else use fetched user skills
+    const skills = sessionData?.skills?.length
+      ? sessionData.skills
+      : (fetchedCommands?.skills ?? []);
+    for (const skill of skills) {
+      const name = skill.startsWith("/") ? skill.slice(1) : skill;
+      cmds.push({ name, type: "skill" });
     }
+
     if (import.meta.env.DEV && cmds.length > 0) {
       console.log("[Composer] slash commands loaded:", cmds.length, cmds.slice(0, 5).map((c) => `/${c.name}`));
     }
     return cmds;
-  }, [sessionData?.slash_commands, sessionData?.skills]);
+  }, [sessionData?.slash_commands, sessionData?.skills, fetchedCommands]);
 
   // Filter commands based on what the user typed after /
   const filteredCommands = useMemo(() => {

@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.10.12] - 2026-03-05
+
+### Added
+- `GET /api/slash-commands` server endpoint — serves built-in Claude commands plus user skills from `~/.claude/commands/*.md`
+- Composer fetches slash commands at mount (module-level cache — one fetch per app session)
+
+### Fixed
+- Slash command menu now populated on page load without requiring a CLI session to be active
+
 ## [0.10.10] - 2026-03-04
 
 ### Added
