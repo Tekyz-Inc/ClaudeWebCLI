@@ -60,17 +60,23 @@ export function Composer({ sessionId }: { sessionId: string }) {
   const isPlan = currentMode === "plan";
 
   // Build command list from session data
+  // Strip leading "/" if CLI sends commands as "/commit" style
   const allCommands = useMemo<CommandItem[]>(() => {
     const cmds: CommandItem[] = [];
     if (sessionData?.slash_commands) {
       for (const cmd of sessionData.slash_commands) {
-        cmds.push({ name: cmd, type: "command" });
+        const name = cmd.startsWith("/") ? cmd.slice(1) : cmd;
+        cmds.push({ name, type: "command" });
       }
     }
     if (sessionData?.skills) {
       for (const skill of sessionData.skills) {
-        cmds.push({ name: skill, type: "skill" });
+        const name = skill.startsWith("/") ? skill.slice(1) : skill;
+        cmds.push({ name, type: "skill" });
       }
+    }
+    if (import.meta.env.DEV && cmds.length > 0) {
+      console.log("[Composer] slash commands loaded:", cmds.length, cmds.slice(0, 5).map((c) => `/${c.name}`));
     }
     return cmds;
   }, [sessionData?.slash_commands, sessionData?.skills]);
@@ -92,9 +98,13 @@ export function Composer({ sessionId }: { sessionId: string }) {
     if (shouldOpen && !slashMenuOpen) {
       setSlashMenuOpen(true);
       setSlashMenuIndex(0);
+      if (import.meta.env.DEV) {
+        console.log("[Composer] slash menu opened. allCommands:", allCommands.length, "sessionData:", !!sessionData);
+      }
     } else if (!shouldOpen && slashMenuOpen) {
       setSlashMenuOpen(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, slashMenuOpen]);
 
   // Keep selected index in bounds
