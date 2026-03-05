@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.14] - 2026-03-05
+
+### Added
+- "Kill All Sessions" button in sidebar footer — terminates all non-exited SDK sessions in one click
+
 ## [0.10.13] - 2026-03-05
 
 ### Changed

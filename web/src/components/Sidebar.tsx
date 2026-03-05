@@ -198,6 +198,11 @@ export function Sidebar() {
     setConfirmArchiveId(null);
   }, []);
 
+  const handleKillAll = useCallback(async () => {
+    const targets = sdkSessions.filter((s) => !s.archived && s.state !== "exited");
+    await Promise.all(targets.map((s) => api.killSession(s.sessionId).catch(() => {})));
+  }, [sdkSessions]);
+
   const handleUnarchiveSession = useCallback(async (e: React.MouseEvent, sessionId: string) => {
     e.stopPropagation();
     try {
@@ -537,6 +542,15 @@ export function Sidebar() {
       {/* Footer — compact icon row */}
       <div className="px-3 py-1.5 border-t border-cc-border flex items-center justify-between">
         <div className="flex items-center gap-1">
+          <button
+            onClick={handleKillAll}
+            title="Kill all sessions"
+            className="p-1.5 rounded-[8px] text-cc-muted hover:text-red-400 hover:bg-cc-hover transition-colors cursor-pointer"
+          >
+            <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+              <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 1.5a5.5 5.5 0 110 11 5.5 5.5 0 010-11zm-2.5 3a.5.5 0 00-.5.5v4a.5.5 0 00.5.5h5a.5.5 0 00.5-.5V6a.5.5 0 00-.5-.5h-5z" />
+            </svg>
+          </button>
           <button
             onClick={() => setShowEnvManager(true)}
             title="Environments"
