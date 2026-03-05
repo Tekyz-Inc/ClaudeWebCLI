@@ -102,23 +102,24 @@ export function TopBar() {
         {/* Terminal toggle */}
         <button
           onClick={() => setTerminalOpen(!terminalOpen)}
-          className={`flex items-center justify-center w-7 h-7 rounded-lg transition-colors ${
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors cursor-pointer ${
             terminalOpen
-              ? "text-cc-primary bg-cc-active cursor-pointer"
-              : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover cursor-pointer"
+              ? "text-cc-primary bg-cc-active"
+              : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover"
           }`}
           title="Toggle terminal"
         >
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3 h-3 shrink-0">
             <polyline points="3 11 6 8 3 5" />
             <line x1="8" y1="11" x2="13" y2="11" />
           </svg>
+          Terminal
         </button>
 
         {/* Session panel toggle */}
         <button
           onClick={() => currentSessionId && setTaskPanelOpen(!taskPanelOpen)}
-          className={`flex items-center justify-center w-7 h-7 rounded-lg transition-colors ${
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
             !currentSessionId
               ? "text-cc-muted opacity-40 cursor-default"
               : taskPanelOpen
@@ -127,9 +128,10 @@ export function TopBar() {
           }`}
           title="Toggle session panel"
         >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 shrink-0">
             <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 3a1 1 0 000 2h6a1 1 0 100-2H7zm0 4a1 1 0 000 2h6a1 1 0 100-2H7zm0 4a1 1 0 000 2h4a1 1 0 100-2H7z" clipRule="evenodd" />
           </svg>
+          Session
         </button>
       </div>
     </header>

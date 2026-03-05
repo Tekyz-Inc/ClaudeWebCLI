@@ -1,7 +1,7 @@
 # GSD-T Progress
 
 ## Project: ClaudeWebCLI
-## Version: 0.10.12
+## Version: 0.10.13
 ## Current Milestone
 None — ready for next milestone
 
@@ -22,6 +22,7 @@ None — ready for next milestone
 | 2.1 | Fix Windows Path Test Failures | MEDIUM | TD-011 |
 
 ## Decision Log
+- 2026-03-05 10:25: [ad-hoc] v0.10.12→0.10.13 — TopBar Terminal/Session buttons converted from icon-only (w-7 h-7) to labeled toggle pills (icon + text, px-2.5 py-1 rounded-lg). Consistent with Chat/Editor tab style.
 - 2026-03-05 10:20: [fix] v0.10.11→0.10.12 — Slash commands load on page open. Added GET /api/slash-commands endpoint (built-ins list + user skills from ~/.claude/commands/*.md). Composer fetches at mount with module-level cache; allCommands useMemo falls back to server-fetched when CLI doesn't populate slash_commands in system_init. 19/19 Composer tests pass.
 - 2026-03-04 18:00: [ad-hoc] v0.9.11→0.10.10 — Session activity pre-pop, slash commands fix, sidebar UX. Added readClaudeSessionActivity (parses .jsonl tool_use blocks for filesRead/changedFiles/commands), GET /api/claude-sessions/:id/activity endpoint, resumeNativeSession now parallel-fetches activity + pre-populates store. Sidebar: + button (new session), spinner while resuming, auto-resume most recent native session on project tab switch. Composer: removed allCommands.length>0 guard from shouldOpen so / menu opens before CLI connects; placeholder styling lighter/italic. MessageBubble: text-[11px] everywhere, terminal ● bullet dots replacing list-disc.
 - 2026-02-25 00:15: [debug] Lazy-mount TerminalPanel — only spawn PTY on first toggle open. TerminalPanel was mounting on every page load causing cumulative PTY overhead during Playwright tests (26/28→28/28). App.tsx: added terminalMountedRef, renders <TerminalPanel> only after terminalOpen first becomes true; keeps mounted after that so WS session persists. Also fixed stale background Playwright task that ran without PORT=3457 (all 28 failed with ERR_CONNECTION_REFUSED).

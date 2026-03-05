@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.13] - 2026-03-05
+
+### Changed
+- Terminal and Session icon-only buttons in TopBar converted to labeled toggle buttons with icon + text
+
 ## [0.10.12] - 2026-03-05
 
 ### Added
