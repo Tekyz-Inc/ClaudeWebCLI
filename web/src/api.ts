@@ -217,4 +217,9 @@ export const api = {
       `/claude-sessions/${encodeURIComponent(sessionId)}/messages?cwd=${encodeURIComponent(cwd)}`
     ),
 
+  getClaudeSessionActivity: (cwd: string, sessionId: string) =>
+    get<{ filesRead: string[]; changedFiles: string[]; commands: string[] }>(
+      `/claude-sessions/${encodeURIComponent(sessionId)}/activity?cwd=${encodeURIComponent(cwd)}`
+    ),
+
 };

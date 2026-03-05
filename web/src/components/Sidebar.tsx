@@ -13,7 +13,9 @@ export function Sidebar() {
   const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null);
   const [nativeSessions, setNativeSessions] = useState<ClaudeSession[]>([]);
   const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
+  const [resumingId, setResumingId] = useState<string | null>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
+  const prevCwdRef = useRef<string | null>(null);
   const sessions = useStore((s) => s.sessions);
   const sdkSessions = useStore((s) => s.sdkSessions);
   const currentSessionId = useStore((s) => s.currentSessionId);
@@ -64,17 +66,27 @@ export function Sidebar() {
     };
   }, []);
 
-  // Fetch native Claude sessions when project tab is active
+  // Fetch native Claude sessions when project tab is active; auto-resume on tab switch
   useEffect(() => {
     if (!activeProjectCwd) {
       setNativeSessions([]);
+      prevCwdRef.current = null;
       return;
     }
+    const isTabSwitch = prevCwdRef.current !== null && prevCwdRef.current !== activeProjectCwd;
+    prevCwdRef.current = activeProjectCwd;
     let active = true;
     async function fetchNative() {
       try {
         const list = await api.getClaudeSessions(activeProjectCwd!);
-        if (active) setNativeSessions(list);
+        if (active) {
+          setNativeSessions(list);
+          if (isTabSwitch && list.length > 0) {
+            const s = list[0];
+            setResumingId(s.id);
+            resumeNativeSession(s.id, s.cwd).finally(() => setResumingId(null));
+          }
+        }
       } catch {
         // server not ready
       }
@@ -85,7 +97,7 @@ export function Sidebar() {
       active = false;
       clearInterval(interval);
     };
-  }, [activeProjectCwd]);
+  }, [activeProjectCwd]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleSelectSession(sessionId: string) {
     if (currentSessionId === sessionId) return;
@@ -250,19 +262,29 @@ export function Sidebar() {
   function renderNativeSessionItem(s: ClaudeSession) {
     const preview = s.firstMessage || "(no message)";
     const timeStr = formatRelativeTime(s.lastActiveAt);
+    const isResuming = resumingId === s.id;
     return (
       <div key={s.id}>
         <button
-          onClick={() => resumeNativeSession(s.id, s.cwd)}
+          disabled={isResuming}
+          onClick={() => {
+            if (isResuming) return;
+            setResumingId(s.id);
+            resumeNativeSession(s.id, s.cwd).finally(() => setResumingId(null));
+          }}
           onMouseEnter={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             setTooltip({ text: `${preview}\n${timeStr}`, x: rect.right + 8, y: rect.top });
           }}
           onMouseLeave={() => setTooltip(null)}
-          className="w-full px-2 py-px text-left rounded-[6px] hover:bg-cc-hover transition-colors cursor-pointer"
+          className="w-full px-2 py-px text-left rounded-[6px] hover:bg-cc-hover transition-colors cursor-pointer disabled:cursor-wait"
         >
-          <div className="flex items-baseline gap-1.5 min-w-0">
-            <span className="text-[10px] text-cc-muted shrink-0 whitespace-nowrap">{timeStr}</span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            {isResuming ? (
+              <span className="shrink-0 w-2.5 h-2.5 rounded-full border border-cc-primary border-t-transparent animate-spin" />
+            ) : (
+              <span className="text-[10px] text-cc-muted shrink-0 whitespace-nowrap">{timeStr}</span>
+            )}
             <span className="text-[10px] text-cc-fg/75 truncate">{preview}</span>
           </div>
         </button>
@@ -493,9 +515,18 @@ export function Sidebar() {
           </p>
         ) : (
           <div className="pt-0.5">
-            <p className="px-2 py-0.5 text-[9px] font-semibold text-cc-muted uppercase tracking-widest">
-              Resume Sessions
-            </p>
+            <div className="flex items-center justify-between px-2 py-0.5">
+              <span className="text-[9px] font-semibold text-cc-muted uppercase tracking-widest">Resume Sessions</span>
+              <button
+                onClick={handleNewSession}
+                title="New session"
+                className="p-0.5 rounded text-cc-muted hover:text-cc-fg hover:bg-cc-hover transition-colors cursor-pointer"
+              >
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="w-3 h-3">
+                  <path d="M8 3v10M3 8h10" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
             <div>
               {nativeSessions.map((s) => renderNativeSessionItem(s))}
             </div>

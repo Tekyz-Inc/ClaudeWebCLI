@@ -88,14 +88,14 @@ export function Composer({ sessionId }: { sessionId: string }) {
 
   // Open/close menu based on text
   useEffect(() => {
-    const shouldOpen = text.startsWith("/") && /^\/\S*$/.test(text) && allCommands.length > 0;
+    const shouldOpen = text.startsWith("/") && /^\/\S*$/.test(text);
     if (shouldOpen && !slashMenuOpen) {
       setSlashMenuOpen(true);
       setSlashMenuIndex(0);
     } else if (!shouldOpen && slashMenuOpen) {
       setSlashMenuOpen(false);
     }
-  }, [text, allCommands.length, slashMenuOpen]);
+  }, [text, slashMenuOpen]);
 
   // Keep selected index in bounds
   useEffect(() => {
@@ -412,7 +412,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
               placeholder={isConnected ? "Type a message... (/ for commands)" : "Waiting for CLI connection..."}
               disabled={!isConnected}
               rows={1}
-              className="w-full px-4 pt-3 pb-1 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted disabled:opacity-50"
+              className="w-full px-4 pt-3 pb-1 text-sm bg-transparent resize-none focus:outline-none text-cc-fg font-sans-ui placeholder:text-cc-muted/50 placeholder:italic disabled:opacity-50"
               style={{ minHeight: "36px", maxHeight: "200px" }}
             />
           </div>

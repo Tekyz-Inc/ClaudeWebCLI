@@ -33,7 +33,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
               ))}
             </div>
           )}
-          <pre className="text-[12px] whitespace-pre-wrap break-words font-sans-ui leading-snug">
+          <pre className="text-[11px] whitespace-pre-wrap break-words font-sans-ui leading-snug">
             {message.content}
           </pre>
         </div>
@@ -131,7 +131,7 @@ function AssistantAvatar() {
 
 function MarkdownContent({ text }: { text: string }) {
   return (
-    <div className="markdown-body text-[13px] text-cc-fg leading-snug overflow-hidden">
+    <div className="markdown-body text-[11px] text-cc-fg leading-snug overflow-hidden">
       <Markdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -154,13 +154,16 @@ function MarkdownContent({ text }: { text: string }) {
             <h3 className="text-[13px] font-semibold text-cc-fg mt-2 mb-0.5">{children}</h3>
           ),
           ul: ({ children }) => (
-            <ul className="list-disc pl-4 mb-1.5 space-y-0.5">{children}</ul>
+            <ul className="list-none pl-2 mb-1 space-y-0">{children}</ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal pl-4 mb-1.5 space-y-0.5">{children}</ol>
+            <ol className="list-decimal pl-5 mb-1 space-y-0">{children}</ol>
           ),
           li: ({ children }) => (
-            <li className="text-cc-fg">{children}</li>
+            <li className="text-cc-fg flex gap-1.5 items-start">
+              <span className="text-cc-muted shrink-0 text-[8px] mt-[3px] select-none">●</span>
+              <span>{children}</span>
+            </li>
           ),
           a: ({ href, children }) => (
             <a href={href} target="_blank" rel="noopener noreferrer" className="text-cc-primary hover:underline">

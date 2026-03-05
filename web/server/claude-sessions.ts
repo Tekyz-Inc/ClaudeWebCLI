@@ -114,6 +114,43 @@ export interface SessionHistoryMessage {
   timestamp: string;
 }
 
+export interface SessionActivityData {
+  filesRead: string[];
+  changedFiles: string[];
+  commands: string[];
+}
+
+export async function readClaudeSessionActivity(
+  cwd: string,
+  sessionId: string
+): Promise<SessionActivityData> {
+  const slug = encodeProjectSlug(cwd);
+  const filePath = join(homedir(), ".claude", "projects", slug, `${sessionId}.jsonl`);
+  let contents: string;
+  try {
+    contents = await readFile(filePath, "utf-8");
+  } catch {
+    return { filesRead: [], changedFiles: [], commands: [] };
+  }
+  const filesRead = new Set<string>();
+  const changedFiles = new Set<string>();
+  const commands: string[] = [];
+  for (const line of contents.split("\n").filter((l) => l.trim())) {
+    try {
+      const entry = JSON.parse(line) as { type?: string; message?: { content?: unknown[] } };
+      if (entry.type !== "assistant" || !Array.isArray(entry.message?.content)) continue;
+      for (const block of entry.message!.content!) {
+        const b = block as { type?: string; name?: string; input?: Record<string, unknown> };
+        if (b.type !== "tool_use") continue;
+        if (b.name === "Read" && typeof b.input?.file_path === "string") filesRead.add(b.input.file_path);
+        if ((b.name === "Edit" || b.name === "Write") && typeof b.input?.file_path === "string") changedFiles.add(b.input.file_path);
+        if (b.name === "Bash" && typeof b.input?.command === "string") commands.push(b.input.command);
+      }
+    } catch { continue; }
+  }
+  return { filesRead: Array.from(filesRead), changedFiles: Array.from(changedFiles), commands: commands.slice(-20).reverse() };
+}
+
 export async function readClaudeSessionMessages(
   cwd: string,
   sessionId: string

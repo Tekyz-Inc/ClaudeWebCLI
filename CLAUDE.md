@@ -175,6 +175,7 @@ If in doubt, skip research and proceed — we can research if execution reveals 
 - ALWAYS run related tests after code changes and fix any failures.
 - ALWAYS include detailed assertions with meaningful error messages.
 - ALWAYS update test scripts whenever functionality changes.
+- ALWAYS kill all test sessions and free test ports (3458, 5174) when testing is complete. Do not leave orphaned processes.
 
 ## Code Patterns to Follow
 
@@ -221,6 +222,8 @@ Then open http://localhost:5174 (Vite frontend — proxies API to :3456)
     cd web
     bun run build
     bun run start
+
+> **Session policy:** The user will always start production sessions manually. Never auto-start or auto-launch production server processes.
 
 ## Destructive Action Guard (MANDATORY)
 

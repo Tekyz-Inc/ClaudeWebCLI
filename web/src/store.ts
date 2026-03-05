@@ -211,9 +211,10 @@ export const useStore = create<AppState>((set) => ({
   },
 
   resumeNativeSession: async (cliId, cwd) => {
-    // Fetch history and create session in parallel
-    const [historyResult, result] = await Promise.all([
+    // Fetch history, activity, and create session in parallel
+    const [historyResult, activityResult, result] = await Promise.all([
       api.getClaudeSessionMessages(cwd, cliId).catch(() => []),
+      api.getClaudeSessionActivity(cwd, cliId).catch(() => ({ filesRead: [], changedFiles: [], commands: [] })),
       api.createSession({ cwd, resumeCliId: cliId }),
     ]);
     const { sessionId } = result;
@@ -229,6 +230,17 @@ export const useStore = create<AppState>((set) => ({
       }));
       useStore.getState().setMessages(sessionId, chatMessages);
     }
+
+    // Pre-populate activity data (files read, changed files, commands)
+    set((s) => {
+      const filesRead = new Map(s.filesRead);
+      filesRead.set(sessionId, new Set(activityResult.filesRead));
+      const changedFiles = new Map(s.changedFiles);
+      changedFiles.set(sessionId, new Set(activityResult.changedFiles));
+      const commandsExecuted = new Map(s.commandsExecuted);
+      commandsExecuted.set(sessionId, activityResult.commands);
+      return { filesRead, changedFiles, commandsExecuted };
+    });
 
     // Dynamic import avoids circular dependency (ws.ts imports store.ts)
     const { connectSession } = await import("./ws.js");

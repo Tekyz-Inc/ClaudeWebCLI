@@ -1,7 +1,7 @@
 # GSD-T Progress
 
 ## Project: ClaudeWebCLI
-## Version: 0.9.11
+## Version: 0.10.10
 ## Current Milestone
 None — ready for next milestone
 
@@ -22,6 +22,7 @@ None — ready for next milestone
 | 2.1 | Fix Windows Path Test Failures | MEDIUM | TD-011 |
 
 ## Decision Log
+- 2026-03-04 18:00: [ad-hoc] v0.9.11→0.10.10 — Session activity pre-pop, slash commands fix, sidebar UX. Added readClaudeSessionActivity (parses .jsonl tool_use blocks for filesRead/changedFiles/commands), GET /api/claude-sessions/:id/activity endpoint, resumeNativeSession now parallel-fetches activity + pre-populates store. Sidebar: + button (new session), spinner while resuming, auto-resume most recent native session on project tab switch. Composer: removed allCommands.length>0 guard from shouldOpen so / menu opens before CLI connects; placeholder styling lighter/italic. MessageBubble: text-[11px] everywhere, terminal ● bullet dots replacing list-disc.
 - 2026-02-25 00:15: [debug] Lazy-mount TerminalPanel — only spawn PTY on first toggle open. TerminalPanel was mounting on every page load causing cumulative PTY overhead during Playwright tests (26/28→28/28). App.tsx: added terminalMountedRef, renders <TerminalPanel> only after terminalOpen first becomes true; keeps mounted after that so WS session persists. Also fixed stale background Playwright task that ran without PORT=3457 (all 28 failed with ERR_CONNECTION_REFUSED).
 - 2026-02-24 23:50: [debug] Terminal PTY, Playwright E2E fixes, server stability. Migrated terminal-ws.ts from child_process.spawn (piped stdio) to node-pty (real PTY) — fixes backspace/arrows/resize. Added cols:80/rows:24 defaults + deferred fit.fit() (ResizeObserver guards clientWidth<10) to fix vertical text layout when panel hidden. Added resize message passing after fit so server PTY tracks dimensions. Added process.on('uncaughtException') handler to suppress async ERR_SOCKET_CLOSED from node-pty when WS closes mid-write. DOM-visible Connected/Disconnected status in TerminalPanel header for Playwright testability. ProjectTabBar deduplication by normalized path (handles .gsd-t-projects listing same project twice). Playwright webServer config with env:{PORT} for Windows-compatible test server spawn. Fixed all textarea selectors to :not(.xterm-helper-textarea). 28/28 E2E tests pass.
 - 2026-02-24 15:00: [feature] Project tabs + Terminal panel. ProjectTabBar reads ~/.claude/.gsd-t-projects, shows one tab per project with status indicators (animated pulse=running, ??=waiting for input, ✓=idle with sessions). Sidebar filters sessions by selected project. TerminalPanel uses xterm.js + FitAddon over /ws/terminal/:id WebSocket (server spawns powershell.exe); panel stays mounted across open/close (CSS width 0↔340px) so session persists. Terminal button in TopBar. ResizeObserver auto-refits xterm on panel transition. Files: ws-bridge.ts, terminal-ws.ts(new), index.ts, routes.ts, api.ts, store.ts, ProjectTabBar.tsx(new), TerminalPanel.tsx(new), Sidebar.tsx, TopBar.tsx, App.tsx.

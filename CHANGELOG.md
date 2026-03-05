@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.10.10] - 2026-03-04
+
+### Added
+- Session activity pre-population: resuming a CLI session now pre-fills Files Read, Files Updated, and Commands Executed in the session panel
+- `GET /api/claude-sessions/:id/activity` endpoint — parses native `.jsonl` files for tool-use activity
+- Sidebar: `+` button next to "Resume Sessions" heading to start a new session from any project tab
+- Sidebar: spinner indicator while a session is being resumed; button disabled during resume
+- Sidebar: switching project tabs now auto-resumes the most recent native session for that project
+- Diff view for code edits: side-by-side before/after with line-level red/green color coding and −/+ prefixes
+
+### Fixed
+- Slash command menu (`/`) now opens immediately when the user types `/`, even before the CLI sends its first system_init (was blocked by empty `allCommands` guard)
+
+### Changed
+- Chat layout: removed max-width centering, reduced side padding from px-4→px-1, top/bottom from py-6→py-2
+- Message font: reduced to text-[11px] across user and assistant bubbles
+- Markdown list bullets: replaced browser `list-disc` with compact terminal-style `●` dots
+- Composer placeholder text: lighter gray (50% opacity) and italicized
+
 ## [0.9.11] - 2026-03-04
 
 ### Added
