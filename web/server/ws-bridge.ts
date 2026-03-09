@@ -269,7 +269,9 @@ export class WsBridge {
   handleBrowserOpen(ws: ServerWebSocket<SocketData>, sessionId: string) {
     const session = this.getOrCreateSession(sessionId);
     session.browserSockets.add(ws);
-    console.log(`[ws-bridge] Browser connected for session ${sessionId} (${session.browserSockets.size} browsers)`);
+    if (session.browserSockets.size === 1) {
+      console.log(`[ws-bridge] Browser connected for session ${sessionId}`);
+    }
 
     // Send current session state as snapshot
     const snapshot: BrowserIncomingMessage = {
@@ -295,7 +297,6 @@ export class WsBridge {
     if (!session.cliSocket) {
       this.sendToBrowser(ws, { type: "cli_disconnected" });
       if (this.onCLIRelaunchNeeded) {
-        console.log(`[ws-bridge] Browser connected but CLI is dead for session ${sessionId}, requesting relaunch`);
         this.onCLIRelaunchNeeded(sessionId);
       }
     }

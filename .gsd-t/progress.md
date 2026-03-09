@@ -1,7 +1,7 @@
 # GSD-T Progress
 
 ## Project: ClaudeWebCLI
-## Version: 0.10.14
+## Version: 0.11.10
 ## Current Milestone
 None — ready for next milestone
 
@@ -22,6 +22,8 @@ None — ready for next milestone
 | 2.1 | Fix Windows Path Test Failures | MEDIUM | TD-011 |
 
 ## Decision Log
+- 2026-03-06 14:25: [ad-hoc] v0.10.14→0.10.15 — UI polish + prompt latency fix. ProjectTabBar: replaced overflow dropdown with horizontal scroll + left/right chevron arrows; Barlow Condensed font, data-active attr for scrollIntoView. TopBar: added + New Session button left of Chat/Editor toggle; Barlow Condensed on all tab/toggle labels. Sidebar: default collapsed (sidebarOpen:false), auto-resume most recent session on first load, removed redundant + button from Resume Sessions header. Composer: optimistic setSessionStatus("running") on send so Thinking indicator and stop button appear immediately (was 10-30s delay). Barlow Condensed typography + tabs-scroll CSS added to index.css + index.html.
+- 2026-03-06 12:00: [visualize] Launched GSD-T dashboard at http://localhost:7433 — real-time SSE agent visualization. Server spawned in detached mode on port 7433, browser auto-opened.
 - 2026-03-05 10:30: [ad-hoc] v0.10.13→0.10.14 — Kill All Sessions button in sidebar footer. handleKillAll calls api.killSession on all non-archived, non-exited sdkSessions. Stop-circle icon, hover:text-red-400.
 - 2026-03-05 10:25: [ad-hoc] v0.10.12→0.10.13 — TopBar Terminal/Session buttons converted from icon-only (w-7 h-7) to labeled toggle pills (icon + text, px-2.5 py-1 rounded-lg). Consistent with Chat/Editor tab style.
 - 2026-03-05 10:20: [fix] v0.10.11→0.10.12 — Slash commands load on page open. Added GET /api/slash-commands endpoint (built-ins list + user skills from ~/.claude/commands/*.md). Composer fetches at mount with module-level cache; allCommands useMemo falls back to server-fetched when CLI doesn't populate slash_commands in system_init. 19/19 Composer tests pass.

@@ -34,7 +34,7 @@ export async function generateSessionTitle(
   },
 ): Promise<string | null> {
   const binary = options?.claudeBinary || resolveClaudeBinary();
-  const timeout = options?.timeoutMs || 15_000;
+  const timeout = options?.timeoutMs || 30_000;
 
   // Truncate message to keep the prompt small
   const truncated = firstUserMessage.slice(0, 500);
@@ -43,7 +43,7 @@ export async function generateSessionTitle(
 
   try {
     const proc = Bun.spawn(
-      [binary, "-p", prompt, "--model", model, "--output-format", "json"],
+      [binary, "-p", prompt, "--model", model, "--output-format", "text"],
       {
         stdout: "pipe",
         stderr: "pipe",
@@ -58,27 +58,15 @@ export async function generateSessionTitle(
       new Promise<never>((_, reject) => {
         timer = setTimeout(() => {
           proc.kill("SIGTERM");
-          reject(new Error("Auto-naming timed out"));
+          reject(new Error("Auto-naming timed out after " + timeout + "ms"));
         }, timeout);
       }),
     ]);
     clearTimeout(timer!);
 
-    const stdout = await new Response(proc.stdout).text();
-
-    // Parse JSON output: { "result": "the title text", ... }
-    try {
-      const parsed = JSON.parse(stdout);
-      const title = (parsed.result || "").trim();
-      if (title && title.length > 0 && title.length < 100) {
-        return title.replace(/^["']|["']$/g, "").trim();
-      }
-    } catch {
-      // If not valid JSON, try using raw stdout
-      const raw = stdout.trim();
-      if (raw && raw.length > 0 && raw.length < 100) {
-        return raw.replace(/^["']|["']$/g, "").trim();
-      }
+    const raw = (await new Response(proc.stdout).text()).trim();
+    if (raw && raw.length > 0 && raw.length < 100) {
+      return raw.replace(/^["']|["']$/g, "").trim();
     }
 
     return null;

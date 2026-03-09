@@ -5,7 +5,11 @@ import { sendNotification } from "./utils/notifications.js";
 
 const sockets = new Map<string, WebSocket>();
 const reconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const reconnectDelays = new Map<string, number>();
+const pingIntervals = new Map<string, ReturnType<typeof setInterval>>();
 const taskCounters = new Map<string, number>();
+
+const PING_INTERVAL_MS = 20_000;
 /** Track processed tool_use IDs to prevent duplicate task creation */
 const processedToolUseIds = new Map<string, Set<string>>();
 
@@ -90,7 +94,9 @@ function extractChangedFilesFromBlocks(sessionId: string, blocks: ContentBlock[]
   }
 }
 
-function extractActivityFromBlocks(sessionId: string, blocks: ContentBlock[]) {
+const TEST_CMD_RE = /\b(vitest|playwright|jest|npm\s+(?:run\s+)?test|bun\s+(?:run\s+)?test|npx\s+playwright)\b/i;
+
+function extractActivityFromBlocks(sessionId: string, blocks: ContentBlock[], parentToolUseId?: string | null) {
   const store = useStore.getState();
   for (const block of blocks) {
     if (block.type !== "tool_use") continue;
@@ -99,7 +105,24 @@ function extractActivityFromBlocks(sessionId: string, blocks: ContentBlock[]) {
       store.addReadFile(sessionId, input.file_path);
     }
     if (name === "Bash" && typeof input.command === "string") {
-      store.addCommandExecuted(sessionId, input.command);
+      // Only track for QA test detection — Bash cmds are not shown in Commands section
+      if (TEST_CMD_RE.test(input.command)) {
+        store.addTestExecuted(sessionId, {
+          cmd: input.command,
+          source: parentToolUseId ? "agent" : "direct",
+        });
+      }
+    }
+    if (name === "Skill" && typeof input.skill === "string") {
+      const args = typeof input.args === "string" && input.args ? ` ${input.args}` : "";
+      store.addCommandExecuted(sessionId, `/${input.skill}${args}`);
+    }
+    if (name === "Agent") {
+      store.addAgentSpawned(sessionId, {
+        description: (input.description as string) || "Agent",
+        subagentType: input.subagent_type as string | undefined,
+        name: input.name as string | undefined,
+      });
     }
   }
 }
@@ -139,9 +162,19 @@ function handleMessage(sessionId: string, event: MessageEvent) {
       if (import.meta.env.DEV) {
         console.log("[ws] session_init slash_commands:", data.session.slash_commands, "skills:", data.session.skills);
       }
-      store.addSession(data.session);
+      // On reconnect the session already exists — use updateSession to avoid replacing
+      // the entire sessions Map (which would cause unnecessary Composer re-renders).
+      if (store.sessions.has(sessionId)) {
+        store.updateSession(sessionId, data.session);
+      } else {
+        store.addSession(data.session);
+      }
       store.setCliConnected(sessionId, true);
-      store.setSessionStatus(sessionId, "idle");
+      // Don't clobber "submitted" — user may have sent a message before reconnect completed
+      const existingStatus = store.sessionStatus.get(sessionId);
+      if (existingStatus !== "submitted" && existingStatus !== "running") {
+        store.setSessionStatus(sessionId, "idle");
+      }
       if (!store.sessionNames.has(sessionId)) {
         const existingNames = new Set(store.sessionNames.values());
         const name = generateUniqueSessionName(existingNames);
@@ -181,7 +214,7 @@ function handleMessage(sessionId: string, event: MessageEvent) {
       if (msg.content?.length) {
         extractTasksFromBlocks(sessionId, msg.content);
         extractChangedFilesFromBlocks(sessionId, msg.content);
-        extractActivityFromBlocks(sessionId, msg.content);
+        extractActivityFromBlocks(sessionId, msg.content, data.parent_tool_use_id);
       }
 
       break;
@@ -190,8 +223,9 @@ function handleMessage(sessionId: string, event: MessageEvent) {
     case "stream_event": {
       const evt = data.event as Record<string, unknown>;
       if (evt && typeof evt === "object") {
-        // message_start → mark generation start time
+        // message_start → Claude has started generating; transition submitted → running
         if (evt.type === "message_start") {
+          store.setSessionStatus(sessionId, "running");
           if (!store.streamingStartedAt.has(sessionId)) {
             store.setStreamingStats(sessionId, { startedAt: Date.now(), outputTokens: 0 });
           }
@@ -298,10 +332,11 @@ function handleMessage(sessionId: string, event: MessageEvent) {
     }
 
     case "status_change": {
+      // Only handle compacting — other CLI statuses (null, "processing", "waiting", etc.)
+      // are ignored so the optimistic "running" state persists until `result` arrives.
+      // This prevents the "Thinking" indicator from disappearing during the API call.
       if (data.status === "compacting") {
         store.setSessionStatus(sessionId, "compacting");
-      } else {
-        store.setSessionStatus(sessionId, data.status);
       }
       break;
     }
@@ -351,6 +386,12 @@ function handleMessage(sessionId: string, event: MessageEvent) {
     }
 
     case "message_history": {
+      // Skip replay if we already have messages (e.g. after a brief reconnect).
+      // Replacing the full message list causes a MessageFeed re-render that steals
+      // focus from the Composer textarea.
+      const existingMessages = store.messages.get(sessionId) ?? [];
+      if (existingMessages.length > 0) break;
+
       const chatMessages: ChatMessage[] = [];
       for (const histMsg of data.messages) {
         if (histMsg.type === "user_message") {
@@ -377,7 +418,7 @@ function handleMessage(sessionId: string, event: MessageEvent) {
           if (msg.content?.length) {
             extractTasksFromBlocks(sessionId, msg.content);
             extractChangedFilesFromBlocks(sessionId, msg.content);
-            extractActivityFromBlocks(sessionId, msg.content);
+            extractActivityFromBlocks(sessionId, msg.content, histMsg.parent_tool_use_id);
           }
         } else if (histMsg.type === "result") {
           const r = histMsg.data;
@@ -410,18 +451,30 @@ export function connectSession(sessionId: string) {
 
   ws.onopen = () => {
     useStore.getState().setConnectionStatus(sessionId, "connected");
-    // Clear any reconnect timer
+    // Reset backoff on successful connection
+    reconnectDelays.delete(sessionId);
     const timer = reconnectTimers.get(sessionId);
     if (timer) {
       clearTimeout(timer);
       reconnectTimers.delete(sessionId);
     }
+    // Start keepalive ping to prevent idle timeout disconnects from proxies/NAT
+    const ping = setInterval(() => {
+      const sock = sockets.get(sessionId);
+      if (sock?.readyState === WebSocket.OPEN) {
+        sock.send(JSON.stringify({ type: "ping" }));
+      }
+    }, PING_INTERVAL_MS);
+    pingIntervals.set(sessionId, ping);
   };
 
   ws.onmessage = (event) => handleMessage(sessionId, event);
 
   ws.onclose = () => {
     sockets.delete(sessionId);
+    // Stop keepalive ping
+    const ping = pingIntervals.get(sessionId);
+    if (ping) { clearInterval(ping); pingIntervals.delete(sessionId); }
     useStore.getState().setConnectionStatus(sessionId, "disconnected");
     scheduleReconnect(sessionId);
   };
@@ -431,16 +484,24 @@ export function connectSession(sessionId: string) {
   };
 }
 
+const RECONNECT_MIN_MS = 2000;
+const RECONNECT_MAX_MS = 30000;
+
 function scheduleReconnect(sessionId: string) {
   if (reconnectTimers.has(sessionId)) return;
-  // Only reconnect if the session is still the current one
+  // Exponential backoff: 2s, 4s, 8s, ... up to 30s
+  const prev = reconnectDelays.get(sessionId) ?? (RECONNECT_MIN_MS / 2);
+  const delay = Math.min(prev * 2, RECONNECT_MAX_MS);
+  reconnectDelays.set(sessionId, delay);
   const timer = setTimeout(() => {
     reconnectTimers.delete(sessionId);
-    const store = useStore.getState();
-    if (store.currentSessionId === sessionId || store.sessions.has(sessionId)) {
+    // Only reconnect the session the user is actively viewing.
+    // Using store.sessions.has() would reconnect every accumulated session after
+    // a server restart, spawning one CLI process per historical session.
+    if (useStore.getState().currentSessionId === sessionId) {
       connectSession(sessionId);
     }
-  }, 2000);
+  }, delay);
   reconnectTimers.set(sessionId, timer);
 }
 
@@ -450,6 +511,8 @@ export function disconnectSession(sessionId: string) {
     clearTimeout(timer);
     reconnectTimers.delete(sessionId);
   }
+  const ping = pingIntervals.get(sessionId);
+  if (ping) { clearInterval(ping); pingIntervals.delete(sessionId); }
   const ws = sockets.get(sessionId);
   if (ws) {
     ws.close();

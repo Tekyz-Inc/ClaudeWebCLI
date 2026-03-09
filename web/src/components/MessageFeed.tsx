@@ -1,7 +1,8 @@
 import { useEffect, useRef, useMemo, useState } from "react";
 import { useStore } from "../store.js";
 import { MessageBubble } from "./MessageBubble.js";
-import { getToolIcon, getToolLabel, getPreview, ToolIcon } from "./ToolBlock.js";
+import { ToolBlock, ToolIcon } from "./ToolBlock.js";
+import { getToolIcon, getToolLabel, getPreview } from "./tool-utils.js";
 import type { ChatMessage, ContentBlock } from "../types.js";
 
 function formatElapsed(ms: number): string {
@@ -193,7 +194,7 @@ function ToolMessageGroup({ group }: { group: ToolMsgGroup }) {
   const label = getToolLabel(group.toolName);
   const count = group.items.length;
 
-  // Single item — don't group, render inline
+  // Single item — render via ToolBlock for proper detail views (diff, syntax, etc.)
   if (count === 1) {
     const item = group.items[0];
     return (
@@ -201,35 +202,14 @@ function ToolMessageGroup({ group }: { group: ToolMsgGroup }) {
         <div className="flex items-start gap-3">
           <AssistantAvatar />
           <div className="flex-1 min-w-0">
-            <div className="border border-cc-border rounded-[10px] overflow-hidden bg-cc-card">
-              <button
-                onClick={() => setOpen(!open)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-cc-hover transition-colors cursor-pointer"
-              >
-                <svg viewBox="0 0 16 16" fill="currentColor" className={`w-3 h-3 text-cc-muted transition-transform shrink-0 ${open ? "rotate-90" : ""}`}>
-                  <path d="M6 4l4 4-4 4" />
-                </svg>
-                <ToolIcon type={iconType} />
-                <span className="text-xs font-medium text-cc-fg">{label}</span>
-                <span className="text-xs text-cc-muted truncate flex-1 font-mono-code">
-                  {getPreview(item.name, item.input)}
-                </span>
-              </button>
-              {open && (
-                <div className="px-3 pb-3 pt-0 border-t border-cc-border mt-0">
-                  <pre className="mt-2 text-[11px] text-cc-muted font-mono-code whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
-                    {JSON.stringify(item.input, null, 2)}
-                  </pre>
-                </div>
-              )}
-            </div>
+            <ToolBlock name={item.name} input={item.input} toolUseId={item.id} />
           </div>
         </div>
       </div>
     );
   }
 
-  // Multi-item group
+  // Multi-item group — collapsible list, each item rendered via ToolBlock
   return (
     <div className="animate-[fadeSlideIn_0.2s_ease-out]">
       <div className="flex items-start gap-3">
@@ -251,16 +231,10 @@ function ToolMessageGroup({ group }: { group: ToolMsgGroup }) {
             </button>
 
             {open && (
-              <div className="border-t border-cc-border px-3 py-1.5">
-                {group.items.map((item, i) => {
-                  const preview = getPreview(item.name, item.input);
-                  return (
-                    <div key={item.id || i} className="flex items-center gap-2 py-1 text-xs text-cc-muted font-mono-code truncate">
-                      <span className="w-1 h-1 rounded-full bg-cc-muted/40 shrink-0" />
-                      <span className="truncate">{preview || JSON.stringify(item.input).slice(0, 80)}</span>
-                    </div>
-                  );
-                })}
+              <div className="border-t border-cc-border px-3 py-2 space-y-2">
+                {group.items.map((item, i) => (
+                  <ToolBlock key={item.id || i} name={item.name} input={item.input} toolUseId={item.id} />
+                ))}
               </div>
             )}
           </div>
@@ -353,11 +327,7 @@ function SubagentContainer({ group }: { group: SubagentGroup }) {
 
 function AssistantAvatar() {
   return (
-    <div className="w-6 h-6 rounded-full bg-cc-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-      <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 text-cc-primary">
-        <circle cx="8" cy="8" r="3" />
-      </svg>
-    </div>
+    <span className="text-cc-primary shrink-0 text-[11px] mt-[3px] select-none leading-none">●</span>
   );
 }
 
@@ -387,6 +357,12 @@ export function MessageFeed({ sessionId }: { sessionId: string }) {
     const interval = setInterval(() => setElapsed(Date.now() - start), 1000);
     return () => clearInterval(interval);
   }, [streamingStartedAt, sessionStatus]);
+
+  // On session switch: reset near-bottom flag and jump to bottom immediately
+  useEffect(() => {
+    isNearBottom.current = true;
+    bottomRef.current?.scrollIntoView({ behavior: "instant" });
+  }, [sessionId]);
 
   function handleScroll() {
     const el = containerRef.current;
@@ -434,11 +410,7 @@ export function MessageFeed({ sessionId }: { sessionId: string }) {
           {streamingText && (
             <div className="animate-[fadeSlideIn_0.2s_ease-out]">
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-cc-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5 text-cc-primary">
-                    <path d="M8 1v14M1 8h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </div>
+                <span className="text-cc-primary shrink-0 text-[11px] mt-[3px] select-none leading-none">●</span>
                 <div className="flex-1 min-w-0">
                   <pre className="font-serif-assistant text-[13px] text-cc-fg whitespace-pre-wrap break-words leading-snug">
                     {streamingText}

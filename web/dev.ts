@@ -36,7 +36,7 @@ function prefix(name: string, color: string, stream: ReadableStream<Uint8Array>)
 }
 
 // ── Backend (Hono on Bun) ──────────────────────────────────────────
-const backend = spawn(["bun", "--watch", "server/index.ts"], {
+const backend = spawn(["bun", "--hot", "server/index.ts"], {
   cwd: webDir,
   stdout: "pipe",
   stderr: "pipe",

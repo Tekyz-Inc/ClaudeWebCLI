@@ -1,6 +1,6 @@
 {
   "name": "the-vibe-companion",
-  "version": "0.10.14",
+  "version": "0.11.10",
   "type": "module",
   "description": "Web UI for launching and interacting with Claude Code agents",
   "license": "MIT",
@@ -40,6 +40,7 @@
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",
     "@tekyzinc/stt-component": "0.3.3",
+    "highlight.js": "^11.11.1",
     "hono": "^4.7.0",
     "node-pty": "^1.1.0"
   },

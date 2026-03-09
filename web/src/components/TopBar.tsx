@@ -1,5 +1,6 @@
 import { useStore } from "../store.js";
 import { api } from "../api.js";
+import { disconnectSession } from "../ws.js";
 
 export function TopBar() {
   const currentSessionId = useStore((s) => s.currentSessionId);
@@ -14,6 +15,8 @@ export function TopBar() {
   const setTerminalOpen = useStore((s) => s.setTerminalOpen);
   const activeTab = useStore((s) => s.activeTab);
   const setActiveTab = useStore((s) => s.setActiveTab);
+  const chatExpanded = useStore((s) => s.chatExpanded);
+  const setChatExpanded = useStore((s) => s.setChatExpanded);
 
   const isConnected = currentSessionId ? (cliConnected.get(currentSessionId) ?? false) : false;
   const connStatus = currentSessionId ? (connectionStatus.get(currentSessionId) ?? "disconnected") : null;
@@ -68,6 +71,13 @@ export function TopBar() {
           <span className="text-cc-warning font-medium animate-pulse">Compacting...</span>
         )}
 
+        {currentSessionId && status === "submitted" && (
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            <span className="text-amber-400 font-medium">Waiting...</span>
+          </div>
+        )}
+
         {currentSessionId && status === "running" && (
           <div className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-cc-primary animate-[pulse-dot_1s_ease-in-out_infinite]" />
@@ -75,11 +85,39 @@ export function TopBar() {
           </div>
         )}
 
+        {/* Expand/Collapse chat tool blocks — pill style */}
+        <div className={`flex items-center bg-cc-hover rounded-lg p-0.5 ${!currentSessionId ? "opacity-40 pointer-events-none" : ""}`}>
+          <button
+            onClick={() => setChatExpanded(!chatExpanded)}
+            className={`px-2 py-0.5 rounded-md text-[11px] font-barlow-condensed font-medium tracking-wide transition-colors cursor-pointer ${
+              chatExpanded
+                ? "bg-cc-card text-cc-fg shadow-sm"
+                : "text-cc-muted hover:text-cc-fg"
+            }`}
+          >
+            {chatExpanded ? "Collapse" : "Expand"}
+          </button>
+        </div>
+
+        {/* New Session button */}
+        <button
+          onClick={() => {
+            if (currentSessionId) disconnectSession(currentSessionId);
+            useStore.getState().newSession();
+          }}
+          title="New session"
+          className="flex items-center justify-center w-6 h-6 rounded-md text-cc-muted hover:text-cc-fg hover:bg-cc-hover transition-colors cursor-pointer"
+        >
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5">
+            <path d="M8 3v10M3 8h10" />
+          </svg>
+        </button>
+
         {/* Chat / Editor tab toggle */}
         <div className={`flex items-center bg-cc-hover rounded-lg p-0.5 ${!currentSessionId ? "opacity-40 pointer-events-none" : ""}`}>
           <button
             onClick={() => setActiveTab("chat")}
-            className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
+            className={`px-2 py-0.5 rounded-md text-[11px] font-barlow-condensed font-medium tracking-wide transition-colors cursor-pointer ${
               activeTab === "chat"
                 ? "bg-cc-card text-cc-fg shadow-sm"
                 : "text-cc-muted hover:text-cc-fg"
@@ -89,7 +127,7 @@ export function TopBar() {
           </button>
           <button
             onClick={() => setActiveTab("editor")}
-            className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
+            className={`px-2 py-0.5 rounded-md text-[11px] font-barlow-condensed font-medium tracking-wide transition-colors cursor-pointer ${
               activeTab === "editor"
                 ? "bg-cc-card text-cc-fg shadow-sm"
                 : "text-cc-muted hover:text-cc-fg"
@@ -102,35 +140,28 @@ export function TopBar() {
         {/* Terminal toggle */}
         <button
           onClick={() => setTerminalOpen(!terminalOpen)}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors cursor-pointer ${
+          className={`px-2 py-0.5 rounded-lg text-[11px] font-barlow-condensed font-medium tracking-wide transition-colors cursor-pointer border ${
             terminalOpen
-              ? "text-cc-primary bg-cc-active"
-              : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover"
+              ? "text-cc-primary bg-cc-active border-cc-primary/30"
+              : "text-cc-muted border-cc-border hover:text-cc-fg hover:bg-cc-hover"
           }`}
           title="Toggle terminal"
         >
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3 h-3 shrink-0">
-            <polyline points="3 11 6 8 3 5" />
-            <line x1="8" y1="11" x2="13" y2="11" />
-          </svg>
           Terminal
         </button>
 
         {/* Session panel toggle */}
         <button
           onClick={() => currentSessionId && setTaskPanelOpen(!taskPanelOpen)}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
+          className={`px-2 py-0.5 rounded-lg text-[11px] font-barlow-condensed font-medium tracking-wide transition-colors border ${
             !currentSessionId
-              ? "text-cc-muted opacity-40 cursor-default"
+              ? "text-cc-muted border-cc-border opacity-40 cursor-default"
               : taskPanelOpen
-                ? "text-cc-primary bg-cc-active cursor-pointer"
-                : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover cursor-pointer"
+                ? "text-cc-primary bg-cc-active border-cc-primary/30 cursor-pointer"
+                : "text-cc-muted border-cc-border hover:text-cc-fg hover:bg-cc-hover cursor-pointer"
           }`}
           title="Toggle session panel"
         >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 shrink-0">
-            <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 3a1 1 0 000 2h6a1 1 0 100-2H7zm0 4a1 1 0 000 2h6a1 1 0 100-2H7zm0 4a1 1 0 000 2h4a1 1 0 100-2H7z" clipRule="evenodd" />
-          </svg>
           Session
         </button>
       </div>

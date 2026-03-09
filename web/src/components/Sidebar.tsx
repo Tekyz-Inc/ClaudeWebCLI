@@ -88,10 +88,9 @@ export function Sidebar() {
         const list = await api.getClaudeSessions(activeProjectCwd!);
         if (active) {
           setNativeSessions(list);
-          if (shouldAutoResume && list.length > 0) {
+          if (shouldAutoResume) {
             shouldAutoResume = false; // Reset: never auto-resume again until the next real tab switch
-            // Check if we already have a live session for this project — if so, activate it
-            // instead of spawning a new CLI process (which would abandon any running work).
+            // Always prefer an existing live session for this project over spawning a new one.
             const store = useStore.getState();
             const pNorm = activeProjectCwd!.replace(/\\/g, "/");
             const existingSession = store.sdkSessions.find((s) => {
@@ -99,10 +98,12 @@ export function Sidebar() {
               const sCwd = (s.cwd || "").replace(/\\/g, "/");
               return sCwd === pNorm || sCwd.startsWith(pNorm + "/");
             });
-            if (existingSession && store.sessions.has(existingSession.sessionId)) {
+            if (existingSession) {
+              // Always reconnect — session may exist in sdkSessions but bridge WS may be closed
               connectSession(existingSession.sessionId);
               setCurrentSession(existingSession.sessionId);
-            } else {
+            } else if (list.length > 0) {
+              // No live session — resume most recent from history
               const s = list[0];
               setResumingId(s.id);
               resumeNativeSession(s.id, s.cwd).finally(() => setResumingId(null));

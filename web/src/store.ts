@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { SessionState, PermissionRequest, ChatMessage, SdkSessionInfo, TaskItem } from "./types.js";
+import type { SessionState, PermissionRequest, ChatMessage, SdkSessionInfo, TaskItem, AgentSpawn, TestRun } from "./types.js";
 import { api } from "./api.js";
 
 interface AppState {
@@ -26,7 +26,7 @@ interface AppState {
   cliConnected: Map<string, boolean>;
 
   // Session status
-  sessionStatus: Map<string, "idle" | "running" | "compacting" | null>;
+  sessionStatus: Map<string, "idle" | "submitted" | "running" | "compacting" | null>;
 
   // Plan mode: stores previous permission mode per session so we can restore it
   previousPermissionMode: Map<string, string>;
@@ -43,6 +43,12 @@ interface AppState {
   // Commands executed per session (Bash tool calls), most recent first, capped at 20
   commandsExecuted: Map<string, string[]>;
 
+  // Agents spawned per session (Agent tool calls)
+  agentsSpawned: Map<string, AgentSpawn[]>;
+
+  // Tests executed per session (test-like Bash commands)
+  testsExecuted: Map<string, TestRun[]>;
+
   // Session display names
   sessionNames: Map<string, string>;
   // Track sessions that were just renamed (for animation)
@@ -52,6 +58,8 @@ interface AppState {
   darkMode: boolean;
   sidebarOpen: boolean;
   taskPanelOpen: boolean;
+  chatExpanded: boolean;
+  chatExpandTick: number;
   homeResetKey: number;
   activeTab: "chat" | "editor";
   editorOpenFile: Map<string, string>;
@@ -63,6 +71,7 @@ interface AppState {
   toggleDarkMode: () => void;
   setSidebarOpen: (v: boolean) => void;
   setTaskPanelOpen: (open: boolean) => void;
+  setChatExpanded: (expanded: boolean) => void;
   newSession: () => void;
   resumeNativeSession: (cliId: string, cwd: string) => Promise<void>;
 
@@ -96,6 +105,8 @@ interface AppState {
   // Activity tracking actions
   addReadFile: (sessionId: string, filePath: string) => void;
   addCommandExecuted: (sessionId: string, cmd: string) => void;
+  addAgentSpawned: (sessionId: string, agent: AgentSpawn) => void;
+  addTestExecuted: (sessionId: string, test: TestRun) => void;
 
   // Session name actions
   setSessionName: (sessionId: string, name: string) => void;
@@ -108,7 +119,7 @@ interface AppState {
   // Connection actions
   setConnectionStatus: (sessionId: string, status: "connecting" | "connected" | "disconnected") => void;
   setCliConnected: (sessionId: string, connected: boolean) => void;
-  setSessionStatus: (sessionId: string, status: "idle" | "running" | "compacting" | null) => void;
+  setSessionStatus: (sessionId: string, status: "idle" | "submitted" | "running" | "compacting" | null) => void;
 
   // Prompt history per session
   promptHistory: Map<string, string[]>;
@@ -179,12 +190,16 @@ export const useStore = create<AppState>((set) => ({
   changedFiles: new Map(),
   filesRead: new Map(),
   commandsExecuted: new Map(),
+  agentsSpawned: new Map(),
+  testsExecuted: new Map(),
   promptHistory: getInitialPromptHistory(),
   sessionNames: getInitialSessionNames(),
   recentlyRenamed: new Set(),
   darkMode: getInitialDarkMode(),
-  sidebarOpen: typeof window !== "undefined" ? window.innerWidth >= 768 : true,
-  taskPanelOpen: typeof window !== "undefined" ? window.innerWidth >= 1024 : false,
+  sidebarOpen: false,
+  taskPanelOpen: true,
+  chatExpanded: true,
+  chatExpandTick: 0,
   homeResetKey: 0,
   activeTab: "chat",
   editorOpenFile: new Map(),
@@ -205,6 +220,8 @@ export const useStore = create<AppState>((set) => ({
     }),
   setSidebarOpen: (v) => set({ sidebarOpen: v }),
   setTaskPanelOpen: (open) => set({ taskPanelOpen: open }),
+  setChatExpanded: (expanded) =>
+    set((s) => ({ chatExpanded: expanded, chatExpandTick: s.chatExpandTick + 1 })),
   newSession: () => {
     sessionStorage.removeItem("cc-current-session");
     set((s) => ({ currentSessionId: null, homeResetKey: s.homeResetKey + 1 }));
@@ -226,6 +243,7 @@ export const useStore = create<AppState>((set) => ({
         id: `hist-${cliId}-${idSeq++}`,
         role: m.role as "user" | "assistant",
         content: m.content,
+        contentBlocks: m.contentBlocks as import("./types.js").ContentBlock[] | undefined,
         timestamp: new Date(m.timestamp).getTime() || Date.now(),
       }));
       useStore.getState().setMessages(sessionId, chatMessages);
@@ -238,7 +256,9 @@ export const useStore = create<AppState>((set) => ({
       const changedFiles = new Map(s.changedFiles);
       changedFiles.set(sessionId, new Set(activityResult.changedFiles));
       const commandsExecuted = new Map(s.commandsExecuted);
-      commandsExecuted.set(sessionId, activityResult.commands);
+      // Only keep slash commands (skills/GSD-T); strip raw bash commands
+      const slashCmds = activityResult.commands.filter((c: string) => c.startsWith("/"));
+      commandsExecuted.set(sessionId, slashCmds);
       return { filesRead, changedFiles, commandsExecuted };
     });
 
@@ -304,6 +324,10 @@ export const useStore = create<AppState>((set) => ({
       filesRead.delete(sessionId);
       const commandsExecuted = new Map(s.commandsExecuted);
       commandsExecuted.delete(sessionId);
+      const agentsSpawned = new Map(s.agentsSpawned);
+      agentsSpawned.delete(sessionId);
+      const testsExecuted = new Map(s.testsExecuted);
+      testsExecuted.delete(sessionId);
       const sessionNames = new Map(s.sessionNames);
       sessionNames.delete(sessionId);
       const recentlyRenamed = new Set(s.recentlyRenamed);
@@ -333,6 +357,8 @@ export const useStore = create<AppState>((set) => ({
         changedFiles,
         filesRead,
         commandsExecuted,
+        agentsSpawned,
+        testsExecuted,
         sessionNames,
         recentlyRenamed,
         editorOpenFile,
@@ -481,6 +507,20 @@ export const useStore = create<AppState>((set) => ({
       return { commandsExecuted };
     }),
 
+  addAgentSpawned: (sessionId, agent) =>
+    set((s) => {
+      const agentsSpawned = new Map(s.agentsSpawned);
+      agentsSpawned.set(sessionId, [...(agentsSpawned.get(sessionId) || []), agent]);
+      return { agentsSpawned };
+    }),
+
+  addTestExecuted: (sessionId, test) =>
+    set((s) => {
+      const testsExecuted = new Map(s.testsExecuted);
+      testsExecuted.set(sessionId, [...(testsExecuted.get(sessionId) || []), test]);
+      return { testsExecuted };
+    }),
+
   setSessionName: (sessionId, name) =>
     set((s) => {
       const sessionNames = new Map(s.sessionNames);
@@ -589,6 +629,8 @@ export const useStore = create<AppState>((set) => ({
       changedFiles: new Map(),
       filesRead: new Map(),
       commandsExecuted: new Map(),
+      agentsSpawned: new Map(),
+      testsExecuted: new Map(),
       promptHistory: new Map(),
       sessionNames: new Map(),
       recentlyRenamed: new Set(),

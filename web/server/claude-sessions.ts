@@ -15,11 +15,19 @@ export function encodeProjectSlug(cwd: string): string {
   return cwd.replace(/[^a-zA-Z0-9]/g, "-");
 }
 
+interface JsonlContentBlock {
+  type: string;
+  text?: string;
+  id?: string;
+  name?: string;
+  input?: Record<string, unknown>;
+}
+
 interface JsonlEntry {
   type?: string;
   message?: {
     role?: string;
-    content?: string | Array<{ type: string; text?: string }>;
+    content?: string | JsonlContentBlock[];
   };
   timestamp?: string;
   cwd?: string;
@@ -108,9 +116,18 @@ export async function readClaudeSessions(cwd: string): Promise<ClaudeSession[]> 
   return readClaudeSessionsFromDir(dir, cwd);
 }
 
+export interface SessionHistoryContentBlock {
+  type: "text" | "tool_use";
+  text?: string;
+  id?: string;
+  name?: string;
+  input?: Record<string, unknown>;
+}
+
 export interface SessionHistoryMessage {
   role: "user" | "assistant";
   content: string;
+  contentBlocks?: SessionHistoryContentBlock[];
   timestamp: string;
 }
 
@@ -181,12 +198,23 @@ export async function readClaudeSessionMessages(
       } else if (entry.type === "assistant" && entry.message?.role === "assistant") {
         const content = entry.message.content;
         let text = "";
+        let contentBlocks: SessionHistoryContentBlock[] | undefined;
         if (typeof content === "string") {
           text = content.trim();
         } else if (Array.isArray(content)) {
           text = content.filter((b) => b.type === "text").map((b) => b.text || "").filter(Boolean).join("\n");
+          // Include text + tool_use blocks so the client can render diffs on resume
+          const blocks = content.filter((b) => b.type === "text" || b.type === "tool_use");
+          if (blocks.length > 0) {
+            contentBlocks = blocks.map((b) => ({
+              type: b.type as "text" | "tool_use",
+              ...(b.type === "text" ? { text: b.text } : { id: b.id, name: b.name, input: b.input }),
+            }));
+          }
         }
-        if (text) messages.push({ role: "assistant", content: text, timestamp: entry.timestamp ?? new Date().toISOString() });
+        if (text || contentBlocks) {
+          messages.push({ role: "assistant", content: text, contentBlocks, timestamp: entry.timestamp ?? new Date().toISOString() });
+        }
       }
     } catch {
       continue;

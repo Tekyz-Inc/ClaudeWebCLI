@@ -48,6 +48,17 @@ export interface SdkSessionInfo {
   name?: string;
 }
 
+export interface AgentSpawn {
+  description: string;
+  subagentType?: string;
+  name?: string;
+}
+
+export interface TestRun {
+  cmd: string;
+  source: "agent" | "direct";
+}
+
 export interface ClaudeSession {
   id: string;
   cwd: string;

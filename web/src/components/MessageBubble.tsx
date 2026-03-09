@@ -2,7 +2,8 @@ import { useState, useMemo, type ComponentProps } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ChatMessage, ContentBlock } from "../types.js";
-import { ToolBlock, getToolIcon, getToolLabel, getPreview, ToolIcon } from "./ToolBlock.js";
+import { ToolBlock, ToolIcon } from "./ToolBlock.js";
+import { getToolIcon, getToolLabel } from "./tool-utils.js";
 
 export function MessageBubble({ message }: { message: ChatMessage }) {
   if (message.role === "system") {
@@ -121,11 +122,7 @@ function AssistantMessage({ message }: { message: ChatMessage }) {
 
 function AssistantAvatar() {
   return (
-    <div className="w-6 h-6 rounded-full bg-cc-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-      <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 text-cc-primary">
-        <circle cx="8" cy="8" r="3" />
-      </svg>
-    </div>
+    <span className="text-cc-primary shrink-0 text-[11px] mt-[3px] select-none leading-none">●</span>
   );
 }
 
@@ -290,16 +287,10 @@ function ToolGroupBlock({ name, items }: { name: string; items: ToolGroupItem[] 
       </button>
 
       {open && (
-        <div className="border-t border-cc-border px-3 py-1.5">
-          {items.map((item, i) => {
-            const preview = getPreview(item.name, item.input);
-            return (
-              <div key={item.id || i} className="flex items-center gap-2 py-1 text-xs text-cc-muted font-mono-code truncate">
-                <span className="w-1 h-1 rounded-full bg-cc-muted/40 shrink-0" />
-                <span className="truncate">{preview || JSON.stringify(item.input).slice(0, 80)}</span>
-              </div>
-            );
-          })}
+        <div className="border-t border-cc-border px-3 py-2 space-y-2">
+          {items.map((item, i) => (
+            <ToolBlock key={item.id || i} name={item.name} input={item.input} toolUseId={item.id} />
+          ))}
         </div>
       )}
     </div>

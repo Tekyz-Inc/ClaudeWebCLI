@@ -245,9 +245,11 @@ export class CliLauncher {
     }
     args.push("-p", "");
 
+    // Strip CLAUDECODE so the child CLI doesn't think it's nested inside another
+    // Claude Code session (which would cause it to exit immediately with code 1).
+    const { CLAUDECODE: _nc, ...baseEnv } = process.env;
     const env: Record<string, string | undefined> = {
-      ...process.env,
-      CLAUDECODE: "1",
+      ...baseEnv,
       ...options.env,
     };
 

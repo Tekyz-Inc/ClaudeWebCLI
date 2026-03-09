@@ -1,33 +1,7 @@
-import { useState } from "react";
-
-const TOOL_ICONS: Record<string, string> = {
-  Bash: "terminal",
-  Read: "file",
-  Write: "file-plus",
-  Edit: "file-edit",
-  Glob: "search",
-  Grep: "search",
-  WebFetch: "globe",
-  WebSearch: "globe",
-  NotebookEdit: "file-edit",
-  TaskCreate: "list",
-  TaskUpdate: "list",
-  SendMessage: "message",
-};
-
-export function getToolIcon(name: string): string {
-  return TOOL_ICONS[name] || "tool";
-}
-
-export function getToolLabel(name: string): string {
-  if (name === "Bash") return "Terminal";
-  if (name === "Read") return "Read File";
-  if (name === "Write") return "Write File";
-  if (name === "Edit") return "Edit File";
-  if (name === "Glob") return "Find Files";
-  if (name === "Grep") return "Search Content";
-  return name;
-}
+import { useState, useEffect } from "react";
+import { useStore } from "../store.js";
+import { DiffView } from "./DiffView.js";
+import { getToolIcon, getToolLabel, getPreview } from "./tool-utils.js";
 
 export function ToolBlock({
   name,
@@ -38,7 +12,14 @@ export function ToolBlock({
   input: Record<string, unknown>;
   toolUseId: string;
 }) {
-  const [open, setOpen] = useState(false);
+  const chatExpanded = useStore((s) => s.chatExpanded);
+  const chatExpandTick = useStore((s) => s.chatExpandTick);
+  const [open, setOpen] = useState(true);
+
+  useEffect(() => {
+    if (chatExpandTick > 0) setOpen(chatExpanded);
+  }, [chatExpandTick, chatExpanded]);
+
   const iconType = getToolIcon(name);
   const label = getToolLabel(name);
 
@@ -95,42 +76,79 @@ export function ToolBlock({
   );
 }
 
-function DiffPane({ lines, type }: { lines: string[]; type: "removed" | "added" }) {
-  const isRemoved = type === "removed";
-  return (
-    <div className={`flex-1 min-w-0 overflow-hidden ${isRemoved ? "border-r border-cc-border" : ""}`}>
-      <div className={`px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider border-b border-cc-border/40 ${
-        isRemoved ? "bg-red-900/30 text-red-400" : "bg-green-900/30 text-green-400"
-      }`}>
-        {isRemoved ? "before" : "after"}
-      </div>
-      <div className="overflow-x-auto overflow-y-auto max-h-44">
-        {lines.map((line, i) => (
-          <div key={i} className={`flex ${isRemoved ? "bg-red-900/20" : "bg-green-900/20"}`}>
-            <span className={`shrink-0 w-4 text-center text-[9px] select-none ${isRemoved ? "text-red-500" : "text-green-500"}`}>
-              {isRemoved ? "−" : "+"}
-            </span>
-            <span className={`whitespace-pre flex-1 px-0.5 ${isRemoved ? "text-red-200/80" : "text-green-200/80"}`}>
-              {line}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+type DiffOp = ["keep" | "remove" | "add", string];
+
+function lcs(a: string[], b: string[]): DiffOp[] {
+  const m = a.length, n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] + 1 : Math.max(dp[i-1][j], dp[i][j-1]);
+  const ops: DiffOp[] = [];
+  let i = m, j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && a[i-1] === b[j-1]) { ops.unshift(["keep", a[i-1]]); i--; j--; }
+    else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) { ops.unshift(["add", b[j-1]]); j--; }
+    else { ops.unshift(["remove", a[i-1]]); i--; }
+  }
+  return ops;
+}
+
+function buildUnifiedDiff(oldStr: string, newStr: string, filePath: string): string {
+  const oldLines = oldStr ? oldStr.split("\n") : [];
+  const newLines = newStr ? newStr.split("\n") : [];
+  const ops = lcs(oldLines, newLines);
+  const CONTEXT = 3;
+
+  // Find indices of changed ops
+  const changed = ops.reduce<number[]>((acc, op, i) => { if (op[0] !== "keep") acc.push(i); return acc; }, []);
+  if (changed.length === 0) return "";
+
+  // Group changes into hunks
+  const hunks: Array<[number, number]> = [];
+  let hs = Math.max(0, changed[0] - CONTEXT);
+  let he = Math.min(ops.length - 1, changed[0] + CONTEXT);
+  for (let k = 1; k < changed.length; k++) {
+    const ci = changed[k];
+    if (ci - CONTEXT <= he + 1) { he = Math.min(ops.length - 1, ci + CONTEXT); }
+    else { hunks.push([hs, he]); hs = Math.max(0, ci - CONTEXT); he = Math.min(ops.length - 1, ci + CONTEXT); }
+  }
+  hunks.push([hs, he]);
+
+  // Build line number counters by scanning ops in order
+  const opOldLine: number[] = [];
+  const opNewLine: number[] = [];
+  let ol = 1, nl = 1;
+  for (const [type] of ops) {
+    opOldLine.push(ol); opNewLine.push(nl);
+    if (type !== "add") ol++;
+    if (type !== "remove") nl++;
+  }
+
+  const out = [`--- a/${filePath}`, `+++ b/${filePath}`];
+  for (const [hs, he] of hunks) {
+    const slice = ops.slice(hs, he + 1);
+    const oldCount = slice.filter(([t]) => t !== "add").length;
+    const newCount = slice.filter(([t]) => t !== "remove").length;
+    out.push(`@@ -${opOldLine[hs]},${oldCount} +${opNewLine[hs]},${newCount} @@`);
+    for (const [type, line] of slice) {
+      out.push((type === "keep" ? " " : type === "remove" ? "-" : "+") + line);
+    }
+  }
+  return out.join("\n");
 }
 
 function EditToolDetail({ input }: { input: Record<string, unknown> }) {
   const filePath = String(input.file_path || "");
-  const oldLines = String(input.old_string || "").split("\n");
-  const newLines = String(input.new_string || "").split("\n");
+  const oldStr = String(input.old_string || "");
+  const newStr = String(input.new_string || "");
+  const diff = buildUnifiedDiff(oldStr, newStr, filePath);
 
   return (
     <div className="space-y-1.5">
       <div className="text-[10px] text-cc-muted font-mono-code truncate">{filePath}</div>
-      <div className="rounded border border-cc-border overflow-hidden flex font-mono-code text-[11px] bg-cc-code-bg leading-[1.4rem]">
-        <DiffPane lines={oldLines} type="removed" />
-        <DiffPane lines={newLines} type="added" />
+      <div className="rounded border border-cc-border overflow-auto bg-cc-code-bg max-h-72">
+        <DiffView diff={diff} />
       </div>
     </div>
   );
@@ -149,20 +167,6 @@ function WriteToolDetail({ input }: { input: Record<string, unknown> }) {
       </pre>
     </div>
   );
-}
-
-export function getPreview(name: string, input: Record<string, unknown>): string {
-  if (name === "Bash" && typeof input.command === "string") {
-    return input.command.length > 60 ? input.command.slice(0, 60) + "..." : input.command;
-  }
-  if ((name === "Read" || name === "Write" || name === "Edit") && input.file_path) {
-    const path = String(input.file_path);
-    return path.split("/").slice(-2).join("/");
-  }
-  if (name === "Glob" && input.pattern) return String(input.pattern);
-  if (name === "Grep" && input.pattern) return String(input.pattern);
-  if (name === "WebSearch" && input.query) return String(input.query);
-  return "";
 }
 
 export function ToolIcon({ type }: { type: string }) {

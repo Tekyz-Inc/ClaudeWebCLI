@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { render, screen, fireEvent } from "@testing-library/react";
-import { ToolBlock, ToolIcon, getToolIcon, getToolLabel, getPreview } from "./ToolBlock.js";
+import { ToolBlock, ToolIcon } from "./ToolBlock.js";
+import { getToolIcon, getToolLabel, getPreview } from "./tool-utils.js";
 
 // ─── getToolIcon ─────────────────────────────────────────────────────────────
 

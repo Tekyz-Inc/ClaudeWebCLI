@@ -50,6 +50,8 @@ wsBridge.onCLIRelaunchNeededCallback(async (sessionId) => {
   if (relaunchingSet.has(sessionId)) return;
   const info = launcher.getSession(sessionId);
   if (info?.archived) return;
+  // Already starting up — CLI just hasn't connected its WS yet, do nothing
+  if (info?.state === "starting") return;
   if (info && info.state !== "starting") {
     relaunchingSet.add(sessionId);
     console.log(`[server] Auto-relaunching CLI for session ${sessionId}`);
@@ -134,6 +136,7 @@ const server = Bun.serve<SocketData>({
     return app.fetch(req, server);
   },
   websocket: {
+    idleTimeout: 0, // Never close idle browser/CLI connections
     open(ws: ServerWebSocket<SocketData>) {
       const data = ws.data;
       if (data.kind === "cli") {

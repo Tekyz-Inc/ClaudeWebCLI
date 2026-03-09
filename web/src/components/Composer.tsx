@@ -10,6 +10,9 @@ let idCounter = 0;
 // Module-level cache: fetched once on first Composer mount, reused on remounts
 let _cachedSlashCommands: { commands: string[]; skills: string[] } | null = null;
 
+// Per-session draft text — persists across project tab switches
+const _sessionDrafts = new Map<string, string>();
+
 interface ImageAttachment {
   name: string;
   base64: string;
@@ -32,13 +35,38 @@ function readFileAsBase64(file: File): Promise<{ base64: string; mediaType: stri
 interface CommandItem {
   name: string;
   type: "command" | "skill";
+  description?: string;
 }
+
+const COMMAND_DESCRIPTIONS: Record<string, string> = {
+  help: "Show available commands and help",
+  clear: "Clear the current conversation",
+  compact: "Compact conversation to save context",
+  cost: "Show token usage and cost",
+  config: "View or change configuration",
+  exit: "Exit the current session",
+  login: "Log in to Claude",
+  logout: "Log out of Claude",
+  model: "Switch the active model",
+  permission: "View or set permission mode",
+  pr_comments: "Fetch PR review comments",
+  release_notes: "Show recent release notes",
+  review: "Review code changes",
+  status: "Show session status",
+  terminal: "Open an embedded terminal",
+  vim: "Enable vim keybindings",
+};
 
 export function Composer({ sessionId }: { sessionId: string }) {
   const [text, setText] = useState("");
   const [images, setImages] = useState<ImageAttachment[]>([]);
-  const [slashMenuOpen, setSlashMenuOpen] = useState(false);
+  // Track text value at time of Escape so menu stays closed for that exact text
+  const [slashMenuEscapedText, setSlashMenuEscapedText] = useState<string | null>(null);
   const [slashMenuIndex, setSlashMenuIndex] = useState(0);
+
+  // Derive slashMenuOpen synchronously — eliminates async state-timing race conditions
+  const slashQuery = text.match(/^\/(\S*)$/);
+  const slashMenuOpen = !!slashQuery && slashMenuEscapedText !== text;
   const [isDragging, setIsDragging] = useState(false);
   const [fetchedCommands, setFetchedCommands] = useState<{ commands: string[]; skills: string[] } | null>(
     _cachedSlashCommands
@@ -50,6 +78,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
   const cliConnected = useStore((s) => s.cliConnected);
   const sessionData = useStore((s) => s.sessions.get(sessionId));
   const previousMode = useStore((s) => s.previousPermissionMode.get(sessionId) || "acceptEdits");
+  const activeProjectCwd = useStore((s) => s.activeProjectCwd);
 
   const COMPOSER_MODES = [
     { value: "bypassPermissions", label: "Bypass" },
@@ -60,6 +89,24 @@ export function Composer({ sessionId }: { sessionId: string }) {
 
   const { navigateUp, navigateDown, addToHistory, resetNavigation, saveDraft } =
     usePromptHistory(sessionId);
+
+  // Keep a ref to the latest text so the cleanup below can read it without stale closure
+  const textRef = useRef(text);
+  useEffect(() => { textRef.current = text; }, [text]);
+
+  // Draft key: project path beats session ID so drafts survive session ID changes
+  // (e.g. resumeNativeSession creates a new ID for the same project on reconnect)
+  const draftKey = activeProjectCwd ?? sessionId;
+  const draftKeyRef = useRef(draftKey);
+  useEffect(() => { draftKeyRef.current = draftKey; });
+
+  // Save outgoing draft, restore incoming draft on project/session switch
+  useEffect(() => {
+    setText(_sessionDrafts.get(draftKey) || "");
+    return () => {
+      _sessionDrafts.set(draftKeyRef.current, textRef.current);
+    };
+  }, [draftKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch available commands from server once at mount (module-level cache reused on remounts)
   useEffect(() => {
@@ -86,7 +133,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
       : (fetchedCommands?.commands ?? []);
     for (const cmd of slashCmds) {
       const name = cmd.startsWith("/") ? cmd.slice(1) : cmd;
-      cmds.push({ name, type: "command" });
+      cmds.push({ name, type: "command", description: COMMAND_DESCRIPTIONS[name] });
     }
 
     // Skills: use session's if CLI sent them, else use fetched user skills
@@ -95,7 +142,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
       : (fetchedCommands?.skills ?? []);
     for (const skill of skills) {
       const name = skill.startsWith("/") ? skill.slice(1) : skill;
-      cmds.push({ name, type: "skill" });
+      cmds.push({ name, type: "skill", description: "User skill" });
     }
 
     if (import.meta.env.DEV && cmds.length > 0) {
@@ -105,30 +152,19 @@ export function Composer({ sessionId }: { sessionId: string }) {
   }, [sessionData?.slash_commands, sessionData?.skills, fetchedCommands]);
 
   // Filter commands based on what the user typed after /
-  const filteredCommands = useMemo(() => {
-    if (!slashMenuOpen) return [];
-    // Extract the slash query: text starts with / and we match the part after /
+  // Derived directly from text — no slashMenuOpen dependency so it's always current
+  const filteredCommands = useMemo<CommandItem[]>(() => {
     const match = text.match(/^\/(\S*)$/);
     if (!match) return [];
     const query = match[1].toLowerCase();
     if (query === "") return allCommands;
     return allCommands.filter((cmd) => cmd.name.toLowerCase().includes(query));
-  }, [text, slashMenuOpen, allCommands]);
+  }, [text, allCommands]);
 
-  // Open/close menu based on text
+  // Reset index to 0 whenever the menu transitions from closed to open
   useEffect(() => {
-    const shouldOpen = text.startsWith("/") && /^\/\S*$/.test(text);
-    if (shouldOpen && !slashMenuOpen) {
-      setSlashMenuOpen(true);
-      setSlashMenuIndex(0);
-      if (import.meta.env.DEV) {
-        console.log("[Composer] slash menu opened. allCommands:", allCommands.length, "sessionData:", !!sessionData);
-      }
-    } else if (!shouldOpen && slashMenuOpen) {
-      setSlashMenuOpen(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, slashMenuOpen]);
+    if (slashMenuOpen) setSlashMenuIndex(0);
+  }, [slashMenuOpen]);
 
   // Keep selected index in bounds
   useEffect(() => {
@@ -149,7 +185,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
 
   const selectCommand = useCallback((cmd: CommandItem) => {
     setText(`/${cmd.name} `);
-    setSlashMenuOpen(false);
+    // slashMenuOpen auto-closes: "/command " has a trailing space so slashQuery won't match
     textareaRef.current?.focus();
   }, []);
 
@@ -164,6 +200,9 @@ export function Composer({ sessionId }: { sessionId: string }) {
       images: images.length > 0 ? images.map((img) => ({ media_type: img.mediaType, data: img.base64 })) : undefined,
     });
 
+    // Optimistically mark as submitted — transitions to "running" when stream starts
+    useStore.getState().setSessionStatus(sessionId, "submitted");
+
     useStore.getState().appendMessage(sessionId, {
       id: `user-${Date.now()}-${++idCounter}`,
       role: "user",
@@ -176,7 +215,6 @@ export function Composer({ sessionId }: { sessionId: string }) {
     requestNotificationPermission();
     setText("");
     setImages([]);
-    setSlashMenuOpen(false);
 
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -209,7 +247,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
       }
       if (e.key === "Escape") {
         e.preventDefault();
-        setSlashMenuOpen(false);
+        setSlashMenuEscapedText(text); // closes menu for this exact text; resets when text changes
         return;
       }
     }
@@ -342,7 +380,8 @@ export function Composer({ sessionId }: { sessionId: string }) {
   }
 
   const sessionStatus = useStore((s) => s.sessionStatus);
-  const isRunning = sessionStatus.get(sessionId) === "running";
+  const st = sessionStatus.get(sessionId);
+  const isRunning = st === "running" || st === "submitted";
   const canSend = text.trim().length > 0 && isConnected;
 
   return (
@@ -402,34 +441,23 @@ export function Composer({ sessionId }: { sessionId: string }) {
           {slashMenuOpen && filteredCommands.length > 0 && (
             <div
               ref={menuRef}
-              className="absolute left-2 right-2 bottom-full mb-1 max-h-[240px] overflow-y-auto bg-cc-card border border-cc-border rounded-[10px] shadow-lg z-20 py-1"
+              className="absolute left-2 right-2 bottom-full mb-1 max-h-[320px] overflow-y-auto bg-cc-card border border-cc-border rounded-[10px] shadow-lg z-20 py-0.5"
             >
               {filteredCommands.map((cmd, i) => (
                 <button
                   key={`${cmd.type}-${cmd.name}`}
                   data-cmd-index={i}
                   onClick={() => selectCommand(cmd)}
-                  className={`w-full px-3 py-2 text-left flex items-center gap-2.5 transition-colors cursor-pointer ${
+                  className={`w-full px-3 py-1 text-left flex items-center gap-2 transition-colors cursor-pointer ${
                     i === slashMenuIndex
                       ? "bg-cc-hover"
                       : "hover:bg-cc-hover/50"
                   }`}
                 >
-                  <span className="flex items-center justify-center w-6 h-6 rounded-md bg-cc-hover text-cc-muted shrink-0">
-                    {cmd.type === "skill" ? (
-                      <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
-                        <path d="M8 1l1.796 3.64L14 5.255l-3 2.924.708 4.126L8 10.5l-3.708 1.805L5 8.18 2 5.255l4.204-.615L8 1z" />
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
-                        <path d="M5 12L10 4" strokeLinecap="round" />
-                      </svg>
-                    )}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[13px] font-medium text-cc-fg">/{cmd.name}</span>
-                    <span className="ml-2 text-[11px] text-cc-muted">{cmd.type}</span>
-                  </div>
+                  <span className="text-[11px] font-medium text-cc-fg shrink-0">/{cmd.name}</span>
+                  {cmd.description && (
+                    <span className="text-[10px] text-cc-muted truncate">{cmd.description}</span>
+                  )}
                 </button>
               ))}
             </div>

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* highlight.js: transparent background so diff cell colors show through */
+.hljs { background: transparent !important; padding: 0 !important; }
+
 @theme {
   /* Light Mode (default) */
   --color-cc-bg: #F5F5F0;
@@ -107,6 +110,20 @@
 
 ::-webkit-scrollbar-thumb:hover {
   opacity: 0.6;
+}
+
+/* Barlow Condensed — used for project tab bar and top bar controls */
+.font-barlow-condensed {
+  font-family: 'Barlow Condensed', system-ui, sans-serif;
+}
+
+/* Scrollable strip with hidden scrollbar (used for project tab bar) */
+.tabs-scroll {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 /* Typography families */

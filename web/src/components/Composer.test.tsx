@@ -303,7 +303,7 @@ describe("Composer slash menu", () => {
     expect(screen.queryByText("/help")).toBeNull();
   });
 
-  it("slash menu shows command types", () => {
+  it("slash menu shows commands and skills without type labels", () => {
     setupMockStore({
       session: {
         slash_commands: ["help"],
@@ -315,9 +315,11 @@ describe("Composer slash menu", () => {
 
     fireEvent.change(textarea, { target: { value: "/" } });
 
-    // Each command should display its type
-    expect(screen.getByText("command")).toBeTruthy();
-    expect(screen.getByText("skill")).toBeTruthy();
+    // Commands and skills should appear without type labels
+    expect(screen.getByText("/help")).toBeTruthy();
+    expect(screen.getByText("/commit")).toBeTruthy();
+    expect(screen.queryByText("command")).toBeNull();
+    expect(screen.queryByText("skill")).toBeNull();
   });
 });
 

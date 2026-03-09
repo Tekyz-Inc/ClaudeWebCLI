@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.11.10] - 2026-03-09
+
+### Added
+- Barlow Condensed font for tab/toggle labels and UI chrome
+- `highlight.js` for syntax-highlighted code blocks in tool outputs
+- Draft persistence: per-project composer text survives project tab switches
+- Slash command descriptions shown in the command picker menu
+- `SessionHistoryContentBlock` — tool_use blocks returned on resume for side-by-side diff rendering
+- `idleTimeout: 0` on WebSocket server to prevent idle browser/CLI disconnects
+
+### Changed
+- Slash menu open/close derived from text state (eliminates async race conditions)
+- DiffView: compact layout, improved contrast colors
+- TaskPanel: Commands section filters to slash commands only
+- ProjectTabBar: scroll strip with left/right chevron arrows
+- Auto-namer: timeout increased 15 s → 30 s; switched to `--output-format text`
+- dev.ts: `--watch` → `--hot` for faster backend reloads
+
+### Fixed
+- `CLAUDECODE` env var stripped from CLI spawn — prevents nested-session exit-code-1 error
+- Redundant CLI relaunch suppressed when session state is already `"starting"`
+- Quieter WebSocket bridge console logging
+
 ## [0.10.14] - 2026-03-05
 
 ### Added
