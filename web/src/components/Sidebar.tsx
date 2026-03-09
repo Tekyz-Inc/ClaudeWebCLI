@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useStore } from "../store.js";
 import { api } from "../api.js";
 import { connectSession, disconnectSession } from "../ws.js";
@@ -73,7 +74,13 @@ export function Sidebar() {
       prevCwdRef.current = null;
       return;
     }
-    const isTabSwitch = prevCwdRef.current !== null && prevCwdRef.current !== activeProjectCwd;
+    // Auto-resume on tab switch, or on first load when there's no existing session.
+    // Using `let` so fetchNative can reset it to false after the first auto-resume attempt,
+    // preventing the interval from calling resumeNativeSession every 10 seconds.
+    const prevCwd = prevCwdRef.current;
+    const isTabSwitch = prevCwd !== null && prevCwd !== activeProjectCwd;
+    const isFirstLoad = prevCwd === null && !useStore.getState().currentSessionId;
+    let shouldAutoResume = isTabSwitch || isFirstLoad;
     prevCwdRef.current = activeProjectCwd;
     let active = true;
     async function fetchNative() {
@@ -81,10 +88,25 @@ export function Sidebar() {
         const list = await api.getClaudeSessions(activeProjectCwd!);
         if (active) {
           setNativeSessions(list);
-          if (isTabSwitch && list.length > 0) {
-            const s = list[0];
-            setResumingId(s.id);
-            resumeNativeSession(s.id, s.cwd).finally(() => setResumingId(null));
+          if (shouldAutoResume && list.length > 0) {
+            shouldAutoResume = false; // Reset: never auto-resume again until the next real tab switch
+            // Check if we already have a live session for this project — if so, activate it
+            // instead of spawning a new CLI process (which would abandon any running work).
+            const store = useStore.getState();
+            const pNorm = activeProjectCwd!.replace(/\\/g, "/");
+            const existingSession = store.sdkSessions.find((s) => {
+              if (s.archived || s.state === "exited") return false;
+              const sCwd = (s.cwd || "").replace(/\\/g, "/");
+              return sCwd === pNorm || sCwd.startsWith(pNorm + "/");
+            });
+            if (existingSession && store.sessions.has(existingSession.sessionId)) {
+              connectSession(existingSession.sessionId);
+              setCurrentSession(existingSession.sessionId);
+            } else {
+              const s = list[0];
+              setResumingId(s.id);
+              resumeNativeSession(s.id, s.cwd).finally(() => setResumingId(null));
+            }
           }
         }
       } catch {
@@ -520,17 +542,8 @@ export function Sidebar() {
           </p>
         ) : (
           <div className="pt-0.5">
-            <div className="flex items-center justify-between px-2 py-0.5">
+            <div className="px-2 py-0.5">
               <span className="text-[9px] font-semibold text-cc-muted uppercase tracking-widest">Resume Sessions</span>
-              <button
-                onClick={handleNewSession}
-                title="New session"
-                className="p-0.5 rounded text-cc-muted hover:text-cc-fg hover:bg-cc-hover transition-colors cursor-pointer"
-              >
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="w-3 h-3">
-                  <path d="M8 3v10M3 8h10" strokeLinecap="round" />
-                </svg>
-              </button>
             </div>
             <div>
               {nativeSessions.map((s) => renderNativeSessionItem(s))}
@@ -584,14 +597,15 @@ export function Sidebar() {
         <EnvManager onClose={() => setShowEnvManager(false)} />
       )}
 
-      {/* Instant hover tooltip (fixed position escapes overflow clip) */}
-      {tooltip && (
+      {/* Instant hover tooltip — rendered via portal to escape overflow:hidden clipping */}
+      {tooltip && createPortal(
         <div
           className="fixed z-[9999] bg-cc-card border border-cc-border rounded-lg shadow-lg px-3 py-2 text-[11px] text-cc-fg max-w-[280px] whitespace-pre-wrap pointer-events-none leading-relaxed"
           style={{ left: tooltip.x, top: tooltip.y }}
         >
           {tooltip.text}
-        </div>
+        </div>,
+        document.body
       )}
     </aside>
   );
