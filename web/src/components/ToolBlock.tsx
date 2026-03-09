@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useStore } from "../store.js";
 import { DiffView } from "./DiffView.js";
 import { getToolIcon, getToolLabel, getPreview } from "./tool-utils.js";
+import { CopyButton } from "./CopyButton.js";
+import { linkifyText } from "../utils/linkify.js";
 
 export function ToolBlock({
   name,
@@ -52,17 +54,23 @@ export function ToolBlock({
         <div className="px-3 pb-3 pt-0 border-t border-cc-border">
           <div className="mt-2">
             {name === "Bash" && typeof input.command === "string" ? (
-              <pre className="px-3 py-2 rounded-lg bg-cc-code-bg text-cc-code-fg text-[12px] font-mono-code leading-relaxed overflow-x-auto">
-                <span className="text-cc-muted select-none">$ </span>
-                {input.command}
-              </pre>
+              <div className="group/bash relative">
+                <pre className="px-3 py-2 rounded-lg bg-cc-code-bg text-cc-code-fg text-[12px] font-mono-code leading-relaxed overflow-x-auto">
+                  <span className="text-cc-muted select-none">$ </span>
+                  {input.command}
+                </pre>
+                <CopyButton
+                  text={input.command}
+                  className="absolute top-1.5 right-1.5 w-5 h-5 rounded hover:bg-cc-hover opacity-0 group-hover/bash:opacity-100 transition-opacity"
+                />
+              </div>
             ) : name === "Edit" ? (
               <EditToolDetail input={input} />
             ) : name === "Write" ? (
               <WriteToolDetail input={input} />
             ) : name === "Read" ? (
               <div className="text-xs text-cc-muted font-mono-code">
-                {String(input.file_path || input.path || "")}
+                {linkifyText(String(input.file_path || input.path || ""))}
               </div>
             ) : (
               <pre className="text-[11px] text-cc-muted font-mono-code whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
@@ -146,7 +154,12 @@ function EditToolDetail({ input }: { input: Record<string, unknown> }) {
 
   return (
     <div className="space-y-1.5">
-      <div className="text-[10px] text-cc-muted font-mono-code truncate">{filePath}</div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-[10px] text-cc-muted font-mono-code truncate flex-1">
+          {linkifyText(filePath)}
+        </div>
+        {diff && <CopyButton text={diff} className="w-5 h-5 rounded hover:bg-cc-hover shrink-0" />}
+      </div>
       <div className="rounded border border-cc-border overflow-auto bg-cc-code-bg max-h-72">
         <DiffView diff={diff} />
       </div>
@@ -161,10 +174,17 @@ function WriteToolDetail({ input }: { input: Record<string, unknown> }) {
 
   return (
     <div className="space-y-2">
-      <div className="text-xs text-cc-muted font-mono-code">{filePath}</div>
-      <pre className="px-3 py-2 rounded-lg bg-cc-code-bg text-cc-code-fg text-[11px] font-mono-code leading-relaxed overflow-x-auto max-h-40 overflow-y-auto">
-        {preview}
-      </pre>
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xs text-cc-muted font-mono-code truncate flex-1">
+          {linkifyText(filePath)}
+        </div>
+        {content && <CopyButton text={content} className="w-5 h-5 rounded hover:bg-cc-hover shrink-0" />}
+      </div>
+      <div className="group/write relative">
+        <pre className="px-3 py-2 rounded-lg bg-cc-code-bg text-cc-code-fg text-[11px] font-mono-code leading-relaxed overflow-x-auto max-h-40 overflow-y-auto">
+          {preview}
+        </pre>
+      </div>
     </div>
   );
 }

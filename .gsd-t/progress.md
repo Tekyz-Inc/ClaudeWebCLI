@@ -1,7 +1,7 @@
 # GSD-T Progress
 
 ## Project: ClaudeWebCLI
-## Version: 0.11.10
+## Version: 0.12.10
 ## Current Milestone
 None — ready for next milestone
 

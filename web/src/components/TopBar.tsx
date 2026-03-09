@@ -1,6 +1,22 @@
 import { useStore } from "../store.js";
 import { api } from "../api.js";
-import { disconnectSession } from "../ws.js";
+import { connectSession, disconnectSession } from "../ws.js";
+
+async function createNewSession(currentSessionId: string | null) {
+  const store = useStore.getState();
+  if (currentSessionId) disconnectSession(currentSessionId);
+  const cwd = store.activeProjectCwd || undefined;
+  const permissionMode = store.previousPermissionMode.get(currentSessionId ?? "") || "acceptEdits";
+  try {
+    const { sessionId } = await api.createSession({ cwd, permissionMode });
+    store.setSessionName(sessionId, "New Session");
+    store.setCurrentSession(sessionId);
+    connectSession(sessionId);
+  } catch (e) {
+    console.error("[TopBar] Failed to create session", e);
+    store.newSession(); // fallback: show HomePage
+  }
+}
 
 export function TopBar() {
   const currentSessionId = useStore((s) => s.currentSessionId);
@@ -101,10 +117,7 @@ export function TopBar() {
 
         {/* New Session button */}
         <button
-          onClick={() => {
-            if (currentSessionId) disconnectSession(currentSessionId);
-            useStore.getState().newSession();
-          }}
+          onClick={() => createNewSession(currentSessionId)}
           title="New session"
           className="flex items-center justify-center w-6 h-6 rounded-md text-cc-muted hover:text-cc-fg hover:bg-cc-hover transition-colors cursor-pointer"
         >

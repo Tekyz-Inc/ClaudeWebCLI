@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.12.10] - 2026-03-09
+
+### Added
+- Copy button (hover) on code blocks, Bash commands, Edit/Write tool diffs, and user/assistant messages
+- URL and file path auto-linkification in tool results and file path labels
+- Session panel: Commands, Agents, and QA sections; Expand/Collapse All toggle
+- TopBar: Expand/Collapse pill for session panel (styled like Chat/Editor toggle), left of + button
+- DiffView: fixed text color contrast on red/green diff backgrounds (light-mode invisible text bug)
+
 ## [0.11.10] - 2026-03-09
 
 ### Added

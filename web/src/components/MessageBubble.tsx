@@ -4,6 +4,8 @@ import remarkGfm from "remark-gfm";
 import type { ChatMessage, ContentBlock } from "../types.js";
 import { ToolBlock, ToolIcon } from "./ToolBlock.js";
 import { getToolIcon, getToolLabel } from "./tool-utils.js";
+import { CopyButton } from "./CopyButton.js";
+import { linkifyText } from "../utils/linkify.js";
 
 export function MessageBubble({ message }: { message: ChatMessage }) {
   if (message.role === "system") {
@@ -20,23 +22,31 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
 
   if (message.role === "user") {
     return (
-      <div className="flex justify-end animate-[fadeSlideIn_0.2s_ease-out]">
-        <div className="max-w-[85%] sm:max-w-[80%] px-3 sm:px-4 py-2.5 rounded-[14px] rounded-br-[4px] bg-cc-user-bubble text-cc-fg">
-          {message.images && message.images.length > 0 && (
-            <div className="flex gap-2 flex-wrap mb-2">
-              {message.images.map((img, i) => (
-                <img
-                  key={i}
-                  src={`data:${img.media_type};base64,${img.data}`}
-                  alt="attachment"
-                  className="max-w-[150px] sm:max-w-[200px] max-h-[120px] sm:max-h-[150px] rounded-lg object-cover"
-                />
-              ))}
-            </div>
-          )}
-          <pre className="text-[11px] whitespace-pre-wrap break-words font-sans-ui leading-snug">
-            {message.content}
-          </pre>
+      <div className="flex justify-end animate-[fadeSlideIn_0.2s_ease-out] group/user">
+        <div className="relative max-w-[85%] sm:max-w-[80%]">
+          <div className="px-3 sm:px-4 py-2.5 rounded-[14px] rounded-br-[4px] bg-cc-user-bubble text-cc-fg">
+            {message.images && message.images.length > 0 && (
+              <div className="flex gap-2 flex-wrap mb-2">
+                {message.images.map((img, i) => (
+                  <img
+                    key={i}
+                    src={`data:${img.media_type};base64,${img.data}`}
+                    alt="attachment"
+                    className="max-w-[150px] sm:max-w-[200px] max-h-[120px] sm:max-h-[150px] rounded-lg object-cover"
+                  />
+                ))}
+              </div>
+            )}
+            <pre className="text-[11px] whitespace-pre-wrap break-words font-sans-ui leading-snug">
+              {message.content}
+            </pre>
+          </div>
+          <div className="absolute -bottom-5 right-1 opacity-0 group-hover/user:opacity-100 transition-opacity">
+            <CopyButton
+              text={message.content}
+              className="w-5 h-5 hover:bg-cc-hover text-cc-muted"
+            />
+          </div>
         </div>
       </div>
     );
@@ -83,38 +93,55 @@ function groupContentBlocks(blocks: ContentBlock[]): GroupedBlock[] {
   return groups;
 }
 
+function getAssistantText(blocks: ContentBlock[], fallback: string): string {
+  if (blocks.length === 0) return fallback;
+  const text = blocks
+    .filter((b): b is ContentBlock & { type: "text" } => b.type === "text")
+    .map((b) => b.text)
+    .join("\n");
+  return text || fallback;
+}
+
 function AssistantMessage({ message }: { message: ChatMessage }) {
   const blocks = message.contentBlocks || [];
-
   const grouped = useMemo(() => groupContentBlocks(blocks), [blocks]);
+  const copyText = getAssistantText(blocks, message.content);
 
   if (blocks.length === 0 && message.content) {
     return (
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-3 group/msg">
         <AssistantAvatar />
         <div className="flex-1 min-w-0">
           <MarkdownContent text={message.content} />
+          {copyText && (
+            <div className="flex justify-end mt-1 opacity-0 group-hover/msg:opacity-100 transition-opacity">
+              <CopyButton text={copyText} className="w-5 h-5 hover:bg-cc-hover" />
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex items-start gap-3 group/msg">
       <AssistantAvatar />
       <div className="flex-1 min-w-0 space-y-3">
         {grouped.map((group, i) => {
           if (group.kind === "content") {
             return <ContentBlockRenderer key={i} block={group.block} />;
           }
-          // Single tool_use renders as before
           if (group.items.length === 1) {
             const item = group.items[0];
             return <ToolBlock key={i} name={item.name} input={item.input} toolUseId={item.id} />;
           }
-          // Grouped tool_uses
           return <ToolGroupBlock key={i} name={group.name} items={group.items} />;
         })}
+        {copyText && (
+          <div className="flex justify-end opacity-0 group-hover/msg:opacity-100 transition-opacity">
+            <CopyButton text={copyText} className="w-5 h-5 hover:bg-cc-hover" />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -182,13 +209,18 @@ function MarkdownContent({ text }: { text: string }) {
 
             if (isBlock) {
               const lang = match?.[1] || "";
+              const codeText = typeof children === "string" ? children : String(children ?? "");
               return (
-                <div className="my-2 rounded-lg overflow-hidden border border-cc-border">
-                  {lang && (
-                    <div className="px-3 py-1.5 bg-cc-code-bg/80 border-b border-cc-border text-[10px] text-cc-muted font-mono-code uppercase tracking-wider">
-                      {lang}
-                    </div>
-                  )}
+                <div className="my-2 rounded-lg overflow-hidden border border-cc-border group/code">
+                  <div className="flex items-center justify-between px-3 py-1.5 bg-cc-code-bg/80 border-b border-cc-border">
+                    <span className="text-[10px] text-cc-muted font-mono-code uppercase tracking-wider">
+                      {lang || "code"}
+                    </span>
+                    <CopyButton
+                      text={codeText}
+                      className="w-5 h-5 rounded hover:bg-cc-hover opacity-0 group-hover/code:opacity-100 transition-opacity"
+                    />
+                  </div>
                   <pre className="px-2 sm:px-3 py-2 sm:py-2.5 bg-cc-code-bg text-cc-code-fg text-[12px] sm:text-[13px] font-mono-code leading-relaxed overflow-x-auto">
                     <code>{children}</code>
                   </pre>
@@ -253,7 +285,7 @@ function ContentBlockRenderer({ block }: { block: ContentBlock }) {
           ? "bg-cc-error/5 border-cc-error/20 text-cc-error"
           : "bg-cc-card border-cc-border text-cc-muted"
       } max-h-40 overflow-y-auto whitespace-pre-wrap`}>
-        {content}
+        {linkifyText(content)}
       </div>
     );
   }
