@@ -1,207 +1,80 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useStore } from "../store.js";
 import { sendToSession } from "../ws.js";
 import { api } from "../api.js";
 import { usePromptHistory } from "../hooks/use-prompt-history.js";
 import { requestNotificationPermission } from "../utils/notifications.js";
+import { useImageAttachments } from "../hooks/useImageAttachments.js";
+import { useDraftPersistence, setDraft } from "../hooks/useDraftPersistence.js";
+import { useSlashMenu } from "../hooks/useSlashMenu.js";
 
 let idCounter = 0;
 
-// Module-level cache: fetched once on first Composer mount, reused on remounts
-let _cachedSlashCommands: { commands: string[]; skills: string[] } | null = null;
-
-// Per-session draft text — persists across project tab switches
-const _sessionDrafts = new Map<string, string>();
-
-interface ImageAttachment {
-  name: string;
-  base64: string;
-  mediaType: string;
-}
-
-function readFileAsBase64(file: File): Promise<{ base64: string; mediaType: string }> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      const base64 = dataUrl.split(",")[1];
-      resolve({ base64, mediaType: file.type });
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-interface CommandItem {
-  name: string;
-  type: "command" | "skill";
-  description?: string;
-}
-
-const COMMAND_DESCRIPTIONS: Record<string, string> = {
-  help: "Show available commands and help",
-  clear: "Clear the current conversation",
-  compact: "Compact conversation to save context",
-  cost: "Show token usage and cost",
-  config: "View or change configuration",
-  exit: "Exit the current session",
-  login: "Log in to Claude",
-  logout: "Log out of Claude",
-  model: "Switch the active model",
-  permission: "View or set permission mode",
-  pr_comments: "Fetch PR review comments",
-  release_notes: "Show recent release notes",
-  review: "Review code changes",
-  status: "Show session status",
-  terminal: "Open an embedded terminal",
-  vim: "Enable vim keybindings",
-};
+const COMPOSER_MODES = [
+  { value: "bypassPermissions", label: "Bypass" },
+  { value: "acceptEdits", label: "Accept Edits" },
+  { value: "plan", label: "Plan" },
+  { value: "default", label: "Manual" },
+] as const;
 
 export function Composer({ sessionId }: { sessionId: string }) {
   const [text, setText] = useState("");
-  const [images, setImages] = useState<ImageAttachment[]>([]);
-  // Track text value at time of Escape so menu stays closed for that exact text
-  const [slashMenuEscapedText, setSlashMenuEscapedText] = useState<string | null>(null);
-  const [slashMenuIndex, setSlashMenuIndex] = useState(0);
-
-  // Derive slashMenuOpen synchronously — eliminates async state-timing race conditions
-  const slashQuery = text.match(/^\/(\S*)$/);
-  const slashMenuOpen = !!slashQuery && slashMenuEscapedText !== text;
-  const [isDragging, setIsDragging] = useState(false);
-  const [fetchedCommands, setFetchedCommands] = useState<{ commands: string[]; skills: string[] } | null>(
-    _cachedSlashCommands
-  );
-  const dragCounterRef = useRef(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
   const cliConnected = useStore((s) => s.cliConnected);
   const sessionData = useStore((s) => s.sessions.get(sessionId));
-  const previousMode = useStore((s) => s.previousPermissionMode.get(sessionId) || "acceptEdits");
   const activeProjectCwd = useStore((s) => s.activeProjectCwd);
-
-  const COMPOSER_MODES = [
-    { value: "bypassPermissions", label: "Bypass" },
-    { value: "acceptEdits", label: "Accept Edits" },
-    { value: "plan", label: "Plan" },
-    { value: "default", label: "Manual" },
-  ] as const;
+  const sessionStatus = useStore((s) => s.sessionStatus);
+  const streamingText = useStore((s) => s.streaming.get(sessionId));
+  const hasQueued = useStore((s) => s.queuedMessages.has(sessionId));
 
   const { navigateUp, navigateDown, addToHistory, resetNavigation, saveDraft } =
     usePromptHistory(sessionId);
 
-  // Keep a ref to the latest text so the cleanup below can read it without stale closure
-  const textRef = useRef(text);
-  useEffect(() => { textRef.current = text; }, [text]);
-
-  // Draft key: project path beats session ID so drafts survive session ID changes
-  // (e.g. resumeNativeSession creates a new ID for the same project on reconnect)
   const draftKey = activeProjectCwd ?? sessionId;
-  const draftKeyRef = useRef(draftKey);
-  useEffect(() => { draftKeyRef.current = draftKey; });
+  const { draftKeyRef } = useDraftPersistence(draftKey, text, setText);
 
-  // Save outgoing draft, restore incoming draft on project/session switch
-  useEffect(() => {
-    setText(_sessionDrafts.get(draftKey) || "");
-    return () => {
-      _sessionDrafts.set(draftKeyRef.current, textRef.current);
-    };
-  }, [draftKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const imageAttachments = useImageAttachments();
+  const { images, setImages, isDragging, fileInputRef } = imageAttachments;
 
-  // Fetch available commands from server once at mount (module-level cache reused on remounts)
-  useEffect(() => {
-    if (_cachedSlashCommands) return;
-    api.getSlashCommands()
-      .then((data) => {
-        _cachedSlashCommands = data;
-        setFetchedCommands(data);
-      })
-      .catch(() => {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const slashMenu = useSlashMenu(text, sessionData?.slash_commands, sessionData?.skills);
+  const { slashMenuOpen, slashMenuIndex, setSlashMenuIndex, filteredCommands, menuRef } = slashMenu;
 
   const isConnected = cliConnected.get(sessionId) ?? false;
   const currentMode = sessionData?.permissionMode || "acceptEdits";
   const isPlan = currentMode === "plan";
+  const st = sessionStatus.get(sessionId);
+  const isFinishing = st === "running" && !streamingText;
+  const isRunning = (st === "running" && !!streamingText) || st === "submitted";
+  const canSend = (text.trim().length > 0 || images.length > 0) && isConnected;
 
-  // Build command list: prefer CLI-provided commands, fall back to server-fetched built-ins
-  const allCommands = useMemo<CommandItem[]>(() => {
-    const cmds: CommandItem[] = [];
-
-    // Commands: use session's if CLI sent them, else use fetched built-ins
-    const slashCmds = sessionData?.slash_commands?.length
-      ? sessionData.slash_commands
-      : (fetchedCommands?.commands ?? []);
-    for (const cmd of slashCmds) {
-      const name = cmd.startsWith("/") ? cmd.slice(1) : cmd;
-      cmds.push({ name, type: "command", description: COMMAND_DESCRIPTIONS[name] });
-    }
-
-    // Skills: use session's if CLI sent them, else use fetched user skills
-    const skills = sessionData?.skills?.length
-      ? sessionData.skills
-      : (fetchedCommands?.skills ?? []);
-    for (const skill of skills) {
-      const name = skill.startsWith("/") ? skill.slice(1) : skill;
-      cmds.push({ name, type: "skill", description: "User skill" });
-    }
-
-    if (import.meta.env.DEV && cmds.length > 0) {
-      console.log("[Composer] slash commands loaded:", cmds.length, cmds.slice(0, 5).map((c) => `/${c.name}`));
-    }
-    return cmds;
-  }, [sessionData?.slash_commands, sessionData?.skills, fetchedCommands]);
-
-  // Filter commands based on what the user typed after /
-  // Derived directly from text — no slashMenuOpen dependency so it's always current
-  const filteredCommands = useMemo<CommandItem[]>(() => {
-    const match = text.match(/^\/(\S*)$/);
-    if (!match) return [];
-    const query = match[1].toLowerCase();
-    if (query === "") return allCommands;
-    return allCommands.filter((cmd) => cmd.name.toLowerCase().includes(query));
-  }, [text, allCommands]);
-
-  // Reset index to 0 whenever the menu transitions from closed to open
+  // Auto-resize textarea when content changes
   useEffect(() => {
-    if (slashMenuOpen) setSlashMenuIndex(0);
-  }, [slashMenuOpen]);
-
-  // Keep selected index in bounds
-  useEffect(() => {
-    if (slashMenuIndex >= filteredCommands.length) {
-      setSlashMenuIndex(Math.max(0, filteredCommands.length - 1));
-    }
-  }, [filteredCommands.length, slashMenuIndex]);
-
-  // Scroll selected item into view
-  useEffect(() => {
-    if (!menuRef.current || !slashMenuOpen) return;
-    const items = menuRef.current.querySelectorAll("[data-cmd-index]");
-    const selected = items[slashMenuIndex];
-    if (selected) {
-      selected.scrollIntoView({ block: "nearest" });
-    }
-  }, [slashMenuIndex, slashMenuOpen]);
-
-  const selectCommand = useCallback((cmd: CommandItem) => {
-    setText(`/${cmd.name} `);
-    // slashMenuOpen auto-closes: "/command " has a trailing space so slashQuery won't match
-    textareaRef.current?.focus();
-  }, []);
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = Math.min(ta.scrollHeight, 200) + "px";
+  }, [text]);
 
   async function handleSend() {
     const msg = text.trim();
-    if (!msg || !isConnected) return;
+    if ((!msg && images.length === 0) || !isConnected) return;
 
-    sendToSession(sessionId, {
-      type: "user_message",
+    const sendPayload = {
+      type: "user_message" as const,
       content: msg,
       session_id: sessionId,
       images: images.length > 0 ? images.map((img) => ({ media_type: img.mediaType, data: img.base64 })) : undefined,
-    });
+    };
 
-    // Optimistically mark as submitted — transitions to "running" when stream starts
-    useStore.getState().setSessionStatus(sessionId, "submitted");
+    if (isRunning || isFinishing) {
+      useStore.getState().setQueuedMessage(sessionId, { content: msg, images: sendPayload.images });
+    } else {
+      sendToSession(sessionId, sendPayload);
+      if (/^\/(clear|compact)\b/i.test(msg)) {
+        useStore.getState().markClearOnNextResult(sessionId);
+      }
+      useStore.getState().setSessionStatus(sessionId, "submitted");
+    }
 
     useStore.getState().appendMessage(sessionId, {
       id: `user-${Date.now()}-${++idCounter}`,
@@ -213,17 +86,14 @@ export function Composer({ sessionId }: { sessionId: string }) {
 
     addToHistory(msg);
     requestNotificationPermission();
+    setDraft(draftKeyRef.current, "");
     setText("");
     setImages([]);
-
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
     textareaRef.current?.focus();
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    // Slash menu navigation
     if (slashMenuOpen && filteredCommands.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -235,33 +105,24 @@ export function Composer({ sessionId }: { sessionId: string }) {
         setSlashMenuIndex((i) => (i - 1 + filteredCommands.length) % filteredCommands.length);
         return;
       }
-      if (e.key === "Tab" && !e.shiftKey) {
+      if ((e.key === "Tab" && !e.shiftKey) || (e.key === "Enter" && !e.shiftKey)) {
         e.preventDefault();
-        selectCommand(filteredCommands[slashMenuIndex]);
-        return;
-      }
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        selectCommand(filteredCommands[slashMenuIndex]);
+        slashMenu.selectCommand(filteredCommands[slashMenuIndex], setText, () => textareaRef.current?.focus());
         return;
       }
       if (e.key === "Escape") {
         e.preventDefault();
-        setSlashMenuEscapedText(text); // closes menu for this exact text; resets when text changes
+        slashMenu.closeMenu(text);
         return;
       }
     }
 
-    // Prompt history navigation (Up/Down arrows)
     if (e.key === "ArrowUp" && !slashMenuOpen) {
       const ta = textareaRef.current;
       if (ta && ta.selectionStart === 0) {
         saveDraft(text);
         const prev = navigateUp();
-        if (prev !== null) {
-          e.preventDefault();
-          setText(prev);
-        }
+        if (prev !== null) { e.preventDefault(); setText(prev); }
         return;
       }
     }
@@ -269,106 +130,13 @@ export function Composer({ sessionId }: { sessionId: string }) {
       const ta = textareaRef.current;
       if (ta && ta.selectionStart === ta.value.length) {
         const next = navigateDown();
-        if (next !== null) {
-          e.preventDefault();
-          setText(next);
-        }
+        if (next !== null) { e.preventDefault(); setText(next); }
         return;
       }
     }
 
-    if (e.key === "Tab" && e.shiftKey) {
-      e.preventDefault();
-      cycleMode();
-      return;
-    }
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  }
-
-  // Auto-resize textarea when content changes (voice, text, etc.)
-  useEffect(() => {
-    const ta = textareaRef.current;
-    if (!ta) return;
-    ta.style.height = "auto";
-    ta.style.height = Math.min(ta.scrollHeight, 200) + "px";
-  }, [text]);
-
-  function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setText(e.target.value);
-  }
-
-  function handleInterrupt() {
-    sendToSession(sessionId, { type: "interrupt" });
-  }
-
-  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files) return;
-    const newImages: ImageAttachment[] = [];
-    for (const file of Array.from(files)) {
-      if (!file.type.startsWith("image/")) continue;
-      const { base64, mediaType } = await readFileAsBase64(file);
-      newImages.push({ name: file.name, base64, mediaType });
-    }
-    setImages((prev) => [...prev, ...newImages]);
-    e.target.value = "";
-  }
-
-  function removeImage(index: number) {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  }
-
-  async function handlePaste(e: React.ClipboardEvent) {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    const newImages: ImageAttachment[] = [];
-    for (const item of Array.from(items)) {
-      if (!item.type.startsWith("image/")) continue;
-      const file = item.getAsFile();
-      if (!file) continue;
-      const { base64, mediaType } = await readFileAsBase64(file);
-      newImages.push({ name: `pasted-${Date.now()}.${file.type.split("/")[1]}`, base64, mediaType });
-    }
-    if (newImages.length > 0) {
-      e.preventDefault();
-      setImages((prev) => [...prev, ...newImages]);
-    }
-  }
-
-  function handleDragEnter(e: React.DragEvent) {
-    e.preventDefault();
-    dragCounterRef.current++;
-    if (dragCounterRef.current === 1) setIsDragging(true);
-  }
-
-  function handleDragLeave(e: React.DragEvent) {
-    e.preventDefault();
-    dragCounterRef.current--;
-    if (dragCounterRef.current === 0) setIsDragging(false);
-  }
-
-  function handleDragOver(e: React.DragEvent) {
-    e.preventDefault();
-  }
-
-  async function handleDrop(e: React.DragEvent) {
-    e.preventDefault();
-    dragCounterRef.current = 0;
-    setIsDragging(false);
-    const files = e.dataTransfer?.files;
-    if (!files) return;
-    const newImages: ImageAttachment[] = [];
-    for (const file of Array.from(files)) {
-      if (!file.type.startsWith("image/")) continue;
-      const { base64, mediaType } = await readFileAsBase64(file);
-      newImages.push({ name: file.name, base64, mediaType });
-    }
-    if (newImages.length > 0) {
-      setImages((prev) => [...prev, ...newImages]);
-    }
+    if (e.key === "Tab" && e.shiftKey) { e.preventDefault(); cycleMode(); return; }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
   }
 
   function cycleMode() {
@@ -379,18 +147,13 @@ export function Composer({ sessionId }: { sessionId: string }) {
     useStore.getState().updateSession(sessionId, { permissionMode: next.value });
   }
 
-  const sessionStatus = useStore((s) => s.sessionStatus);
-  const st = sessionStatus.get(sessionId);
-  const isRunning = st === "running" || st === "submitted";
-  const canSend = text.trim().length > 0 && isConnected;
-
   return (
-  <div
+    <div
       className="shrink-0 border-t border-cc-border bg-cc-card px-2 sm:px-4 py-2 sm:py-3 relative"
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
+      onDragEnter={imageAttachments.handleDragEnter}
+      onDragLeave={imageAttachments.handleDragLeave}
+      onDragOver={imageAttachments.handleDragOver}
+      onDrop={imageAttachments.handleDrop}
     >
       {isDragging && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-cc-card/80 border-2 border-dashed border-cc-primary rounded-lg pointer-events-none">
@@ -398,7 +161,6 @@ export function Composer({ sessionId }: { sessionId: string }) {
         </div>
       )}
       <div className="max-w-3xl mx-auto">
-        {/* Image thumbnails */}
         {images.length > 0 && (
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {images.map((img, i) => (
@@ -409,7 +171,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
                   className="w-12 h-12 rounded-lg object-cover border border-cc-border"
                 />
                 <button
-                  onClick={() => removeImage(i)}
+                  onClick={() => imageAttachments.removeImage(i)}
                   className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-cc-error text-white flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 >
                   <svg viewBox="0 0 16 16" fill="currentColor" className="w-2.5 h-2.5">
@@ -421,23 +183,18 @@ export function Composer({ sessionId }: { sessionId: string }) {
           </div>
         )}
 
-        {/* Hidden file input */}
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
           multiple
-          onChange={handleFileSelect}
+          onChange={imageAttachments.handleFileSelect}
           className="hidden"
         />
 
-        {/* Unified input card */}
         <div className={`relative bg-cc-input-bg border rounded-[14px] overflow-visible transition-colors ${
-          isPlan
-            ? "border-cc-primary/40"
-            : "border-cc-border focus-within:border-cc-primary/30"
+          isPlan ? "border-cc-primary/40" : "border-cc-border focus-within:border-cc-primary/30"
         }`}>
-          {/* Slash command menu */}
           {slashMenuOpen && filteredCommands.length > 0 && (
             <div
               ref={menuRef}
@@ -447,14 +204,15 @@ export function Composer({ sessionId }: { sessionId: string }) {
                 <button
                   key={`${cmd.type}-${cmd.name}`}
                   data-cmd-index={i}
-                  onClick={() => selectCommand(cmd)}
+                  onClick={() => slashMenu.selectCommand(cmd, setText, () => textareaRef.current?.focus())}
                   className={`w-full px-3 py-1 text-left flex items-center gap-2 transition-colors cursor-pointer ${
-                    i === slashMenuIndex
-                      ? "bg-cc-hover"
-                      : "hover:bg-cc-hover/50"
+                    i === slashMenuIndex ? "bg-cc-hover" : "hover:bg-cc-hover/50"
                   }`}
                 >
                   <span className="text-[11px] font-medium text-cc-fg shrink-0">/{cmd.name}</span>
+                  {cmd.argumentHint && (
+                    <span className="text-[10px] text-cc-primary/60 shrink-0">{cmd.argumentHint}</span>
+                  )}
                   {cmd.description && (
                     <span className="text-[10px] text-cc-muted truncate">{cmd.description}</span>
                   )}
@@ -467,9 +225,9 @@ export function Composer({ sessionId }: { sessionId: string }) {
             <textarea
               ref={textareaRef}
               value={text}
-              onChange={handleInput}
+              onChange={(e) => setText(e.target.value)}
               onKeyDown={handleKeyDown}
-              onPaste={handlePaste}
+              onPaste={imageAttachments.handlePaste}
               placeholder={isConnected ? "Type a message... (/ for commands)" : "Waiting for CLI connection..."}
               disabled={!isConnected}
               rows={1}
@@ -478,7 +236,6 @@ export function Composer({ sessionId }: { sessionId: string }) {
             />
           </div>
 
-          {/* Git branch + lines info */}
           {sessionData?.git_branch && (
             <div className="flex items-center gap-2 px-2 sm:px-4 pb-1 text-[11px] text-cc-muted overflow-hidden">
               <span className="flex items-center gap-1 truncate min-w-0">
@@ -523,9 +280,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
             </div>
           )}
 
-          {/* Bottom toolbar */}
           <div className="flex items-center justify-between px-2.5 pb-2.5">
-            {/* Left: mode indicator */}
             <button
               onClick={cycleMode}
               disabled={!isConnected}
@@ -542,7 +297,6 @@ export function Composer({ sessionId }: { sessionId: string }) {
               <span>{COMPOSER_MODES.find((m) => m.value === currentMode)?.label || "Bypass"}</span>
             </button>
 
-            {/* Right: image + send/stop */}
             <div className="flex items-center gap-1">
               <button
                 onClick={() => fileInputRef.current?.click()}
@@ -559,9 +313,9 @@ export function Composer({ sessionId }: { sessionId: string }) {
                 </svg>
               </button>
 
-              {isRunning ? (
+              {(isRunning || isFinishing) && (
                 <button
-                  onClick={handleInterrupt}
+                  onClick={() => sendToSession(sessionId, { type: "interrupt" })}
                   className="flex items-center justify-center w-8 h-8 rounded-lg bg-cc-error/10 hover:bg-cc-error/20 text-cc-error transition-colors cursor-pointer"
                   title="Stop generation"
                 >
@@ -569,22 +323,27 @@ export function Composer({ sessionId }: { sessionId: string }) {
                     <rect x="3" y="3" width="10" height="10" rx="1" />
                   </svg>
                 </button>
-              ) : (
-                <button
-                  onClick={handleSend}
-                  disabled={!canSend}
-                  className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors ${
-                    canSend
-                      ? "bg-cc-primary hover:bg-cc-primary-hover text-white cursor-pointer"
-                      : "bg-cc-hover text-cc-muted cursor-not-allowed"
-                  }`}
-                  title="Send message"
-                >
-                  <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
-                    <path d="M3 2l11 6-11 6V9.5l7-1.5-7-1.5V2z" />
-                  </svg>
-                </button>
               )}
+              <button
+                onClick={handleSend}
+                disabled={!canSend}
+                className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors ${
+                  !canSend
+                    ? "bg-cc-hover text-cc-muted cursor-not-allowed"
+                    : hasQueued && (isRunning || isFinishing)
+                    ? "bg-cc-warning hover:bg-cc-warning/80 text-white cursor-pointer"
+                    : "bg-cc-primary hover:bg-cc-primary-hover text-white cursor-pointer"
+                }`}
+                title={
+                  isRunning || isFinishing
+                    ? hasQueued ? "Replace queued message" : "Queue message"
+                    : "Send message"
+                }
+              >
+                <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+                  <path d="M3 2l11 6-11 6V9.5l7-1.5-7-1.5V2z" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
