@@ -1,155 +1,61 @@
 import { useStore } from "./store.js";
-import type { BrowserIncomingMessage, BrowserOutgoingMessage, ContentBlock, ChatMessage, TaskItem } from "./types.js";
-import { generateUniqueSessionName } from "./utils/names.js";
-import { sendNotification } from "./utils/notifications.js";
+import type { BrowserIncomingMessage, BrowserOutgoingMessage } from "./types.js";
+import {
+  handleSessionInit,
+  handleSessionUpdate,
+  handleSessionNameUpdate,
+} from "./ws-handlers/session-handler.js";
+import {
+  handleAssistant,
+  handleStreamEvent,
+  handleMessageHistory,
+} from "./ws-handlers/message-handler.js";
+import { handleResult } from "./ws-handlers/result-handler.js";
+import {
+  handlePermissionRequest,
+  handlePermissionCancelled,
+  handleStatusChange,
+  handleAuthStatus,
+  handleError,
+  handleCliDisconnected,
+  handleCliConnected,
+  handleInitTimeout,
+} from "./ws-handlers/control-handler.js";
 
-const sockets = new Map<string, WebSocket>();
-const reconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
-const reconnectDelays = new Map<string, number>();
-const pingIntervals = new Map<string, ReturnType<typeof setInterval>>();
-const taskCounters = new Map<string, number>();
+// ─── HMR-safe module state ──────────────────────────────────────────────────
+interface WsModuleState {
+  sockets: Map<string, WebSocket>;
+  reconnectTimers: Map<string, ReturnType<typeof setTimeout>>;
+  reconnectDelays: Map<string, number>;
+  pingIntervals: Map<string, ReturnType<typeof setInterval>>;
+  taskCounters: Map<string, number>;
+  processedToolUseIds: Map<string, Set<string>>;
+}
+
+const WIN = window as unknown as { __ws_state?: WsModuleState };
+if (!WIN.__ws_state) {
+  WIN.__ws_state = {
+    sockets: new Map(),
+    reconnectTimers: new Map(),
+    reconnectDelays: new Map(),
+    pingIntervals: new Map(),
+    taskCounters: new Map(),
+    processedToolUseIds: new Map(),
+  };
+}
+const { sockets, reconnectTimers, reconnectDelays, pingIntervals, taskCounters, processedToolUseIds } =
+  WIN.__ws_state;
 
 const PING_INTERVAL_MS = 20_000;
-/** Track processed tool_use IDs to prevent duplicate task creation */
-const processedToolUseIds = new Map<string, Set<string>>();
-
-function getProcessedSet(sessionId: string): Set<string> {
-  let set = processedToolUseIds.get(sessionId);
-  if (!set) {
-    set = new Set();
-    processedToolUseIds.set(sessionId, set);
-  }
-  return set;
-}
-
-function extractTasksFromBlocks(sessionId: string, blocks: ContentBlock[]) {
-  const store = useStore.getState();
-  const processed = getProcessedSet(sessionId);
-
-  for (const block of blocks) {
-    if (block.type !== "tool_use") continue;
-    const { name, input, id: toolUseId } = block;
-
-    // Deduplicate by tool_use_id
-    if (toolUseId) {
-      if (processed.has(toolUseId)) continue;
-      processed.add(toolUseId);
-    }
-
-    // TodoWrite: full replacement — { todos: [{ content, status, activeForm }] }
-    if (name === "TodoWrite") {
-      const todos = input.todos as { content?: string; status?: string; activeForm?: string }[] | undefined;
-      if (Array.isArray(todos)) {
-        const tasks: TaskItem[] = todos.map((t, i) => ({
-          id: String(i + 1),
-          subject: t.content || "Task",
-          description: "",
-          activeForm: t.activeForm,
-          status: (t.status as TaskItem["status"]) || "pending",
-        }));
-        store.setTasks(sessionId, tasks);
-        taskCounters.set(sessionId, tasks.length);
-      }
-      continue;
-    }
-
-    // TaskCreate: incremental add — { subject, description, activeForm }
-    if (name === "TaskCreate") {
-      const count = (taskCounters.get(sessionId) || 0) + 1;
-      taskCounters.set(sessionId, count);
-      const task = {
-        id: String(count),
-        subject: (input.subject as string) || "Task",
-        description: (input.description as string) || "",
-        activeForm: input.activeForm as string | undefined,
-        status: "pending" as const,
-      };
-      store.addTask(sessionId, task);
-      continue;
-    }
-
-    // TaskUpdate: incremental update — { taskId, status, owner, activeForm, addBlockedBy }
-    if (name === "TaskUpdate") {
-      const taskId = input.taskId as string;
-      if (taskId) {
-        const updates: Partial<TaskItem> = {};
-        if (input.status) updates.status = input.status as TaskItem["status"];
-        if (input.owner) updates.owner = input.owner as string;
-        if (input.activeForm !== undefined) updates.activeForm = input.activeForm as string;
-        if (input.addBlockedBy) updates.blockedBy = input.addBlockedBy as string[];
-        store.updateTask(sessionId, taskId, updates);
-      }
-    }
-  }
-}
-
-function extractChangedFilesFromBlocks(sessionId: string, blocks: ContentBlock[]) {
-  const store = useStore.getState();
-  for (const block of blocks) {
-    if (block.type !== "tool_use") continue;
-    const { name, input } = block;
-    if ((name === "Edit" || name === "Write") && typeof input.file_path === "string") {
-      store.addChangedFile(sessionId, input.file_path);
-    }
-  }
-}
-
-const TEST_CMD_RE = /\b(vitest|playwright|jest|npm\s+(?:run\s+)?test|bun\s+(?:run\s+)?test|npx\s+playwright)\b/i;
-
-function extractActivityFromBlocks(sessionId: string, blocks: ContentBlock[], parentToolUseId?: string | null) {
-  const store = useStore.getState();
-  for (const block of blocks) {
-    if (block.type !== "tool_use") continue;
-    const { name, input } = block;
-    if (name === "Read" && typeof input.file_path === "string") {
-      store.addReadFile(sessionId, input.file_path);
-    }
-    if (name === "Bash" && typeof input.command === "string") {
-      // Only track for QA test detection — Bash cmds are not shown in Commands section
-      if (TEST_CMD_RE.test(input.command)) {
-        store.addTestExecuted(sessionId, {
-          cmd: input.command,
-          source: parentToolUseId ? "agent" : "direct",
-        });
-      }
-    }
-    if (name === "Skill" && typeof input.skill === "string") {
-      const args = typeof input.args === "string" && input.args ? ` ${input.args}` : "";
-      store.addCommandExecuted(sessionId, `/${input.skill}${args}`);
-    }
-    if (name === "Agent") {
-      store.addAgentSpawned(sessionId, {
-        description: (input.description as string) || "Agent",
-        subagentType: input.subagent_type as string | undefined,
-        name: input.name as string | undefined,
-      });
-    }
-  }
-}
-
-let idCounter = 0;
-function nextId(): string {
-  return `msg-${Date.now()}-${++idCounter}`;
-}
+const RECONNECT_MIN_MS = 2000;
+const RECONNECT_MAX_MS = 30000;
 
 function getWsUrl(sessionId: string): string {
   const proto = location.protocol === "https:" ? "wss:" : "ws:";
   return `${proto}//${location.host}/ws/browser/${sessionId}`;
 }
 
-function extractTextFromBlocks(blocks: ContentBlock[]): string {
-  return blocks
-    .map((b) => {
-      if (b.type === "text") return b.text;
-      if (b.type === "thinking") return b.thinking;
-      return "";
-    })
-    .filter(Boolean)
-    .join("\n");
-}
-
 function handleMessage(sessionId: string, event: MessageEvent) {
-  const store = useStore.getState();
   let data: BrowserIncomingMessage;
   try {
     data = JSON.parse(event.data);
@@ -158,285 +64,55 @@ function handleMessage(sessionId: string, event: MessageEvent) {
   }
 
   switch (data.type) {
-    case "session_init": {
-      if (import.meta.env.DEV) {
-        console.log("[ws] session_init slash_commands:", data.session.slash_commands, "skills:", data.session.skills);
-      }
-      // On reconnect the session already exists — use updateSession to avoid replacing
-      // the entire sessions Map (which would cause unnecessary Composer re-renders).
-      if (store.sessions.has(sessionId)) {
-        store.updateSession(sessionId, data.session);
-      } else {
-        store.addSession(data.session);
-      }
-      store.setCliConnected(sessionId, true);
-      // Don't clobber "submitted" — user may have sent a message before reconnect completed
-      const existingStatus = store.sessionStatus.get(sessionId);
-      if (existingStatus !== "submitted" && existingStatus !== "running") {
-        store.setSessionStatus(sessionId, "idle");
-      }
-      if (!store.sessionNames.has(sessionId)) {
-        const existingNames = new Set(store.sessionNames.values());
-        const name = generateUniqueSessionName(existingNames);
-        store.setSessionName(sessionId, name);
-      }
+    case "session_init":
+      handleSessionInit(sessionId, data);
       break;
-    }
-
-    case "session_update": {
-      store.updateSession(sessionId, data.session);
+    case "session_update":
+      handleSessionUpdate(sessionId, data);
       break;
-    }
-
-    case "assistant": {
-      const msg = data.message;
-      const textContent = extractTextFromBlocks(msg.content);
-      const chatMsg: ChatMessage = {
-        id: msg.id,
-        role: "assistant",
-        content: textContent,
-        contentBlocks: msg.content,
-        timestamp: Date.now(),
-        parentToolUseId: data.parent_tool_use_id,
-        model: msg.model,
-        stopReason: msg.stop_reason,
-      };
-      store.appendMessage(sessionId, chatMsg);
-      store.setStreaming(sessionId, null);
-      store.setSessionStatus(sessionId, "running");
-
-      // Start timer if not already started (for non-streaming tool calls)
-      if (!store.streamingStartedAt.has(sessionId)) {
-        store.setStreamingStats(sessionId, { startedAt: Date.now() });
-      }
-
-      // Extract tasks, changed files, and activity from tool_use content blocks
-      if (msg.content?.length) {
-        extractTasksFromBlocks(sessionId, msg.content);
-        extractChangedFilesFromBlocks(sessionId, msg.content);
-        extractActivityFromBlocks(sessionId, msg.content, data.parent_tool_use_id);
-      }
-
+    case "assistant":
+      handleAssistant(sessionId, data, taskCounters, processedToolUseIds);
       break;
-    }
-
-    case "stream_event": {
-      const evt = data.event as Record<string, unknown>;
-      if (evt && typeof evt === "object") {
-        // message_start → Claude has started generating; transition submitted → running
-        if (evt.type === "message_start") {
-          store.setSessionStatus(sessionId, "running");
-          if (!store.streamingStartedAt.has(sessionId)) {
-            store.setStreamingStats(sessionId, { startedAt: Date.now(), outputTokens: 0 });
-          }
-        }
-
-        // content_block_delta → accumulate streaming text
-        if (evt.type === "content_block_delta") {
-          const delta = evt.delta as Record<string, unknown> | undefined;
-          if (delta?.type === "text_delta" && typeof delta.text === "string") {
-            const current = store.streaming.get(sessionId) || "";
-            store.setStreaming(sessionId, current + delta.text);
-          }
-        }
-
-        // message_delta → extract output token count
-        if (evt.type === "message_delta") {
-          const usage = (evt as { usage?: { output_tokens?: number } }).usage;
-          if (usage?.output_tokens) {
-            store.setStreamingStats(sessionId, { outputTokens: usage.output_tokens });
-          }
-        }
-      }
+    case "stream_event":
+      handleStreamEvent(sessionId, data);
       break;
-    }
-
-    case "result": {
-      const r = data.data;
-      const sessionUpdates: Partial<{ total_cost_usd: number; num_turns: number; context_used_percent: number; total_lines_added: number; total_lines_removed: number }> = {
-        total_cost_usd: r.total_cost_usd,
-        num_turns: r.num_turns,
-      };
-      // Forward lines changed if present
-      if (typeof r.total_lines_added === "number") {
-        sessionUpdates.total_lines_added = r.total_lines_added;
-      }
-      if (typeof r.total_lines_removed === "number") {
-        sessionUpdates.total_lines_removed = r.total_lines_removed;
-      }
-      // Compute context % from modelUsage if available
-      if (r.modelUsage) {
-        for (const usage of Object.values(r.modelUsage)) {
-          if (usage.contextWindow > 0) {
-            sessionUpdates.context_used_percent = Math.round(
-              ((usage.inputTokens + usage.outputTokens) / usage.contextWindow) * 100
-            );
-          }
-        }
-      }
-      store.updateSession(sessionId, sessionUpdates);
-      store.setStreaming(sessionId, null);
-      store.setStreamingStats(sessionId, null);
-      store.setSessionStatus(sessionId, "idle");
-      const sessionName = store.sessionNames.get(sessionId) || "Session";
-      sendNotification(`${sessionName} — Complete`, {
-        body: `Cost: $${r.total_cost_usd.toFixed(4)} · ${r.num_turns} turns`,
-        sessionId,
-      });
-      if (r.is_error && r.errors?.length) {
-        store.appendMessage(sessionId, {
-          id: nextId(),
-          role: "system",
-          content: `Error: ${r.errors.join(", ")}`,
-          timestamp: Date.now(),
-        });
-      }
+    case "result":
+      handleResult(sessionId, data);
       break;
-    }
-
-    case "permission_request": {
-      store.addPermission(sessionId, data.request);
-      const permSessionName = store.sessionNames.get(sessionId) || "Session";
-      sendNotification(`${permSessionName} — Permission Needed`, {
-        body: `${data.request.tool_name}: approve or deny`,
-        sessionId,
-      });
-      // Also extract tasks and changed files from permission requests
-      const req = data.request;
-      if (req.tool_name && req.input) {
-        const permBlocks = [{
-          type: "tool_use" as const,
-          id: req.tool_use_id,
-          name: req.tool_name,
-          input: req.input,
-        }];
-        extractTasksFromBlocks(sessionId, permBlocks);
-        extractChangedFilesFromBlocks(sessionId, permBlocks);
-      }
+    case "permission_request":
+      handlePermissionRequest(sessionId, data, taskCounters, processedToolUseIds);
       break;
-    }
-
-    case "permission_cancelled": {
-      store.removePermission(sessionId, data.request_id);
+    case "permission_cancelled":
+      handlePermissionCancelled(sessionId, data);
       break;
-    }
-
-    case "tool_progress": {
-      // Could be used for progress indicators; ignored for now
+    case "status_change":
+      handleStatusChange(sessionId, data);
       break;
-    }
-
-    case "tool_use_summary": {
-      // Optional: add as system message
+    case "auth_status":
+      handleAuthStatus(sessionId, data);
       break;
-    }
-
-    case "status_change": {
-      // Only handle compacting — other CLI statuses (null, "processing", "waiting", etc.)
-      // are ignored so the optimistic "running" state persists until `result` arrives.
-      // This prevents the "Thinking" indicator from disappearing during the API call.
-      if (data.status === "compacting") {
-        store.setSessionStatus(sessionId, "compacting");
-      }
+    case "error":
+      handleError(sessionId, data);
       break;
-    }
-
-    case "auth_status": {
-      if (data.error) {
-        store.appendMessage(sessionId, {
-          id: nextId(),
-          role: "system",
-          content: `Auth error: ${data.error}`,
-          timestamp: Date.now(),
-        });
-      }
+    case "cli_disconnected":
+      handleCliDisconnected(sessionId);
       break;
-    }
-
-    case "error": {
-      store.appendMessage(sessionId, {
-        id: nextId(),
-        role: "system",
-        content: data.message,
-        timestamp: Date.now(),
-      });
+    case "cli_connected":
+      handleCliConnected(sessionId);
       break;
-    }
-
-    case "cli_disconnected": {
-      store.setCliConnected(sessionId, false);
-      store.setSessionStatus(sessionId, null);
+    case "init_timeout":
+      handleInitTimeout(sessionId);
       break;
-    }
-
-    case "cli_connected": {
-      store.setCliConnected(sessionId, true);
+    case "session_name_update":
+      handleSessionNameUpdate(sessionId, data);
       break;
-    }
-
-    case "session_name_update": {
-      // Only apply auto-name if user hasn't manually renamed (still has random Adj+Noun name)
-      const currentName = store.sessionNames.get(sessionId);
-      const isRandomName = currentName && /^[A-Z][a-z]+ [A-Z][a-z]+$/.test(currentName);
-      if (!currentName || isRandomName) {
-        store.setSessionName(sessionId, data.name);
-        store.markRecentlyRenamed(sessionId);
-      }
+    case "message_history":
+      handleMessageHistory(sessionId, data, taskCounters, processedToolUseIds);
       break;
-    }
-
-    case "message_history": {
-      // Skip replay if we already have messages (e.g. after a brief reconnect).
-      // Replacing the full message list causes a MessageFeed re-render that steals
-      // focus from the Composer textarea.
-      const existingMessages = store.messages.get(sessionId) ?? [];
-      if (existingMessages.length > 0) break;
-
-      const chatMessages: ChatMessage[] = [];
-      for (const histMsg of data.messages) {
-        if (histMsg.type === "user_message") {
-          chatMessages.push({
-            id: nextId(),
-            role: "user",
-            content: histMsg.content,
-            timestamp: histMsg.timestamp,
-          });
-        } else if (histMsg.type === "assistant") {
-          const msg = histMsg.message;
-          const textContent = extractTextFromBlocks(msg.content);
-          chatMessages.push({
-            id: msg.id,
-            role: "assistant",
-            content: textContent,
-            contentBlocks: msg.content,
-            timestamp: Date.now(),
-            parentToolUseId: histMsg.parent_tool_use_id,
-            model: msg.model,
-            stopReason: msg.stop_reason,
-          });
-          // Also extract tasks, changed files, and activity from history
-          if (msg.content?.length) {
-            extractTasksFromBlocks(sessionId, msg.content);
-            extractChangedFilesFromBlocks(sessionId, msg.content);
-            extractActivityFromBlocks(sessionId, msg.content, histMsg.parent_tool_use_id);
-          }
-        } else if (histMsg.type === "result") {
-          const r = histMsg.data;
-          if (r.is_error && r.errors?.length) {
-            chatMessages.push({
-              id: nextId(),
-              role: "system",
-              content: `Error: ${r.errors.join(", ")}`,
-              timestamp: Date.now(),
-            });
-          }
-        }
-      }
-      if (chatMessages.length > 0) {
-        store.setMessages(sessionId, chatMessages);
-      }
+    case "tool_progress":
+    case "tool_use_summary":
+      // Intentionally ignored
       break;
-    }
   }
 }
 
@@ -451,14 +127,12 @@ export function connectSession(sessionId: string) {
 
   ws.onopen = () => {
     useStore.getState().setConnectionStatus(sessionId, "connected");
-    // Reset backoff on successful connection
     reconnectDelays.delete(sessionId);
     const timer = reconnectTimers.get(sessionId);
     if (timer) {
       clearTimeout(timer);
       reconnectTimers.delete(sessionId);
     }
-    // Start keepalive ping to prevent idle timeout disconnects from proxies/NAT
     const ping = setInterval(() => {
       const sock = sockets.get(sessionId);
       if (sock?.readyState === WebSocket.OPEN) {
@@ -472,32 +146,22 @@ export function connectSession(sessionId: string) {
 
   ws.onclose = () => {
     sockets.delete(sessionId);
-    // Stop keepalive ping
     const ping = pingIntervals.get(sessionId);
     if (ping) { clearInterval(ping); pingIntervals.delete(sessionId); }
     useStore.getState().setConnectionStatus(sessionId, "disconnected");
     scheduleReconnect(sessionId);
   };
 
-  ws.onerror = () => {
-    ws.close();
-  };
+  ws.onerror = () => { ws.close(); };
 }
-
-const RECONNECT_MIN_MS = 2000;
-const RECONNECT_MAX_MS = 30000;
 
 function scheduleReconnect(sessionId: string) {
   if (reconnectTimers.has(sessionId)) return;
-  // Exponential backoff: 2s, 4s, 8s, ... up to 30s
   const prev = reconnectDelays.get(sessionId) ?? (RECONNECT_MIN_MS / 2);
   const delay = Math.min(prev * 2, RECONNECT_MAX_MS);
   reconnectDelays.set(sessionId, delay);
   const timer = setTimeout(() => {
     reconnectTimers.delete(sessionId);
-    // Only reconnect the session the user is actively viewing.
-    // Using store.sessions.has() would reconnect every accumulated session after
-    // a server restart, spawning one CLI process per historical session.
     if (useStore.getState().currentSessionId === sessionId) {
       connectSession(sessionId);
     }
@@ -507,25 +171,17 @@ function scheduleReconnect(sessionId: string) {
 
 export function disconnectSession(sessionId: string) {
   const timer = reconnectTimers.get(sessionId);
-  if (timer) {
-    clearTimeout(timer);
-    reconnectTimers.delete(sessionId);
-  }
+  if (timer) { clearTimeout(timer); reconnectTimers.delete(sessionId); }
   const ping = pingIntervals.get(sessionId);
   if (ping) { clearInterval(ping); pingIntervals.delete(sessionId); }
   const ws = sockets.get(sessionId);
-  if (ws) {
-    ws.close();
-    sockets.delete(sessionId);
-  }
+  if (ws) { ws.close(); sockets.delete(sessionId); }
   processedToolUseIds.delete(sessionId);
   taskCounters.delete(sessionId);
 }
 
 export function disconnectAll() {
-  for (const [id] of sockets) {
-    disconnectSession(id);
-  }
+  for (const [id] of sockets) disconnectSession(id);
 }
 
 export function waitForConnection(sessionId: string): Promise<void> {
@@ -550,4 +206,18 @@ export function sendToSession(sessionId: string, msg: BrowserOutgoingMessage) {
   if (ws?.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(msg));
   }
+}
+
+// ─── HMR: re-attach message handlers to surviving WebSocket connections ──
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    for (const [sessionId, ws] of sockets) {
+      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+        ws.onmessage = (event) => handleMessage(sessionId, event);
+      }
+    }
+    if (import.meta.env.DEV) {
+      console.log("[ws] HMR: re-attached handlers to", sockets.size, "socket(s)");
+    }
+  });
 }
