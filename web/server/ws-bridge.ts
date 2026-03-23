@@ -1,6 +1,9 @@
 import type { ServerWebSocket } from "bun";
 import { randomUUID } from "node:crypto";
-import { execSync } from "node:child_process";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 import type {
   CLIMessage,
   CLISystemInitMessage,
@@ -50,6 +53,22 @@ interface Session {
   messageHistory: BrowserIncomingMessage[];
   /** Messages queued while waiting for CLI to connect */
   pendingMessages: string[];
+  /** Whether the CLI has sent system/init */
+  initReceived: boolean;
+  /** Timer that fires if init isn't received within the grace period */
+  initTimer: ReturnType<typeof setTimeout> | null;
+  /** True while we've sent a user message and are waiting for a result */
+  awaitingResult: boolean;
+  /** Timestamp of last CLI message received (any type) */
+  lastCliActivityAt: number;
+  /** Interval that checks for streaming inactivity */
+  activityWatchdog: ReturnType<typeof setInterval> | null;
+  /** How many times we've auto-retried after a stall for the current turn */
+  stallRetryCount: number;
+  /** Flag: the next result should trigger an auto-retry */
+  pendingStallRetry: boolean;
+  /** The last NDJSON user message sent to CLI (for auto-retry) */
+  lastUserNdjson: string | null;
 }
 
 function makeDefaultState(sessionId: string): SessionState {
@@ -86,7 +105,14 @@ export class WsBridge {
   private onCLISessionId: ((sessionId: string, cliSessionId: string) => void) | null = null;
   private onCLIRelaunchNeeded: ((sessionId: string) => void) | null = null;
   private onFirstTurnCompleted: ((sessionId: string, firstUserMessage: string) => void) | null = null;
+  private onInterrupt: ((sessionId: string) => void) | null = null;
+  private onInitTimeout: ((sessionId: string) => void) | null = null;
   private autoNamingAttempted = new Set<string>();
+
+  private static INIT_TIMEOUT_MS = 90_000;
+  private static STALL_TIMEOUT_MS = 60_000;
+  private static STALL_CHECK_INTERVAL_MS = 15_000;
+  private static MAX_STALL_RETRIES = 2;
 
   /** Register a callback for when we learn the CLI's internal session ID. */
   onCLISessionIdReceived(cb: (sessionId: string, cliSessionId: string) => void): void {
@@ -103,15 +129,25 @@ export class WsBridge {
     this.onFirstTurnCompleted = cb;
   }
 
+  /** Register a callback to send SIGINT to the CLI process when the user clicks Stop. */
+  onInterruptCallback(cb: (sessionId: string) => void): void {
+    this.onInterrupt = cb;
+  }
+
+  /** Register a callback for when CLI connects but never sends system/init. */
+  onInitTimeoutCallback(cb: (sessionId: string) => void): void {
+    this.onInitTimeout = cb;
+  }
+
   /** Attach a persistent store. Call restoreFromDisk() after. */
   setStore(store: SessionStore): void {
     this.store = store;
   }
 
   /** Restore sessions from disk (call once at startup). */
-  restoreFromDisk(): number {
+  async restoreFromDisk(): Promise<number> {
     if (!this.store) return 0;
-    const persisted = this.store.loadAll();
+    const persisted = await this.store.loadAll();
     let count = 0;
     for (const p of persisted) {
       if (this.sessions.has(p.id)) continue; // don't overwrite live sessions
@@ -123,6 +159,14 @@ export class WsBridge {
         pendingPermissions: new Map(p.pendingPermissions || []),
         messageHistory: p.messageHistory || [],
         pendingMessages: p.pendingMessages || [],
+        initReceived: false,
+        initTimer: null,
+        awaitingResult: false,
+        lastCliActivityAt: 0,
+        activityWatchdog: null,
+        stallRetryCount: 0,
+        pendingStallRetry: false,
+        lastUserNdjson: null,
       };
       this.sessions.set(p.id, session);
       // Restored sessions with completed turns don't need auto-naming re-triggered
@@ -162,6 +206,14 @@ export class WsBridge {
         pendingPermissions: new Map(),
         messageHistory: [],
         pendingMessages: [],
+        initReceived: false,
+        initTimer: null,
+        awaitingResult: false,
+        lastCliActivityAt: 0,
+        activityWatchdog: null,
+        stallRetryCount: 0,
+        pendingStallRetry: false,
+        lastUserNdjson: null,
       };
       this.sessions.set(sessionId, session);
     }
@@ -180,6 +232,10 @@ export class WsBridge {
     return !!this.sessions.get(sessionId)?.cliSocket;
   }
 
+  isInitReceived(sessionId: string): boolean {
+    return this.sessions.get(sessionId)?.initReceived ?? false;
+  }
+
   removeSession(sessionId: string) {
     this.sessions.delete(sessionId);
     this.autoNamingAttempted.delete(sessionId);
@@ -192,6 +248,13 @@ export class WsBridge {
   closeSession(sessionId: string) {
     const session = this.sessions.get(sessionId);
     if (!session) return;
+
+    // Clear watchdogs
+    if (session.initTimer) {
+      clearTimeout(session.initTimer);
+      session.initTimer = null;
+    }
+    this.stopActivityWatchdog(session);
 
     // Close CLI socket
     if (session.cliSocket) {
@@ -215,8 +278,19 @@ export class WsBridge {
   handleCLIOpen(ws: ServerWebSocket<SocketData>, sessionId: string) {
     const session = this.getOrCreateSession(sessionId);
     session.cliSocket = ws;
+    session.initReceived = false;
     console.log(`[ws-bridge] CLI connected for session ${sessionId}`);
     this.broadcastToBrowsers(session, { type: "cli_connected" });
+
+    // Init watchdog: if system/init isn't received within the timeout, fire callback
+    if (session.initTimer) clearTimeout(session.initTimer);
+    session.initTimer = setTimeout(() => {
+      if (!session.initReceived) {
+        console.warn(`[ws-bridge] Init timeout for session ${sessionId} — no system/init received after ${WsBridge.INIT_TIMEOUT_MS / 1000}s`);
+        this.broadcastToBrowsers(session, { type: "init_timeout" });
+        this.onInitTimeout?.(sessionId);
+      }
+    }, WsBridge.INIT_TIMEOUT_MS);
 
     // Flush any messages that were queued while waiting for CLI to connect
     if (session.pendingMessages.length > 0) {
@@ -254,6 +328,12 @@ export class WsBridge {
     if (!session) return;
 
     session.cliSocket = null;
+    if (session.initTimer) {
+      clearTimeout(session.initTimer);
+      session.initTimer = null;
+    }
+    this.stopActivityWatchdog(session);
+    session.awaitingResult = false;
     console.log(`[ws-bridge] CLI disconnected for session ${sessionId}`);
     this.broadcastToBrowsers(session, { type: "cli_disconnected" });
 
@@ -331,6 +411,9 @@ export class WsBridge {
   // ── CLI message routing ─────────────────────────────────────────────────
 
   private routeCLIMessage(session: Session, msg: CLIMessage) {
+    // Track activity for stall detection
+    session.lastCliActivityAt = Date.now();
+
     switch (msg.type) {
       case "system":
         this.handleSystemMessage(session, msg);
@@ -374,8 +457,31 @@ export class WsBridge {
     }
   }
 
-  private handleSystemMessage(session: Session, msg: CLISystemInitMessage | CLISystemStatusMessage) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private handleSystemMessage(session: Session, msg: CLISystemInitMessage | CLISystemStatusMessage | any) {
+    // hook_response messages prove the CLI is alive and initializing — restart
+    // the init timer so slow plugin installations don't trigger a false timeout.
+    if (msg.subtype === "hook_response" && !session.initReceived && session.initTimer) {
+      console.log(`[ws-bridge] Session ${session.id}: hook_response received (pre-init), resetting init timer`);
+      clearTimeout(session.initTimer);
+      session.initTimer = setTimeout(() => {
+        if (!session.initReceived) {
+          console.warn(`[ws-bridge] Init timeout for session ${session.id} — no system/init received after ${WsBridge.INIT_TIMEOUT_MS / 1000}s`);
+          this.broadcastToBrowsers(session, { type: "init_timeout" });
+          this.onInitTimeout?.(session.id);
+        }
+      }, WsBridge.INIT_TIMEOUT_MS);
+      return;
+    }
+
     if (msg.subtype === "init") {
+      // Clear the init watchdog — CLI is alive and communicating
+      session.initReceived = true;
+      if (session.initTimer) {
+        clearTimeout(session.initTimer);
+        session.initTimer = null;
+      }
+
       // Keep the launcher-assigned session_id as the canonical ID.
       // The CLI may report its own internal session_id which differs
       // from the launcher UUID, causing duplicate entries in the sidebar.
@@ -395,46 +501,9 @@ export class WsBridge {
       session.state.slash_commands = msg.slash_commands ?? [];
       session.state.skills = msg.skills ?? [];
 
-      // Resolve git info from session cwd
+      // Resolve git info from session cwd (async — no event-loop blocking)
       if (session.state.cwd) {
-        try {
-          session.state.git_branch = execSync("git rev-parse --abbrev-ref HEAD", {
-            cwd: session.state.cwd,
-            encoding: "utf-8",
-            timeout: 3000,
-          }).trim();
-
-          // Detect if in a worktree
-          try {
-            const gitDir = execSync("git rev-parse --git-dir", {
-              cwd: session.state.cwd, encoding: "utf-8", timeout: 3000,
-            }).trim();
-            session.state.is_worktree = gitDir.includes("/worktrees/");
-          } catch { /* ignore */ }
-
-          // Get repo root
-          try {
-            session.state.repo_root = execSync("git rev-parse --show-toplevel", {
-              cwd: session.state.cwd, encoding: "utf-8", timeout: 3000,
-            }).trim();
-          } catch { /* ignore */ }
-
-          // Ahead/behind remote
-          try {
-            const counts = execSync(
-              "git rev-list --left-right --count @{upstream}...HEAD",
-              { cwd: session.state.cwd, encoding: "utf-8", timeout: 3000 },
-            ).trim();
-            const [behind, ahead] = counts.split(/\s+/).map(Number);
-            session.state.git_ahead = ahead || 0;
-            session.state.git_behind = behind || 0;
-          } catch {
-            session.state.git_ahead = 0;
-            session.state.git_behind = 0;
-          }
-        } catch {
-          // Not a git repo or git not available
-        }
+        void this.resolveGitInfo(session);
       }
 
       this.broadcastToBrowsers(session, {
@@ -457,6 +526,57 @@ export class WsBridge {
     // Other system subtypes (compact_boundary, task_notification, etc.) can be forwarded as needed
   }
 
+  /** Async git info resolution — called from handleSystemMessage without blocking. */
+  private async resolveGitInfo(session: Session): Promise<void> {
+    const cwd = session.state.cwd;
+    if (!cwd) return;
+    try {
+      const { stdout: branchOut } = await execFileAsync(
+        "git", ["rev-parse", "--abbrev-ref", "HEAD"],
+        { cwd, encoding: "utf-8", timeout: 3000 },
+      );
+      session.state.git_branch = branchOut.trim();
+
+      // Detect if in a worktree
+      try {
+        const { stdout: gitDirOut } = await execFileAsync(
+          "git", ["rev-parse", "--git-dir"],
+          { cwd, encoding: "utf-8", timeout: 3000 },
+        );
+        session.state.is_worktree = gitDirOut.trim().includes("/worktrees/");
+      } catch { /* ignore */ }
+
+      // Get repo root
+      try {
+        const { stdout: rootOut } = await execFileAsync(
+          "git", ["rev-parse", "--show-toplevel"],
+          { cwd, encoding: "utf-8", timeout: 3000 },
+        );
+        session.state.repo_root = rootOut.trim();
+      } catch { /* ignore */ }
+
+      // Ahead/behind remote
+      try {
+        const { stdout: countsOut } = await execFileAsync(
+          "git", ["rev-list", "--left-right", "--count", "@{upstream}...HEAD"],
+          { cwd, encoding: "utf-8", timeout: 3000 },
+        );
+        const [behind, ahead] = countsOut.trim().split(/\s+/).map(Number);
+        session.state.git_ahead = ahead || 0;
+        session.state.git_behind = behind || 0;
+      } catch {
+        session.state.git_ahead = 0;
+        session.state.git_behind = 0;
+      }
+
+      // Broadcast updated git state to connected browsers
+      this.broadcastToBrowsers(session, { type: "session_init", session: session.state });
+      this.persistSession(session);
+    } catch {
+      // Not a git repo or git not available
+    }
+  }
+
   private handleAssistantMessage(session: Session, msg: CLIAssistantMessage) {
     const browserMsg: BrowserIncomingMessage = {
       type: "assistant",
@@ -469,6 +589,12 @@ export class WsBridge {
   }
 
   private handleResultMessage(session: Session, msg: CLIResultMessage) {
+    // Stop activity watchdog and check for pending stall retry
+    const shouldRetry = session.pendingStallRetry && session.lastUserNdjson !== null;
+    session.awaitingResult = false;
+    session.pendingStallRetry = false;
+    this.stopActivityWatchdog(session);
+
     // Update session cost/turns
     session.state.total_cost_usd = msg.total_cost_usd;
     session.state.num_turns = msg.num_turns;
@@ -515,6 +641,22 @@ export class WsBridge {
       if (firstUserMsg && firstUserMsg.type === "user_message") {
         this.onFirstTurnCompleted(session.id, firstUserMsg.content);
       }
+    }
+
+    // Auto-retry after a stall interrupt
+    if (shouldRetry) {
+      console.log(`[ws-bridge] Auto-retrying stalled turn for session ${session.id} (attempt ${session.stallRetryCount}/${WsBridge.MAX_STALL_RETRIES})`);
+      this.broadcastToBrowsers(session, {
+        type: "error",
+        message: `Retrying your message... (attempt ${session.stallRetryCount}/${WsBridge.MAX_STALL_RETRIES})`,
+      });
+      setTimeout(() => {
+        if (!session.cliSocket) return;
+        session.awaitingResult = true;
+        session.lastCliActivityAt = Date.now();
+        this.sendToCLI(session, session.lastUserNdjson!);
+        this.startActivityWatchdog(session);
+      }, 2000);
     }
   }
 
@@ -621,7 +763,7 @@ export class WsBridge {
           source: { type: "base64", media_type: img.media_type, data: img.data },
         });
       }
-      blocks.push({ type: "text", text: msg.content });
+      if (msg.content) blocks.push({ type: "text", text: msg.content });
       content = blocks;
     } else {
       content = msg.content;
@@ -634,6 +776,15 @@ export class WsBridge {
       session_id: msg.session_id || session.state.session_id || "",
     });
     this.sendToCLI(session, ndjson);
+
+    // Start streaming activity watchdog
+    session.awaitingResult = true;
+    session.lastCliActivityAt = Date.now();
+    session.lastUserNdjson = ndjson;
+    session.stallRetryCount = 0;
+    session.pendingStallRetry = false;
+    this.startActivityWatchdog(session);
+
     this.persistSession(session);
   }
 
@@ -685,6 +836,8 @@ export class WsBridge {
       request: { subtype: "interrupt" },
     });
     this.sendToCLI(session, ndjson);
+    // Also send SIGINT directly to the process — WebSocket message alone is unreliable
+    this.onInterrupt?.(session.id);
   }
 
   private handleSetModel(session: Session, model: string) {
@@ -703,6 +856,50 @@ export class WsBridge {
       request: { subtype: "set_permission_mode", mode },
     });
     this.sendToCLI(session, ndjson);
+  }
+
+  // ── Activity watchdog (mid-turn stall detection) ────────────────────────
+
+  private startActivityWatchdog(session: Session): void {
+    this.stopActivityWatchdog(session);
+    session.activityWatchdog = setInterval(() => {
+      if (!session.awaitingResult) {
+        this.stopActivityWatchdog(session);
+        return;
+      }
+      // Don't trigger if there are pending permission requests (user is deciding)
+      if (session.pendingPermissions.size > 0) return;
+
+      const elapsed = Date.now() - session.lastCliActivityAt;
+      if (elapsed < WsBridge.STALL_TIMEOUT_MS) return;
+
+      if (session.stallRetryCount >= WsBridge.MAX_STALL_RETRIES) {
+        console.warn(`[ws-bridge] Session ${session.id} stalled ${session.stallRetryCount} times — giving up`);
+        this.broadcastToBrowsers(session, {
+          type: "error",
+          message: `Session stalled ${session.stallRetryCount} times — please resend your message manually.`,
+        });
+        this.stopActivityWatchdog(session);
+        session.awaitingResult = false;
+        return;
+      }
+
+      session.stallRetryCount++;
+      session.pendingStallRetry = true;
+      console.warn(`[ws-bridge] Stall detected for session ${session.id} — no activity for ${Math.round(elapsed / 1000)}s, interrupting (retry ${session.stallRetryCount}/${WsBridge.MAX_STALL_RETRIES})`);
+      this.broadcastToBrowsers(session, {
+        type: "error",
+        message: `No response for ${Math.round(elapsed / 1000)}s — interrupting and retrying... (attempt ${session.stallRetryCount}/${WsBridge.MAX_STALL_RETRIES})`,
+      });
+      this.handleInterrupt(session);
+    }, WsBridge.STALL_CHECK_INTERVAL_MS);
+  }
+
+  private stopActivityWatchdog(session: Session): void {
+    if (session.activityWatchdog) {
+      clearInterval(session.activityWatchdog);
+      session.activityWatchdog = null;
+    }
   }
 
   // ── Transport helpers ───────────────────────────────────────────────────

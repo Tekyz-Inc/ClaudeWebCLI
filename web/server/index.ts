@@ -36,12 +36,41 @@ const worktreeTracker = new WorktreeTracker();
 // ── Restore persisted sessions from disk ────────────────────────────────────
 wsBridge.setStore(sessionStore);
 launcher.setStore(sessionStore);
-launcher.restoreFromDisk();
-wsBridge.restoreFromDisk();
+void launcher.restoreFromDisk();
+void wsBridge.restoreFromDisk();
 
 // When the CLI reports its internal session_id, store it for --resume on relaunch
+const initTimeoutCounts = new Map<string, number>();
 wsBridge.onCLISessionIdReceived((sessionId, cliSessionId) => {
   launcher.setCLISessionId(sessionId, cliSessionId);
+  initTimeoutCounts.delete(sessionId); // Reset init retry count on successful init
+});
+
+wsBridge.onInterruptCallback((sessionId) => {
+  launcher.sendInterrupt(sessionId);
+});
+
+// Watchdog: if CLI connects but never sends system/init, kill and relaunch.
+// Attempt 1: retry with --resume. Attempt 2: clear resume ID and start fresh.
+const MAX_INIT_RETRIES = 2;
+wsBridge.onInitTimeoutCallback(async (sessionId) => {
+  const info = launcher.getSession(sessionId);
+  if (!info || info.archived || info.state === "exited") return;
+  const count = (initTimeoutCounts.get(sessionId) || 0) + 1;
+  initTimeoutCounts.set(sessionId, count);
+  if (count > MAX_INIT_RETRIES) {
+    console.error(`[server] Init timeout for session ${sessionId} — gave up after ${MAX_INIT_RETRIES} retries (cwd: ${info.cwd})`);
+    return;
+  }
+  // After the first failed attempt, clear the resume ID so the next relaunch
+  // starts fresh. The --resume flag can cause the CLI to hang if the session
+  // being resumed has a large conversation history or corrupted state.
+  if (count >= 1 && info.cliSessionId) {
+    console.warn(`[server] Clearing --resume for session ${sessionId} to retry fresh`);
+    info.cliSessionId = undefined;
+  }
+  console.warn(`[server] Init timeout for session ${sessionId} (cwd: ${info.cwd}), relaunching CLI (attempt ${count}/${MAX_INIT_RETRIES})...`);
+  await launcher.relaunch(sessionId);
 });
 
 // Auto-relaunch CLI when a browser connects to a session with no CLI
@@ -52,7 +81,7 @@ wsBridge.onCLIRelaunchNeededCallback(async (sessionId) => {
   if (info?.archived) return;
   // Already starting up — CLI just hasn't connected its WS yet, do nothing
   if (info?.state === "starting") return;
-  if (info && info.state !== "starting") {
+  if (info) {
     relaunchingSet.add(sessionId);
     console.log(`[server] Auto-relaunching CLI for session ${sessionId}`);
     try {
@@ -95,6 +124,8 @@ if (process.env.NODE_ENV === "production") {
 
 const server = Bun.serve<SocketData>({
   port,
+  hostname: "0.0.0.0",
+  reusePort: true,
   async fetch(req, server) {
     const url = new URL(req.url);
 
@@ -188,11 +219,14 @@ const starting = launcher.getStartingSessions();
 if (starting.length > 0) {
   console.log(`[server] Waiting ${RECONNECT_GRACE_MS / 1000}s for ${starting.length} CLI process(es) to reconnect...`);
   setTimeout(async () => {
-    const stale = launcher.getStartingSessions();
-    for (const info of stale) {
-      if (info.archived) continue;
-      console.log(`[server] CLI for session ${info.sessionId} did not reconnect, relaunching...`);
-      await launcher.relaunch(info.sessionId);
+    const stale = launcher.getStartingSessions().filter((s) => !s.archived);
+    if (stale.length > 0) {
+      // Don't mass-relaunch — just mark them exited. They'll relaunch on-demand when a browser connects.
+      console.log(`[server] ${stale.length} CLI process(es) did not reconnect. Marking as exited (will relaunch on demand).`);
+      for (const info of stale) {
+        info.state = "exited";
+        info.exitCode = -1;
+      }
     }
   }, RECONNECT_GRACE_MS);
 }

@@ -1,7 +1,8 @@
 import { vi } from "vitest";
 
-const mockExecSync = vi.hoisted(() => vi.fn());
-vi.mock("node:child_process", () => ({ execSync: mockExecSync }));
+const mockExecFile = vi.hoisted(() => vi.fn());
+vi.mock("node:child_process", () => ({ execFile: vi.fn() }));
+vi.mock("node:util", () => ({ promisify: (_fn: unknown) => mockExecFile }));
 vi.mock("node:crypto", () => ({ randomUUID: () => "test-uuid" }));
 
 import { WsBridge, type SocketData } from "./ws-bridge.js";
@@ -36,7 +37,7 @@ beforeEach(() => {
   store = new SessionStore(tempDir);
   bridge = new WsBridge();
   bridge.setStore(store);
-  mockExecSync.mockReset();
+  mockExecFile.mockReset();
 });
 
 afterEach(() => {
@@ -199,9 +200,7 @@ describe("CLI handlers", () => {
   });
 
   it("handleCLIMessage: parses NDJSON and routes system.init", () => {
-    mockExecSync.mockImplementation(() => {
-      throw new Error("not a git repo");
-    });
+    mockExecFile.mockRejectedValue(new Error("not a git repo"));
 
     const cli = makeCliSocket("s1");
     const browser = makeBrowserSocket("s1");
@@ -223,9 +222,7 @@ describe("CLI handlers", () => {
   });
 
   it("handleCLIMessage: system.init fires onCLISessionIdReceived callback", () => {
-    mockExecSync.mockImplementation(() => {
-      throw new Error("not a git repo");
-    });
+    mockExecFile.mockRejectedValue(new Error("not a git repo"));
 
     const callback = vi.fn();
     bridge.onCLISessionIdReceived(callback);
@@ -238,9 +235,7 @@ describe("CLI handlers", () => {
   });
 
   it("handleCLIMessage: updates state from init (model, cwd, tools, permissionMode)", () => {
-    mockExecSync.mockImplementation(() => {
-      throw new Error("not a git repo");
-    });
+    mockExecFile.mockRejectedValue(new Error("not a git repo"));
 
     const cli = makeCliSocket("s1");
     bridge.handleCLIOpen(cli, "s1");
@@ -269,21 +264,27 @@ describe("CLI handlers", () => {
     expect(state.skills).toEqual(["pdf"]);
   });
 
-  it("handleCLIMessage: system.init resolves git info via execSync", () => {
-    mockExecSync.mockImplementation((cmd: string) => {
-      if (cmd.includes("--abbrev-ref HEAD")) return "feat/test-branch\n";
-      if (cmd.includes("--git-dir")) return "/repo/.git/worktrees/feat-test\n";
-      if (cmd.includes("--show-toplevel")) return "/repo\n";
-      if (cmd.includes("--left-right --count")) return "2\t5\n";
-      throw new Error("unknown git cmd");
+  it("handleCLIMessage: system.init resolves git info via execFile", async () => {
+    mockExecFile.mockImplementation((_bin: string, args: string[]) => {
+      const cmd = args.join(" ");
+      if (cmd.includes("--abbrev-ref HEAD")) return Promise.resolve({ stdout: "feat/test-branch\n", stderr: "" });
+      if (cmd.includes("--git-dir")) return Promise.resolve({ stdout: "/repo/.git/worktrees/feat-test\n", stderr: "" });
+      if (cmd.includes("--show-toplevel")) return Promise.resolve({ stdout: "/repo\n", stderr: "" });
+      if (cmd.includes("--left-right --count")) return Promise.resolve({ stdout: "2\t5\n", stderr: "" });
+      return Promise.reject(new Error("unknown git cmd"));
     });
 
     const cli = makeCliSocket("s1");
     bridge.handleCLIOpen(cli, "s1");
     bridge.handleCLIMessage(cli, makeInitMsg());
 
+    // Git info is resolved asynchronously — wait for all promises to settle
+    await vi.waitFor(() => {
+      const state = bridge.getSession("s1")!.state;
+      expect(state.git_branch).toBe("feat/test-branch");
+    });
+
     const state = bridge.getSession("s1")!.state;
-    expect(state.git_branch).toBe("feat/test-branch");
     expect(state.is_worktree).toBe(true);
     expect(state.repo_root).toBe("/repo");
     expect(state.git_ahead).toBe(5);
@@ -385,9 +386,7 @@ describe("Browser handlers", () => {
 
   it("handleBrowserOpen: replays message history", () => {
     // First populate some history
-    mockExecSync.mockImplementation(() => {
-      throw new Error("not a git repo");
-    });
+    mockExecFile.mockRejectedValue(new Error("not a git repo"));
 
     const cli = makeCliSocket("s1");
     bridge.handleCLIOpen(cli, "s1");
@@ -924,9 +923,9 @@ describe("Browser message routing", () => {
 // ─── Persistence ─────────────────────────────────────────────────────────────
 
 describe("Persistence", () => {
-  it("restoreFromDisk: loads sessions from store", () => {
+  it("restoreFromDisk: loads sessions from store", async () => {
     // Save a session directly to the store
-    store.saveSync({
+    await store.saveAsync({
       id: "persisted-1",
       state: {
         session_id: "persisted-1",
@@ -958,7 +957,7 @@ describe("Persistence", () => {
       pendingPermissions: [],
     });
 
-    const count = bridge.restoreFromDisk();
+    const count = await bridge.restoreFromDisk();
     expect(count).toBe(1);
 
     const session = bridge.getSession("persisted-1");
@@ -971,13 +970,13 @@ describe("Persistence", () => {
     expect(session!.browserSockets.size).toBe(0);
   });
 
-  it("restoreFromDisk: does not overwrite live sessions", () => {
+  it("restoreFromDisk: does not overwrite live sessions", async () => {
     // Create a live session first
     const liveSession = bridge.getOrCreateSession("live-1");
     liveSession.state.model = "live-model";
 
     // Save a different version to disk
-    store.saveSync({
+    await store.saveAsync({
       id: "live-1",
       state: {
         session_id: "live-1",
@@ -1007,7 +1006,7 @@ describe("Persistence", () => {
       pendingPermissions: [],
     });
 
-    const count = bridge.restoreFromDisk();
+    const count = await bridge.restoreFromDisk();
     expect(count).toBe(0);
 
     // Should still have the live model
@@ -1016,9 +1015,7 @@ describe("Persistence", () => {
   });
 
   it("persistSession: called after state changes (via store.save)", () => {
-    mockExecSync.mockImplementation(() => {
-      throw new Error("not a git repo");
-    });
+    mockExecFile.mockRejectedValue(new Error("not a git repo"));
 
     const saveSpy = vi.spyOn(store, "save");
 
@@ -1631,7 +1628,7 @@ describe("Session not found scenarios", () => {
 // ─── Restore from disk with pendingPermissions ───────────────────────────────
 
 describe("Restore from disk with pendingPermissions", () => {
-  it("restores sessions with pending permissions as a Map", () => {
+  it("restores sessions with pending permissions as a Map", async () => {
     const pendingPerms: [string, any][] = [
       ["req-restored-1", {
         request_id: "req-restored-1",
@@ -1651,7 +1648,7 @@ describe("Restore from disk with pendingPermissions", () => {
       }],
     ];
 
-    store.saveSync({
+    await store.saveAsync({
       id: "perm-session",
       state: {
         session_id: "perm-session",
@@ -1681,7 +1678,7 @@ describe("Restore from disk with pendingPermissions", () => {
       pendingPermissions: pendingPerms,
     });
 
-    const count = bridge.restoreFromDisk();
+    const count = await bridge.restoreFromDisk();
     expect(count).toBe(1);
 
     const session = bridge.getSession("perm-session")!;
@@ -1700,8 +1697,8 @@ describe("Restore from disk with pendingPermissions", () => {
     expect(perm2.agent_id).toBe("agent-1");
   });
 
-  it("restored pending permissions are sent to newly connected browsers", () => {
-    store.saveSync({
+  it("restored pending permissions are sent to newly connected browsers", async () => {
+    await store.saveAsync({
       id: "perm-replay",
       state: {
         session_id: "perm-replay",
@@ -1739,7 +1736,7 @@ describe("Restore from disk with pendingPermissions", () => {
       ],
     });
 
-    bridge.restoreFromDisk();
+    await bridge.restoreFromDisk();
 
     // Connect a CLI so we don't trigger relaunch
     const cli = makeCliSocket("perm-replay");
@@ -1757,8 +1754,8 @@ describe("Restore from disk with pendingPermissions", () => {
     expect(permMsg.request.input).toEqual({ command: "echo test" });
   });
 
-  it("restores sessions with empty pendingPermissions array", () => {
-    store.saveSync({
+  it("restores sessions with empty pendingPermissions array", async () => {
+    await store.saveAsync({
       id: "empty-perms",
       state: {
         session_id: "empty-perms",
@@ -1788,7 +1785,7 @@ describe("Restore from disk with pendingPermissions", () => {
       pendingPermissions: [],
     });
 
-    const count = bridge.restoreFromDisk();
+    const count = await bridge.restoreFromDisk();
     expect(count).toBe(1);
 
     const session = bridge.getSession("empty-perms")!;
@@ -1796,9 +1793,9 @@ describe("Restore from disk with pendingPermissions", () => {
     expect(session.pendingPermissions.size).toBe(0);
   });
 
-  it("restores sessions with undefined pendingPermissions", () => {
+  it("restores sessions with undefined pendingPermissions", async () => {
     // Simulate a persisted session from an older version that lacks pendingPermissions
-    store.saveSync({
+    await store.saveAsync({
       id: "no-perms-field",
       state: {
         session_id: "no-perms-field",
@@ -1829,7 +1826,7 @@ describe("Restore from disk with pendingPermissions", () => {
       pendingPermissions: undefined as any,
     });
 
-    const count = bridge.restoreFromDisk();
+    const count = await bridge.restoreFromDisk();
     expect(count).toBe(1);
 
     const session = bridge.getSession("no-perms-field")!;
@@ -2223,12 +2220,12 @@ describe("onFirstTurnCompletedCallback", () => {
     expect(callback).toHaveBeenCalledTimes(2);
   });
 
-  it("does not fire for restored sessions with completed turns", () => {
+  it("does not fire for restored sessions with completed turns", async () => {
     const callback = vi.fn();
     bridge.onFirstTurnCompletedCallback(callback);
 
     // Persist a session with num_turns > 0 and a user message in history
-    store.save({
+    await store.saveAsync({
       id: "restored-1",
       state: {
         session_id: "restored-1",
@@ -2261,7 +2258,7 @@ describe("onFirstTurnCompletedCallback", () => {
     });
 
     // Restore from disk — this should mark the session as auto-naming attempted
-    bridge.restoreFromDisk();
+    await bridge.restoreFromDisk();
 
     // CLI reconnects
     const cli = makeCliSocket("restored-1");
@@ -2285,12 +2282,12 @@ describe("onFirstTurnCompletedCallback", () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
-  it("allows auto-naming for restored sessions with zero turns", () => {
+  it("allows auto-naming for restored sessions with zero turns", async () => {
     const callback = vi.fn();
     bridge.onFirstTurnCompletedCallback(callback);
 
     // Persist a session with num_turns === 0 (brand new, never completed a turn)
-    store.save({
+    await store.saveAsync({
       id: "fresh-restored",
       state: {
         session_id: "fresh-restored",
@@ -2320,7 +2317,7 @@ describe("onFirstTurnCompletedCallback", () => {
       pendingPermissions: [],
     });
 
-    bridge.restoreFromDisk();
+    await bridge.restoreFromDisk();
 
     // CLI connects and browser sends message
     const cli = makeCliSocket("fresh-restored");

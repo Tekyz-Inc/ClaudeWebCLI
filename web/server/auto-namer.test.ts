@@ -11,9 +11,10 @@ const mockProc = {
 const mockSpawn = vi.fn(() => mockProc);
 vi.stubGlobal("Bun", { spawn: mockSpawn });
 
-// Mock execSync for binary resolution
-const mockExecSync = vi.hoisted(() => vi.fn());
-vi.mock("node:child_process", () => ({ execSync: mockExecSync }));
+// Mock execFile (promisified) for binary resolution
+const mockExecFile = vi.hoisted(() => vi.fn());
+vi.mock("node:child_process", () => ({ execFile: vi.fn() }));
+vi.mock("node:util", () => ({ promisify: (_fn: unknown) => mockExecFile }));
 
 import { generateSessionTitle } from "./auto-namer.js";
 
@@ -28,12 +29,12 @@ function makeStdout(text: string): ReadableStream {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockExecSync.mockReturnValue("/usr/bin/claude\n");
+  mockExecFile.mockResolvedValue({ stdout: "/usr/bin/claude\n", stderr: "" });
 });
 
 describe("generateSessionTitle", () => {
-  it("returns parsed title from JSON output", async () => {
-    mockProc.stdout = makeStdout(JSON.stringify({ result: "Fix Auth Flow" }));
+  it("returns the raw text title from plain text output", async () => {
+    mockProc.stdout = makeStdout("Fix Auth Flow");
     mockProc.exited = Promise.resolve(0);
 
     const title = await generateSessionTitle("Fix the login bug", "claude-sonnet-4-5-20250929", {
@@ -44,7 +45,7 @@ describe("generateSessionTitle", () => {
   });
 
   it("strips surrounding quotes from the title", async () => {
-    mockProc.stdout = makeStdout(JSON.stringify({ result: '"Refactor API Layer"' }));
+    mockProc.stdout = makeStdout('"Refactor API Layer"');
     mockProc.exited = Promise.resolve(0);
 
     const title = await generateSessionTitle("Refactor the API", "claude-sonnet-4-5-20250929", {
@@ -55,7 +56,7 @@ describe("generateSessionTitle", () => {
   });
 
   it("returns null for empty result", async () => {
-    mockProc.stdout = makeStdout(JSON.stringify({ result: "" }));
+    mockProc.stdout = makeStdout("");
     mockProc.exited = Promise.resolve(0);
 
     const title = await generateSessionTitle("Do something", "claude-sonnet-4-5-20250929", {
@@ -112,7 +113,7 @@ describe("generateSessionTitle", () => {
 
   it("truncates the user message to 500 characters for the prompt", async () => {
     const longMessage = "X".repeat(1000);
-    mockProc.stdout = makeStdout(JSON.stringify({ result: "Short Title" }));
+    mockProc.stdout = makeStdout("Short Title");
     mockProc.exited = Promise.resolve(0);
 
     await generateSessionTitle(longMessage, "claude-sonnet-4-5-20250929", {
@@ -127,7 +128,7 @@ describe("generateSessionTitle", () => {
   });
 
   it("passes the correct model to the CLI", async () => {
-    mockProc.stdout = makeStdout(JSON.stringify({ result: "Title" }));
+    mockProc.stdout = makeStdout("Title");
     mockProc.exited = Promise.resolve(0);
 
     await generateSessionTitle("Hello", "claude-opus-4-20250514", {
@@ -165,8 +166,8 @@ describe("generateSessionTitle", () => {
     expect(title).toBeNull();
   });
 
-  it("uses --output-format json flag", async () => {
-    mockProc.stdout = makeStdout(JSON.stringify({ result: "Title" }));
+  it("uses --output-format text flag", async () => {
+    mockProc.stdout = makeStdout("Title");
     mockProc.exited = Promise.resolve(0);
 
     await generateSessionTitle("Hello", "claude-sonnet-4-5-20250929", {
@@ -175,6 +176,6 @@ describe("generateSessionTitle", () => {
 
     const spawnArgs = (mockSpawn.mock.calls as unknown as string[][][])[0]?.[0];
     expect(spawnArgs).toContain("--output-format");
-    expect(spawnArgs).toContain("json");
+    expect(spawnArgs).toContain("text");
   });
 });

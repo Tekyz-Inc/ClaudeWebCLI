@@ -1,7 +1,10 @@
-import { execSync } from "node:child_process";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { existsSync, mkdirSync } from "node:fs";
 import { join, basename } from "node:path";
 import { homedir } from "node:os";
+
+const execFileAsync = promisify(execFile);
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -53,18 +56,18 @@ function worktreeDir(repoName: string, branch: string): string {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function git(cmd: string, cwd: string): string {
-  return execSync(`git ${cmd}`, {
+async function git(args: string[], cwd: string): Promise<string> {
+  const { stdout } = await execFileAsync("git", args, {
     cwd,
-    encoding: "utf-8",
     timeout: 10_000,
-    stdio: ["pipe", "pipe", "pipe"],
-  }).trim();
+    encoding: "utf-8",
+  });
+  return stdout.trim();
 }
 
-function gitSafe(cmd: string, cwd: string): string | null {
+async function gitSafe(args: string[], cwd: string): Promise<string | null> {
   try {
-    return git(cmd, cwd);
+    return await git(args, cwd);
   } catch {
     return null;
   }
@@ -72,16 +75,16 @@ function gitSafe(cmd: string, cwd: string): string | null {
 
 // ─── Functions ──────────────────────────────────────────────────────────────
 
-export function getRepoInfo(cwd: string): GitRepoInfo | null {
-  const repoRoot = gitSafe("rev-parse --show-toplevel", cwd);
+export async function getRepoInfo(cwd: string): Promise<GitRepoInfo | null> {
+  const repoRoot = await gitSafe(["rev-parse", "--show-toplevel"], cwd);
   if (!repoRoot) return null;
 
-  const currentBranch = gitSafe("rev-parse --abbrev-ref HEAD", cwd) || "HEAD";
-  const gitDir = gitSafe("rev-parse --git-dir", cwd) || "";
+  const currentBranch = await gitSafe(["rev-parse", "--abbrev-ref", "HEAD"], cwd) || "HEAD";
+  const gitDir = await gitSafe(["rev-parse", "--git-dir"], cwd) || "";
   // A linked worktree's .git dir is inside the main repo's .git/worktrees/
   const isWorktree = gitDir.includes("/worktrees/");
 
-  const defaultBranch = resolveDefaultBranch(repoRoot);
+  const defaultBranch = await resolveDefaultBranch(repoRoot);
 
   return {
     repoRoot,
@@ -92,23 +95,23 @@ export function getRepoInfo(cwd: string): GitRepoInfo | null {
   };
 }
 
-function resolveDefaultBranch(repoRoot: string): string {
+async function resolveDefaultBranch(repoRoot: string): Promise<string> {
   // Try origin HEAD
-  const originRef = gitSafe("symbolic-ref refs/remotes/origin/HEAD", repoRoot);
+  const originRef = await gitSafe(["symbolic-ref", "refs/remotes/origin/HEAD"], repoRoot);
   if (originRef) {
     return originRef.replace("refs/remotes/origin/", "");
   }
   // Fallback: check if main or master exists
-  const branches = gitSafe("branch --list main master", repoRoot) || "";
+  const branches = await gitSafe(["branch", "--list", "main", "master"], repoRoot) || "";
   if (branches.includes("main")) return "main";
   if (branches.includes("master")) return "master";
   // Last resort
   return "main";
 }
 
-export function listBranches(repoRoot: string): GitBranchInfo[] {
+export async function listBranches(repoRoot: string): Promise<GitBranchInfo[]> {
   // Get worktree mappings first
-  const worktrees = listWorktrees(repoRoot);
+  const worktrees = await listWorktrees(repoRoot);
   const worktreeByBranch = new Map<string, string>();
   for (const wt of worktrees) {
     if (wt.branch) worktreeByBranch.set(wt.branch, wt.path);
@@ -117,8 +120,8 @@ export function listBranches(repoRoot: string): GitBranchInfo[] {
   const result: GitBranchInfo[] = [];
 
   // Local branches
-  const localRaw = gitSafe(
-    "for-each-ref '--format=%(refname:short)%09%(HEAD)' refs/heads/",
+  const localRaw = await gitSafe(
+    ["for-each-ref", "--format=%(refname:short)\t%(HEAD)", "refs/heads/"],
     repoRoot,
   );
   if (localRaw) {
@@ -126,7 +129,7 @@ export function listBranches(repoRoot: string): GitBranchInfo[] {
       if (!line.trim()) continue;
       const [name, head] = line.split("\t");
       const isCurrent = head?.trim() === "*";
-      const { ahead, behind } = getBranchStatus(repoRoot, name);
+      const { ahead, behind } = await getBranchStatus(repoRoot, name);
       result.push({
         name,
         isCurrent,
@@ -140,8 +143,8 @@ export function listBranches(repoRoot: string): GitBranchInfo[] {
 
   // Remote branches (only those without a local counterpart)
   const localNames = new Set(result.map((b) => b.name));
-  const remoteRaw = gitSafe(
-    "for-each-ref '--format=%(refname:short)' refs/remotes/origin/",
+  const remoteRaw = await gitSafe(
+    ["for-each-ref", "--format=%(refname:short)", "refs/remotes/origin/"],
     repoRoot,
   );
   if (remoteRaw) {
@@ -164,8 +167,8 @@ export function listBranches(repoRoot: string): GitBranchInfo[] {
   return result;
 }
 
-export function listWorktrees(repoRoot: string): GitWorktreeInfo[] {
-  const raw = gitSafe("worktree list --porcelain", repoRoot);
+export async function listWorktrees(repoRoot: string): Promise<GitWorktreeInfo[]> {
+  const raw = await gitSafe(["worktree", "list", "--porcelain"], repoRoot);
   if (!raw) return [];
 
   const worktrees: GitWorktreeInfo[] = [];
@@ -197,22 +200,24 @@ export function listWorktrees(repoRoot: string): GitWorktreeInfo[] {
   }
 
   // Check dirty status for each worktree
-  for (const wt of worktrees) {
-    wt.isDirty = isWorktreeDirty(wt.path);
-  }
+  await Promise.all(
+    worktrees.map(async (wt) => {
+      wt.isDirty = await isWorktreeDirty(wt.path);
+    }),
+  );
 
   return worktrees;
 }
 
-export function ensureWorktree(
+export async function ensureWorktree(
   repoRoot: string,
   branchName: string,
   options?: { baseBranch?: string; createBranch?: boolean; forceNew?: boolean },
-): WorktreeCreateResult {
+): Promise<WorktreeCreateResult> {
   const repoName = basename(repoRoot);
 
   // Check if a worktree already exists for this branch
-  const existing = listWorktrees(repoRoot);
+  const existing = await listWorktrees(repoRoot);
   const found = existing.find((wt) => wt.branch === branchName);
 
   if (found && !options?.forceNew) {
@@ -239,34 +244,34 @@ export function ensureWorktree(
   // A worktree already exists for this branch — create a new uniquely-named
   // branch so multiple sessions can work on the same branch independently.
   if (found) {
-    const commitHash = git("rev-parse HEAD", found.path);
-    const uniqueBranch = generateUniqueWorktreeBranch(repoRoot, branchName);
-    git(`worktree add -b ${uniqueBranch} "${targetPath}" ${commitHash}`, repoRoot);
+    const commitHash = await git(["rev-parse", "HEAD"], found.path);
+    const uniqueBranch = await generateUniqueWorktreeBranch(repoRoot, branchName);
+    await git(["worktree", "add", "-b", uniqueBranch, targetPath, commitHash], repoRoot);
     return { worktreePath: targetPath, branch: branchName, actualBranch: uniqueBranch, isNew: false };
   }
 
   // Check if branch already exists locally or on remote
   const branchExists =
-    gitSafe(`rev-parse --verify refs/heads/${branchName}`, repoRoot) !== null;
+    await gitSafe(["rev-parse", "--verify", `refs/heads/${branchName}`], repoRoot) !== null;
   const remoteBranchExists =
-    gitSafe(`rev-parse --verify refs/remotes/origin/${branchName}`, repoRoot) !== null;
+    await gitSafe(["rev-parse", "--verify", `refs/remotes/origin/${branchName}`], repoRoot) !== null;
 
   if (branchExists) {
     // Worktree add with existing local branch
-    git(`worktree add "${targetPath}" ${branchName}`, repoRoot);
+    await git(["worktree", "add", targetPath, branchName], repoRoot);
     return { worktreePath: targetPath, branch: branchName, actualBranch: branchName, isNew: false };
   }
 
   if (remoteBranchExists) {
     // Create local tracking branch from remote
-    git(`worktree add -b ${branchName} "${targetPath}" origin/${branchName}`, repoRoot);
+    await git(["worktree", "add", "-b", branchName, targetPath, `origin/${branchName}`], repoRoot);
     return { worktreePath: targetPath, branch: branchName, actualBranch: branchName, isNew: false };
   }
 
   if (options?.createBranch !== false) {
     // Create new branch from base
-    const base = options?.baseBranch || resolveDefaultBranch(repoRoot);
-    git(`worktree add -b ${branchName} "${targetPath}" ${base}`, repoRoot);
+    const base = options?.baseBranch || await resolveDefaultBranch(repoRoot);
+    await git(["worktree", "add", "-b", branchName, targetPath, base], repoRoot);
     return { worktreePath: targetPath, branch: branchName, actualBranch: branchName, isNew: true };
   }
 
@@ -278,11 +283,11 @@ export function ensureWorktree(
  * Pattern: `{branch}-wt-{random4digit}` (e.g. `main-wt-8374`).
  * Uses random suffixes to avoid collisions with leftover branches.
  */
-export function generateUniqueWorktreeBranch(repoRoot: string, baseBranch: string): string {
+export async function generateUniqueWorktreeBranch(repoRoot: string, baseBranch: string): Promise<string> {
   for (let attempt = 0; attempt < 100; attempt++) {
     const suffix = Math.floor(1000 + Math.random() * 9000);
     const candidate = `${baseBranch}-wt-${suffix}`;
-    if (gitSafe(`rev-parse --verify refs/heads/${candidate}`, repoRoot) === null) {
+    if (await gitSafe(["rev-parse", "--verify", `refs/heads/${candidate}`], repoRoot) === null) {
       return candidate;
     }
   }
@@ -290,21 +295,21 @@ export function generateUniqueWorktreeBranch(repoRoot: string, baseBranch: strin
   return `${baseBranch}-wt-${Date.now()}`;
 }
 
-export function removeWorktree(
+export async function removeWorktree(
   repoRoot: string,
   worktreePath: string,
   options?: { force?: boolean; branchToDelete?: string },
-): { removed: boolean; reason?: string } {
+): Promise<{ removed: boolean; reason?: string }> {
   if (!existsSync(worktreePath)) {
     // Already gone, clean up git's reference
-    gitSafe("worktree prune", repoRoot);
+    await gitSafe(["worktree", "prune"], repoRoot);
     if (options?.branchToDelete) {
-      gitSafe(`branch -D ${options.branchToDelete}`, repoRoot);
+      await gitSafe(["branch", "-D", options.branchToDelete], repoRoot);
     }
     return { removed: true };
   }
 
-  if (!options?.force && isWorktreeDirty(worktreePath)) {
+  if (!options?.force && await isWorktreeDirty(worktreePath)) {
     return {
       removed: false,
       reason: "Worktree has uncommitted changes. Use force to remove anyway.",
@@ -312,11 +317,13 @@ export function removeWorktree(
   }
 
   try {
-    const forceFlag = options?.force ? " --force" : "";
-    git(`worktree remove "${worktreePath}"${forceFlag}`, repoRoot);
+    const removeArgs = options?.force
+      ? ["worktree", "remove", "--force", worktreePath]
+      : ["worktree", "remove", worktreePath];
+    await git(removeArgs, repoRoot);
     // Clean up the companion-managed branch after worktree removal
     if (options?.branchToDelete) {
-      gitSafe(`branch -D ${options.branchToDelete}`, repoRoot);
+      await gitSafe(["branch", "-D", options.branchToDelete], repoRoot);
     }
     return { removed: true };
   } catch (e: unknown) {
@@ -327,43 +334,42 @@ export function removeWorktree(
   }
 }
 
-export function isWorktreeDirty(worktreePath: string): boolean {
+export async function isWorktreeDirty(worktreePath: string): Promise<boolean> {
   if (!existsSync(worktreePath)) return false;
-  const status = gitSafe("status --porcelain", worktreePath);
+  const status = await gitSafe(["status", "--porcelain"], worktreePath);
   return status !== null && status.length > 0;
 }
 
-export function gitFetch(cwd: string): { success: boolean; output: string } {
+export async function gitFetch(cwd: string): Promise<{ success: boolean; output: string }> {
   try {
-    const output = git("fetch --prune", cwd);
+    const output = await git(["fetch", "--prune"], cwd);
     return { success: true, output };
   } catch (e: unknown) {
     return { success: false, output: e instanceof Error ? e.message : String(e) };
   }
 }
 
-export function gitPull(
+export async function gitPull(
   cwd: string,
-): { success: boolean; output: string } {
+): Promise<{ success: boolean; output: string }> {
   try {
-    const output = git("pull", cwd);
+    const output = await git(["pull"], cwd);
     return { success: true, output };
   } catch (e: unknown) {
     return { success: false, output: e instanceof Error ? e.message : String(e) };
   }
 }
 
-
-export function checkoutBranch(cwd: string, branchName: string): void {
-  git(`checkout ${branchName}`, cwd);
+export async function checkoutBranch(cwd: string, branchName: string): Promise<void> {
+  await git(["checkout", branchName], cwd);
 }
 
-export function getBranchStatus(
+export async function getBranchStatus(
   repoRoot: string,
   branchName: string,
-): { ahead: number; behind: number } {
-  const raw = gitSafe(
-    `rev-list --left-right --count origin/${branchName}...${branchName}`,
+): Promise<{ ahead: number; behind: number }> {
+  const raw = await gitSafe(
+    ["rev-list", "--left-right", "--count", `origin/${branchName}...${branchName}`],
     repoRoot,
   );
   if (!raw) return { ahead: 0, behind: 0 };

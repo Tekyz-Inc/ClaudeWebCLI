@@ -1,4 +1,5 @@
-import { mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { vi } from "vitest";
+import { mkdtempSync, rmSync, existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { SessionStore, type PersistedSession } from "./session-store.js";
@@ -48,32 +49,32 @@ afterEach(() => {
   rmSync(tempDir, { recursive: true, force: true });
 });
 
-// ─── saveSync / load ──────────────────────────────────────────────────────────
+// ─── saveAsync / load ─────────────────────────────────────────────────────────
 
-describe("saveSync / load", () => {
-  it("writes a session to disk and reads it back", () => {
+describe("saveAsync / load", () => {
+  it("writes a session to disk and reads it back", async () => {
     const session = makeSession("s1");
-    store.saveSync(session);
+    await store.saveAsync(session);
 
     const filePath = join(tempDir, "s1.json");
     expect(existsSync(filePath)).toBe(true);
 
-    const loaded = store.load("s1");
+    const loaded = await store.load("s1");
     expect(loaded).toEqual(session);
   });
 
-  it("returns null for a non-existent session", () => {
-    const loaded = store.load("does-not-exist");
+  it("returns null for a non-existent session", async () => {
+    const loaded = await store.load("does-not-exist");
     expect(loaded).toBeNull();
   });
 
-  it("returns null for a corrupt JSON file", () => {
+  it("returns null for a corrupt JSON file", async () => {
     writeFileSync(join(tempDir, "corrupt.json"), "{{not valid json!!", "utf-8");
-    const loaded = store.load("corrupt");
+    const loaded = await store.load("corrupt");
     expect(loaded).toBeNull();
   });
 
-  it("preserves all session fields through round-trip", () => {
+  it("preserves all session fields through round-trip", async () => {
     const session = makeSession("s2", {
       messageHistory: [{ type: "error", message: "test error" }],
       pendingMessages: ["msg1", "msg2"],
@@ -92,8 +93,8 @@ describe("saveSync / load", () => {
       archived: true,
     });
 
-    store.saveSync(session);
-    const loaded = store.load("s2");
+    await store.saveAsync(session);
+    const loaded = await store.load("s2");
     expect(loaded).toEqual(session);
     expect(loaded!.archived).toBe(true);
     expect(loaded!.pendingPermissions).toHaveLength(1);
@@ -104,36 +105,34 @@ describe("saveSync / load", () => {
 // ─── save (debounced) ─────────────────────────────────────────────────────────
 
 describe("save (debounced)", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it("does not write immediately", () => {
-    const session = makeSession("debounce-1");
-    store.save(session);
+    vi.useFakeTimers();
+    try {
+      const session = makeSession("debounce-1");
+      store.save(session);
 
-    const filePath = join(tempDir, "debounce-1.json");
-    expect(existsSync(filePath)).toBe(false);
+      const filePath = join(tempDir, "debounce-1.json");
+      expect(existsSync(filePath)).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
-  it("writes after the 150ms debounce period", () => {
+  it("writes after the 150ms debounce period", async () => {
     const session = makeSession("debounce-2");
     store.save(session);
 
-    vi.advanceTimersByTime(150);
+    // Wait long enough for the 150ms debounce + async writeFile
+    await new Promise((r) => setTimeout(r, 250));
 
     const filePath = join(tempDir, "debounce-2.json");
     expect(existsSync(filePath)).toBe(true);
 
-    const loaded = store.load("debounce-2");
+    const loaded = await store.load("debounce-2");
     expect(loaded).toEqual(session);
   });
 
-  it("coalesces rapid calls and only writes the last version", () => {
+  it("coalesces rapid calls and only writes the last version", async () => {
     const session1 = makeSession("debounce-3", {
       pendingMessages: ["first"],
     });
@@ -145,17 +144,18 @@ describe("save (debounced)", () => {
     });
 
     store.save(session1);
-    vi.advanceTimersByTime(50);
+    await new Promise((r) => setTimeout(r, 50));
     store.save(session2);
-    vi.advanceTimersByTime(50);
+    await new Promise((r) => setTimeout(r, 50));
     store.save(session3);
 
     // Not yet written (timer restarted with session3)
     expect(existsSync(join(tempDir, "debounce-3.json"))).toBe(false);
 
-    vi.advanceTimersByTime(150);
+    // Wait for the 150ms debounce + async writeFile
+    await new Promise((r) => setTimeout(r, 250));
 
-    const loaded = store.load("debounce-3");
+    const loaded = await store.load("debounce-3");
     expect(loaded!.pendingMessages).toEqual(["third"]);
   });
 });
@@ -163,36 +163,36 @@ describe("save (debounced)", () => {
 // ─── loadAll ──────────────────────────────────────────────────────────────────
 
 describe("loadAll", () => {
-  it("returns all saved sessions", () => {
-    store.saveSync(makeSession("a"));
-    store.saveSync(makeSession("b"));
-    store.saveSync(makeSession("c"));
+  it("returns all saved sessions", async () => {
+    await store.saveAsync(makeSession("a"));
+    await store.saveAsync(makeSession("b"));
+    await store.saveAsync(makeSession("c"));
 
-    const all = store.loadAll();
+    const all = await store.loadAll();
     const ids = all.map((s) => s.id).sort();
     expect(ids).toEqual(["a", "b", "c"]);
   });
 
-  it("skips corrupt JSON files", () => {
-    store.saveSync(makeSession("good"));
+  it("skips corrupt JSON files", async () => {
+    await store.saveAsync(makeSession("good"));
     writeFileSync(join(tempDir, "bad.json"), "not-json!", "utf-8");
 
-    const all = store.loadAll();
+    const all = await store.loadAll();
     expect(all).toHaveLength(1);
     expect(all[0].id).toBe("good");
   });
 
-  it("excludes launcher.json from results", () => {
-    store.saveSync(makeSession("session-1"));
-    store.saveLauncher({ some: "launcher data" });
+  it("excludes launcher.json from results", async () => {
+    await store.saveAsync(makeSession("session-1"));
+    await store.saveLauncher({ some: "launcher data" });
 
-    const all = store.loadAll();
+    const all = await store.loadAll();
     expect(all).toHaveLength(1);
     expect(all[0].id).toBe("session-1");
   });
 
-  it("returns an empty array for an empty directory", () => {
-    const all = store.loadAll();
+  it("returns an empty array for an empty directory", async () => {
+    const all = await store.loadAll();
     expect(all).toEqual([]);
   });
 });
@@ -200,28 +200,28 @@ describe("loadAll", () => {
 // ─── setArchived ──────────────────────────────────────────────────────────────
 
 describe("setArchived", () => {
-  it("sets archived flag to true and persists it", () => {
-    store.saveSync(makeSession("arch-1"));
-    const result = store.setArchived("arch-1", true);
+  it("sets archived flag to true and persists it", async () => {
+    await store.saveAsync(makeSession("arch-1"));
+    const result = await store.setArchived("arch-1", true);
 
     expect(result).toBe(true);
 
-    const loaded = store.load("arch-1");
+    const loaded = await store.load("arch-1");
     expect(loaded!.archived).toBe(true);
   });
 
-  it("sets archived flag to false and persists it", () => {
-    store.saveSync(makeSession("arch-2", { archived: true }));
-    const result = store.setArchived("arch-2", false);
+  it("sets archived flag to false and persists it", async () => {
+    await store.saveAsync(makeSession("arch-2", { archived: true }));
+    const result = await store.setArchived("arch-2", false);
 
     expect(result).toBe(true);
 
-    const loaded = store.load("arch-2");
+    const loaded = await store.load("arch-2");
     expect(loaded!.archived).toBe(false);
   });
 
-  it("returns false for a non-existent session", () => {
-    const result = store.setArchived("no-such-session", true);
+  it("returns false for a non-existent session", async () => {
+    const result = await store.setArchived("no-such-session", true);
     expect(result).toBe(false);
   });
 });
@@ -229,31 +229,28 @@ describe("setArchived", () => {
 // ─── remove ───────────────────────────────────────────────────────────────────
 
 describe("remove", () => {
-  it("deletes the session file from disk", () => {
-    store.saveSync(makeSession("rm-1"));
+  it("deletes the session file from disk", async () => {
+    await store.saveAsync(makeSession("rm-1"));
     expect(existsSync(join(tempDir, "rm-1.json"))).toBe(true);
 
     store.remove("rm-1");
+    // Wait for the async unlink to settle
+    await new Promise((r) => setTimeout(r, 20));
     expect(existsSync(join(tempDir, "rm-1.json"))).toBe(false);
-    expect(store.load("rm-1")).toBeNull();
+    expect(await store.load("rm-1")).toBeNull();
   });
 
-  it("cancels a pending debounced save so it never writes", () => {
-    vi.useFakeTimers();
-    try {
-      const session = makeSession("rm-2");
-      store.save(session);
+  it("cancels a pending debounced save so it never writes", async () => {
+    const session = makeSession("rm-2");
+    store.save(session);
 
-      // Remove before the debounce fires
-      store.remove("rm-2");
+    // Remove before the debounce fires
+    store.remove("rm-2");
 
-      // Advance past the debounce window
-      vi.advanceTimersByTime(300);
+    // Advance past the debounce window + async I/O time
+    await new Promise((r) => setTimeout(r, 300));
 
-      expect(existsSync(join(tempDir, "rm-2.json"))).toBe(false);
-    } finally {
-      vi.useRealTimers();
-    }
+    expect(existsSync(join(tempDir, "rm-2.json"))).toBe(false);
   });
 
   it("does not throw when removing a non-existent session", () => {
@@ -264,16 +261,16 @@ describe("remove", () => {
 // ─── saveLauncher / loadLauncher ──────────────────────────────────────────────
 
 describe("saveLauncher / loadLauncher", () => {
-  it("writes and reads launcher data", () => {
+  it("writes and reads launcher data", async () => {
     const data = { pids: [123, 456], lastBoot: "2025-01-01T00:00:00Z" };
-    store.saveLauncher(data);
+    await store.saveLauncher(data);
 
-    const loaded = store.loadLauncher<{ pids: number[]; lastBoot: string }>();
+    const loaded = await store.loadLauncher<{ pids: number[]; lastBoot: string }>();
     expect(loaded).toEqual(data);
   });
 
-  it("returns null when no launcher file exists", () => {
-    const loaded = store.loadLauncher();
+  it("returns null when no launcher file exists", async () => {
+    const loaded = await store.loadLauncher();
     expect(loaded).toBeNull();
   });
 });

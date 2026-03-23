@@ -1,6 +1,9 @@
 import { Hono } from "hono";
-import { execSync } from "node:child_process";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { readdir, readFile, writeFile, stat } from "node:fs/promises";
+
+const execFileAsync = promisify(execFile);
 import { resolve, join, dirname } from "node:path";
 import { homedir } from "node:os";
 import type { CliLauncher } from "./cli-launcher.js";
@@ -23,7 +26,7 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
       // Resolve environment variables from envSlug
       let envVars: Record<string, string> | undefined = body.env;
       if (body.envSlug) {
-        const companionEnv = envManager.getEnv(body.envSlug);
+        const companionEnv = await envManager.getEnv(body.envSlug);
         if (companionEnv) {
           console.log(`[routes] Injecting env "${companionEnv.name}" (${Object.keys(companionEnv.variables).length} vars):`, Object.keys(companionEnv.variables).join(", "));
           envVars = { ...companionEnv.variables, ...body.env };
@@ -37,9 +40,9 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
 
       // If worktree is requested, set up a worktree for the selected branch
       if (body.useWorktree && body.branch && cwd) {
-        const repoInfo = gitUtils.getRepoInfo(cwd);
+        const repoInfo = await gitUtils.getRepoInfo(cwd);
         if (repoInfo) {
-          const result = gitUtils.ensureWorktree(repoInfo.repoRoot, body.branch, {
+          const result = await gitUtils.ensureWorktree(repoInfo.repoRoot, body.branch, {
             baseBranch: repoInfo.defaultBranch,
             createBranch: body.createBranch,
             forceNew: true,
@@ -55,9 +58,9 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
         }
       } else if (body.branch && cwd) {
         // Non-worktree: checkout the selected branch in-place
-        const repoInfo = gitUtils.getRepoInfo(cwd);
+        const repoInfo = await gitUtils.getRepoInfo(cwd);
         if (repoInfo && repoInfo.currentBranch !== body.branch) {
-          gitUtils.checkoutBranch(repoInfo.repoRoot, body.branch);
+          await gitUtils.checkoutBranch(repoInfo.repoRoot, body.branch);
         }
       }
 
@@ -131,37 +134,58 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
   // Returns built-in Claude commands + user skills from ~/.claude/commands/
   api.get("/slash-commands", async (c) => {
     const builtins = [
-      "help", "clear", "compact", "cost", "config",
+      "help", "clear", "compact", "context", "cost", "config",
       "exit", "quit", "vim", "multiline", "review",
       "init", "doctor", "bug", "login", "logout",
       "resume", "release-notes", "status", "approve", "reject",
+      "btw", "model", "memory", "permission", "add-dir",
+      "pr-comments", "security-review", "extra-usage", "insights",
     ];
+
+    // Parse argument-hint from YAML frontmatter in a .md file
+    function parseArgumentHint(content: string): string | undefined {
+      if (!content.startsWith("---")) return undefined;
+      const end = content.indexOf("---", 3);
+      if (end === -1) return undefined;
+      const fm = content.slice(3, end);
+      const match = fm.match(/^argument-hint:\s*["']?(.+?)["']?\s*$/m);
+      return match?.[1];
+    }
+
+    // Read .md files from a directory → names + argument hints
+    async function readCommandDir(dir: string, prefix?: string): Promise<{ names: string[]; hints: Record<string, string> }> {
+      const names: string[] = [];
+      const hints: Record<string, string> = {};
+      try {
+        const files = (await readdir(dir)).filter((f) => f.endsWith(".md")).sort();
+        for (const f of files) {
+          const name = prefix ? `${prefix}${f.slice(0, -3)}` : f.slice(0, -3);
+          names.push(name);
+          try {
+            const content = await readFile(join(dir, f), "utf-8");
+            const hint = parseArgumentHint(content);
+            if (hint) hints[name] = hint;
+          } catch { /* skip unreadable files */ }
+        }
+      } catch { /* dir doesn't exist */ }
+      return { names, hints };
+    }
 
     // User-global skills from ~/.claude/commands/*.md → invoked as /user:<name>
     const userCommandsDir = join(homedir(), ".claude", "commands");
-    let userSkills: string[] = [];
-    try {
-      const files = await readdir(userCommandsDir);
-      userSkills = files
-        .filter((f) => f.endsWith(".md"))
-        .map((f) => `user:${f.slice(0, -3)}`)
-        .sort();
-    } catch { /* no commands dir */ }
+    const userResult = await readCommandDir(userCommandsDir, "user:");
 
     // Project-local skills from .claude/commands/*.md in cwd → invoked as /<name>
     const cwd = c.req.query("cwd");
-    let projectSkills: string[] = [];
-    if (cwd) {
-      try {
-        const files = await readdir(join(cwd, ".claude", "commands"));
-        projectSkills = files
-          .filter((f) => f.endsWith(".md"))
-          .map((f) => f.slice(0, -3))
-          .sort();
-      } catch { /* no project commands dir */ }
-    }
+    const projectResult = cwd
+      ? await readCommandDir(join(cwd, ".claude", "commands"))
+      : { names: [], hints: {} };
 
-    return c.json({ commands: builtins, skills: [...userSkills, ...projectSkills] });
+    return c.json({
+      commands: builtins,
+      skills: [...userResult.names, ...projectResult.names],
+      argumentHints: { ...userResult.hints, ...projectResult.hints },
+    });
   });
 
   api.get("/sessions", (c) => {
@@ -170,6 +194,7 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
     const enriched = sessions.map((s) => ({
       ...s,
       name: names[s.sessionId] ?? s.name,
+      initReceived: wsBridge.isInitReceived(s.sessionId),
     }));
     return c.json(enriched);
   });
@@ -212,9 +237,8 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
     const id = c.req.param("id");
     await launcher.kill(id);
 
-
     // Clean up worktree if no other sessions use it (force: delete is destructive)
-    const worktreeResult = cleanupWorktree(id, true);
+    const worktreeResult = await cleanupWorktree(id, true);
 
     launcher.removeSession(id);
     wsBridge.closeSession(id);
@@ -226,19 +250,18 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
     const body = await c.req.json().catch(() => ({}));
     await launcher.kill(id);
 
-
     // Clean up worktree if no other sessions use it
-    const worktreeResult = cleanupWorktree(id, body.force);
+    const worktreeResult = await cleanupWorktree(id, body.force);
 
     launcher.setArchived(id, true);
-    sessionStore.setArchived(id, true);
+    await sessionStore.setArchived(id, true);
     return c.json({ ok: true, worktree: worktreeResult });
   });
 
-  api.post("/sessions/:id/unarchive", (c) => {
+  api.post("/sessions/:id/unarchive", async (c) => {
     const id = c.req.param("id");
     launcher.setArchived(id, false);
-    sessionStore.setArchived(id, false);
+    await sessionStore.setArchived(id, false);
     return c.json({ ok: true });
   });
 
@@ -344,17 +367,16 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
   });
 
   /** Git diff for a single file (unified diff) */
-  api.get("/fs/diff", (c) => {
+  api.get("/fs/diff", async (c) => {
     const filePath = c.req.query("path");
     if (!filePath) return c.json({ error: "path required" }, 400);
     const absPath = resolve(filePath);
     try {
-      const diff = execSync(`git diff HEAD -- "${absPath}"`, {
-        cwd: dirname(absPath),
-        encoding: "utf-8",
-        timeout: 5000,
-      });
-      return c.json({ path: absPath, diff });
+      const { stdout } = await execFileAsync(
+        "git", ["diff", "HEAD", "--", absPath],
+        { cwd: dirname(absPath), encoding: "utf-8", timeout: 5000 },
+      );
+      return c.json({ path: absPath, diff: stdout });
     } catch {
       return c.json({ path: absPath, diff: "" });
     }
@@ -362,16 +384,16 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
 
   // ─── Environments (~/.companion/envs/) ────────────────────────────
 
-  api.get("/envs", (c) => {
+  api.get("/envs", async (c) => {
     try {
-      return c.json(envManager.listEnvs());
+      return c.json(await envManager.listEnvs());
     } catch (e: unknown) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 500);
     }
   });
 
-  api.get("/envs/:slug", (c) => {
-    const env = envManager.getEnv(c.req.param("slug"));
+  api.get("/envs/:slug", async (c) => {
+    const env = await envManager.getEnv(c.req.param("slug"));
     if (!env) return c.json({ error: "Environment not found" }, 404);
     return c.json(env);
   });
@@ -379,7 +401,7 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
   api.post("/envs", async (c) => {
     const body = await c.req.json().catch(() => ({}));
     try {
-      const env = envManager.createEnv(body.name, body.variables || {});
+      const env = await envManager.createEnv(body.name, body.variables || {});
       return c.json(env, 201);
     } catch (e: unknown) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
@@ -390,7 +412,7 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
     const slug = c.req.param("slug");
     const body = await c.req.json().catch(() => ({}));
     try {
-      const env = envManager.updateEnv(slug, { name: body.name, variables: body.variables });
+      const env = await envManager.updateEnv(slug, { name: body.name, variables: body.variables });
       if (!env) return c.json({ error: "Environment not found" }, 404);
       return c.json(env);
     } catch (e: unknown) {
@@ -398,8 +420,8 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
     }
   });
 
-  api.delete("/envs/:slug", (c) => {
-    const deleted = envManager.deleteEnv(c.req.param("slug"));
+  api.delete("/envs/:slug", async (c) => {
+    const deleted = await envManager.deleteEnv(c.req.param("slug"));
     if (!deleted) return c.json({ error: "Environment not found" }, 404);
     return c.json({ ok: true });
   });
@@ -428,29 +450,29 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
 
   // ─── Git operations ─────────────────────────────────────────────────
 
-  api.get("/git/repo-info", (c) => {
+  api.get("/git/repo-info", async (c) => {
     const path = c.req.query("path");
     if (!path) return c.json({ error: "path required" }, 400);
-    const info = gitUtils.getRepoInfo(path);
+    const info = await gitUtils.getRepoInfo(path);
     if (!info) return c.json({ error: "Not a git repository" }, 400);
     return c.json(info);
   });
 
-  api.get("/git/branches", (c) => {
+  api.get("/git/branches", async (c) => {
     const repoRoot = c.req.query("repoRoot");
     if (!repoRoot) return c.json({ error: "repoRoot required" }, 400);
     try {
-      return c.json(gitUtils.listBranches(repoRoot));
+      return c.json(await gitUtils.listBranches(repoRoot));
     } catch (e: unknown) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 500);
     }
   });
 
-  api.get("/git/worktrees", (c) => {
+  api.get("/git/worktrees", async (c) => {
     const repoRoot = c.req.query("repoRoot");
     if (!repoRoot) return c.json({ error: "repoRoot required" }, 400);
     try {
-      return c.json(gitUtils.listWorktrees(repoRoot));
+      return c.json(await gitUtils.listWorktrees(repoRoot));
     } catch (e: unknown) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 500);
     }
@@ -461,7 +483,7 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
     const { repoRoot, branch, baseBranch, createBranch } = body;
     if (!repoRoot || !branch) return c.json({ error: "repoRoot and branch required" }, 400);
     try {
-      const result = gitUtils.ensureWorktree(repoRoot, branch, { baseBranch, createBranch });
+      const result = await gitUtils.ensureWorktree(repoRoot, branch, { baseBranch, createBranch });
       return c.json(result);
     } catch (e: unknown) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 500);
@@ -472,7 +494,7 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
     const body = await c.req.json().catch(() => ({}));
     const { repoRoot, worktreePath, force } = body;
     if (!repoRoot || !worktreePath) return c.json({ error: "repoRoot and worktreePath required" }, 400);
-    const result = gitUtils.removeWorktree(repoRoot, worktreePath, { force });
+    const result = await gitUtils.removeWorktree(repoRoot, worktreePath, { force });
     return c.json(result);
   });
 
@@ -480,21 +502,22 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
     const body = await c.req.json().catch(() => ({}));
     const { repoRoot } = body;
     if (!repoRoot) return c.json({ error: "repoRoot required" }, 400);
-    return c.json(gitUtils.gitFetch(repoRoot));
+    return c.json(await gitUtils.gitFetch(repoRoot));
   });
 
   api.post("/git/pull", async (c) => {
     const body = await c.req.json().catch(() => ({}));
     const { cwd } = body;
     if (!cwd) return c.json({ error: "cwd required" }, 400);
-    const result = gitUtils.gitPull(cwd);
+    const result = await gitUtils.gitPull(cwd);
     // Return refreshed ahead/behind counts
     let git_ahead = 0, git_behind = 0;
     try {
-      const counts = execSync("git rev-list --left-right --count @{upstream}...HEAD", {
-        cwd, encoding: "utf-8", timeout: 3000,
-      }).trim();
-      const [behind, ahead] = counts.split(/\s+/).map(Number);
+      const { stdout } = await execFileAsync(
+        "git", ["rev-list", "--left-right", "--count", "@{upstream}...HEAD"],
+        { cwd, encoding: "utf-8", timeout: 3000 },
+      );
+      const [behind, ahead] = stdout.trim().split(/\s+/).map(Number);
       git_ahead = ahead || 0;
       git_behind = behind || 0;
     } catch { /* no upstream */ }
@@ -504,7 +527,7 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
 
   // ─── Helper ─────────────────────────────────────────────────────────
 
-  function cleanupWorktree(sessionId: string, force?: boolean): { cleaned?: boolean; dirty?: boolean; path?: string } | undefined {
+  async function cleanupWorktree(sessionId: string, force?: boolean): Promise<{ cleaned?: boolean; dirty?: boolean; path?: string } | undefined> {
     const mapping = worktreeTracker.getBySession(sessionId);
     if (!mapping) return undefined;
 
@@ -515,7 +538,7 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
     }
 
     // Auto-remove if clean, or force-remove if requested
-    const dirty = gitUtils.isWorktreeDirty(mapping.worktreePath);
+    const dirty = await gitUtils.isWorktreeDirty(mapping.worktreePath);
     if (dirty && !force) {
       console.log(`[routes] Worktree ${mapping.worktreePath} is dirty, not auto-removing`);
       // Keep the mapping so the worktree remains trackable
@@ -526,7 +549,7 @@ export function createRoutes(launcher: CliLauncher, wsBridge: WsBridge, sessionS
     const branchToDelete = mapping.actualBranch && mapping.actualBranch !== mapping.branch
       ? mapping.actualBranch
       : undefined;
-    const result = gitUtils.removeWorktree(mapping.repoRoot, mapping.worktreePath, { force: dirty, branchToDelete });
+    const result = await gitUtils.removeWorktree(mapping.repoRoot, mapping.worktreePath, { force: dirty, branchToDelete });
     if (result.removed) {
       // Only remove the mapping after successful cleanup
       worktreeTracker.removeBySession(sessionId);

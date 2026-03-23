@@ -1,7 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { execSync } from "node:child_process";
-import { mkdirSync, existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { mkdirSync, existsSync, appendFileSync, readdirSync, statSync, unlinkSync } from "node:fs";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
+
+const execFileAsync = promisify(execFile);
+import { join, resolve } from "node:path";
 import type { Subprocess } from "bun";
 import type { SessionStore } from "./session-store.js";
 
@@ -52,6 +56,11 @@ export interface LaunchOptions {
  * Manages Claude Code CLI processes launched with --sdk-url.
  * Each session spawns a CLI that connects back to our WebSocket server.
  */
+const LOG_DIR = resolve(process.cwd(), ".webcli-logs");
+const MAX_LOG_FILES = 50;
+/** Hard cap on concurrent CLI processes to prevent resource exhaustion / system crashes. */
+const MAX_CONCURRENT_PROCESSES = 5;
+
 export class CliLauncher {
   private sessions = new Map<string, SdkSessionInfo>();
   private processes = new Map<string, Subprocess>();
@@ -67,20 +76,20 @@ export class CliLauncher {
     this.store = store;
   }
 
-  /** Persist launcher state to disk. */
+  /** Persist launcher state to disk (fire-and-forget). */
   private persistState(): void {
     if (!this.store) return;
     const data = Array.from(this.sessions.values());
-    this.store.saveLauncher(data);
+    void this.store.saveLauncher(data);
   }
 
   /**
    * Restore sessions from disk and check which PIDs are still alive.
    * Returns the number of recovered sessions.
    */
-  restoreFromDisk(): number {
+  async restoreFromDisk(): Promise<number> {
     if (!this.store) return 0;
-    const data = this.store.loadLauncher<SdkSessionInfo[]>();
+    const data = await this.store.loadLauncher<SdkSessionInfo[]>();
     if (!data || !Array.isArray(data)) return 0;
 
     let recovered = 0;
@@ -172,7 +181,7 @@ export class CliLauncher {
     }
 
     info.state = "starting";
-    this.spawnCLI(sessionId, info, {
+    await this.spawnCLI(sessionId, info, {
       model: info.model,
       permissionMode: info.permissionMode,
       cwd: info.cwd,
@@ -188,15 +197,24 @@ export class CliLauncher {
     return Array.from(this.sessions.values()).filter((s) => s.state === "starting");
   }
 
-  private spawnCLI(sessionId: string, info: SdkSessionInfo, options: LaunchOptions & { resumeSessionId?: string }): void {
+  private async spawnCLI(sessionId: string, info: SdkSessionInfo, options: LaunchOptions & { resumeSessionId?: string }): Promise<void> {
+    // Hard cap: refuse to spawn if too many CLI processes are already running
+    if (this.processes.size >= MAX_CONCURRENT_PROCESSES) {
+      console.error(`[cli-launcher] Process cap reached (${this.processes.size}/${MAX_CONCURRENT_PROCESSES}). Refusing to spawn session ${sessionId}`);
+      info.state = "exited";
+      info.exitCode = -1;
+      return;
+    }
+
     let binary = options.claudeBinary || "claude";
     if (!binary.startsWith("/") && !binary.match(/^[A-Z]:\\/i)) {
       try {
         const cmd = process.platform === "win32" ? "where" : "which";
-        const lines = execSync(`${cmd} ${binary}`, { encoding: "utf-8" }).trim().split("\n").map(l => l.trim());
+        const { stdout } = await execFileAsync(cmd, [binary], { encoding: "utf-8" });
+        const lines = stdout.trim().split("\n").map((l) => l.trim());
         if (process.platform === "win32") {
           // On Windows, prefer .cmd/.exe over extensionless shell scripts
-          binary = lines.find(l => /\.(cmd|exe)$/i.test(l)) || binary;
+          binary = lines.find((l) => /\.(cmd|exe)$/i.test(l)) || binary;
         } else {
           binary = lines[0] || binary;
         }
@@ -229,7 +247,7 @@ export class CliLauncher {
 
     // Inject CLAUDE.md guardrails for worktree sessions
     if (info.isWorktree && info.branch) {
-      this.injectWorktreeGuardrails(
+      await this.injectWorktreeGuardrails(
         info.cwd,
         info.actualBranch || info.branch,
         info.repoRoot || "",
@@ -296,7 +314,7 @@ export class CliLauncher {
    * Inject a CLAUDE.md file into the worktree with branch guardrails.
    * Only injects into actual worktree directories, never the main repo.
    */
-  private injectWorktreeGuardrails(worktreePath: string, branch: string, repoRoot: string, parentBranch?: string): void {
+  private async injectWorktreeGuardrails(worktreePath: string, branch: string, repoRoot: string, parentBranch?: string): Promise<void> {
     // Safety: never inject guardrails into the main repository itself
     if (worktreePath === repoRoot) {
       console.warn(`[cli-launcher] Skipping guardrails injection: worktree path is the main repo (${repoRoot})`);
@@ -332,21 +350,27 @@ ${MARKER_END}`;
     const claudeMdPath = join(claudeDir, "CLAUDE.md");
 
     try {
-      mkdirSync(claudeDir, { recursive: true });
+      await mkdir(claudeDir, { recursive: true });
 
-      if (existsSync(claudeMdPath)) {
-        const existing = readFileSync(claudeMdPath, "utf-8");
+      let existing: string | null = null;
+      try {
+        existing = await readFile(claudeMdPath, "utf-8");
+      } catch {
+        // File does not exist yet
+      }
+
+      if (existing !== null) {
         // Replace existing guardrails section or append
         if (existing.includes(MARKER_START)) {
           const before = existing.substring(0, existing.indexOf(MARKER_START));
           const afterIdx = existing.indexOf(MARKER_END);
           const after = afterIdx >= 0 ? existing.substring(afterIdx + MARKER_END.length) : "";
-          writeFileSync(claudeMdPath, before + guardrails + after, "utf-8");
+          await writeFile(claudeMdPath, before + guardrails + after, "utf-8");
         } else {
-          writeFileSync(claudeMdPath, existing + "\n\n" + guardrails, "utf-8");
+          await writeFile(claudeMdPath, existing + "\n\n" + guardrails, "utf-8");
         }
       } else {
-        writeFileSync(claudeMdPath, guardrails, "utf-8");
+        await writeFile(claudeMdPath, guardrails, "utf-8");
       }
       console.log(`[cli-launcher] Injected worktree guardrails for branch ${branch}`);
     } catch (e) {
@@ -375,6 +399,19 @@ ${MARKER_END}`;
     if (session) {
       session.cliSessionId = cliSessionId;
       this.persistState();
+    }
+  }
+
+  /**
+   * Send SIGINT to a session's CLI process — interrupts the current turn without killing the session.
+   */
+  sendInterrupt(sessionId: string): void {
+    const proc = this.processes.get(sessionId);
+    if (!proc) return;
+    try {
+      proc.kill("SIGINT");
+    } catch {
+      // Process may already be exiting
     }
   }
 
@@ -472,10 +509,29 @@ ${MARKER_END}`;
     await Promise.all(ids.map((id) => this.kill(id)));
   }
 
+  /** Remove oldest log files when the cap is exceeded. */
+  private pruneLogFiles(): void {
+    try {
+      const files = readdirSync(LOG_DIR)
+        .filter((f) => f.endsWith(".log"))
+        .map((f) => ({
+          name: f,
+          path: join(LOG_DIR, f),
+          mtime: statSync(join(LOG_DIR, f)).mtimeMs,
+        }))
+        .sort((a, b) => a.mtime - b.mtime);
+      while (files.length > MAX_LOG_FILES) {
+        const oldest = files.shift()!;
+        try { unlinkSync(oldest.path); } catch {}
+      }
+    } catch {}
+  }
+
   private async pipeStream(
     sessionId: string,
     stream: ReadableStream<Uint8Array> | null,
     label: "stdout" | "stderr",
+    logPath?: string,
   ): Promise<void> {
     if (!stream) return;
     const reader = stream.getReader();
@@ -488,6 +544,11 @@ ${MARKER_END}`;
         const text = decoder.decode(value);
         if (text.trim()) {
           log(`[session:${sessionId}:${label}] ${text.trimEnd()}`);
+          if (logPath) {
+            try {
+              appendFileSync(logPath, `[${new Date().toISOString()}][${label}] ${text.trimEnd()}\n`);
+            } catch {}
+          }
         }
       }
     } catch {
@@ -496,13 +557,17 @@ ${MARKER_END}`;
   }
 
   private pipeOutput(sessionId: string, proc: Subprocess): void {
+    mkdirSync(LOG_DIR, { recursive: true });
+    const logPath = join(LOG_DIR, `${sessionId}.log`);
+    this.pruneLogFiles();
+
     const stdout = proc.stdout;
     const stderr = proc.stderr;
     if (stdout && typeof stdout !== "number") {
-      this.pipeStream(sessionId, stdout, "stdout");
+      this.pipeStream(sessionId, stdout, "stdout", logPath);
     }
     if (stderr && typeof stderr !== "number") {
-      this.pipeStream(sessionId, stderr, "stderr");
+      this.pipeStream(sessionId, stderr, "stderr", logPath);
     }
   }
 }

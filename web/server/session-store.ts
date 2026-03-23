@@ -1,4 +1,5 @@
-import { mkdirSync, readdirSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
+import { mkdirSync } from "node:fs";
+import { readdir, readFile, writeFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import type { SessionState, BrowserIncomingMessage, PermissionRequest } from "./session-types.js";
@@ -38,24 +39,33 @@ export class SessionStore {
 
     const timer = setTimeout(() => {
       this.debounceTimers.delete(session.id);
-      this.saveSync(session);
+      this.saveAsync(session).catch((err) => {
+        console.error(`[session-store] Failed to save session ${session.id}:`, err);
+      });
     }, 150);
     this.debounceTimers.set(session.id, timer);
   }
 
-  /** Immediate write — use for critical state changes. */
-  saveSync(session: PersistedSession): void {
+  /** Async write — use for critical state changes. */
+  async saveAsync(session: PersistedSession): Promise<void> {
     try {
-      writeFileSync(this.filePath(session.id), JSON.stringify(session), "utf-8");
+      await writeFile(this.filePath(session.id), JSON.stringify(session), "utf-8");
     } catch (err) {
       console.error(`[session-store] Failed to save session ${session.id}:`, err);
     }
   }
 
+  /** Immediate synchronous alias kept for callers that need fire-and-forget. */
+  saveSync(session: PersistedSession): void {
+    this.saveAsync(session).catch((err) => {
+      console.error(`[session-store] Failed to save session ${session.id}:`, err);
+    });
+  }
+
   /** Load a single session from disk. */
-  load(sessionId: string): PersistedSession | null {
+  async load(sessionId: string): Promise<PersistedSession | null> {
     try {
-      const raw = readFileSync(this.filePath(sessionId), "utf-8");
+      const raw = await readFile(this.filePath(sessionId), "utf-8");
       return JSON.parse(raw) as PersistedSession;
     } catch {
       return null;
@@ -63,18 +73,22 @@ export class SessionStore {
   }
 
   /** Load all sessions from disk. */
-  loadAll(): PersistedSession[] {
+  async loadAll(): Promise<PersistedSession[]> {
     const sessions: PersistedSession[] = [];
     try {
-      const files = readdirSync(this.dir).filter((f) => f.endsWith(".json") && f !== "launcher.json");
-      for (const file of files) {
-        try {
-          const raw = readFileSync(join(this.dir, file), "utf-8");
-          sessions.push(JSON.parse(raw));
-        } catch {
-          // Skip corrupt files
-        }
-      }
+      const files = (await readdir(this.dir)).filter(
+        (f) => f.endsWith(".json") && f !== "launcher.json",
+      );
+      await Promise.all(
+        files.map(async (file) => {
+          try {
+            const raw = await readFile(join(this.dir, file), "utf-8");
+            sessions.push(JSON.parse(raw));
+          } catch {
+            // Skip corrupt files
+          }
+        }),
+      );
     } catch {
       // Dir doesn't exist yet
     }
@@ -82,11 +96,11 @@ export class SessionStore {
   }
 
   /** Set the archived flag on a persisted session. */
-  setArchived(sessionId: string, archived: boolean): boolean {
-    const session = this.load(sessionId);
+  async setArchived(sessionId: string, archived: boolean): Promise<boolean> {
+    const session = await this.load(sessionId);
     if (!session) return false;
     session.archived = archived;
-    this.saveSync(session);
+    await this.saveAsync(session);
     return true;
   }
 
@@ -97,26 +111,24 @@ export class SessionStore {
       clearTimeout(timer);
       this.debounceTimers.delete(sessionId);
     }
-    try {
-      unlinkSync(this.filePath(sessionId));
-    } catch {
+    unlink(this.filePath(sessionId)).catch(() => {
       // File may not exist
-    }
+    });
   }
 
   /** Persist launcher state (separate file). */
-  saveLauncher(data: unknown): void {
+  async saveLauncher(data: unknown): Promise<void> {
     try {
-      writeFileSync(join(this.dir, "launcher.json"), JSON.stringify(data), "utf-8");
+      await writeFile(join(this.dir, "launcher.json"), JSON.stringify(data), "utf-8");
     } catch (err) {
       console.error("[session-store] Failed to save launcher state:", err);
     }
   }
 
   /** Load launcher state. */
-  loadLauncher<T>(): T | null {
+  async loadLauncher<T>(): Promise<T | null> {
     try {
-      const raw = readFileSync(join(this.dir, "launcher.json"), "utf-8");
+      const raw = await readFile(join(this.dir, "launcher.json"), "utf-8");
       return JSON.parse(raw) as T;
     } catch {
       return null;

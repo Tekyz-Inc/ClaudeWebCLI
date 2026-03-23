@@ -1,11 +1,5 @@
-import {
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  writeFileSync,
-  unlinkSync,
-  existsSync,
-} from "node:fs";
+import { mkdirSync } from "node:fs";
+import { readdir, readFile, writeFile, unlink, access } from "node:fs/promises";
 import { join } from "node:path";
 import { homedir } from "node:os";
 
@@ -32,6 +26,15 @@ function filePath(slug: string): string {
   return join(ENVS_DIR, `${slug}.json`);
 }
 
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function slugify(name: string): string {
@@ -45,19 +48,21 @@ function slugify(name: string): string {
 
 // ─── CRUD ───────────────────────────────────────────────────────────────────
 
-export function listEnvs(): CompanionEnv[] {
+export async function listEnvs(): Promise<CompanionEnv[]> {
   ensureDir();
   try {
-    const files = readdirSync(ENVS_DIR).filter((f) => f.endsWith(".json"));
+    const files = (await readdir(ENVS_DIR)).filter((f) => f.endsWith(".json"));
     const envs: CompanionEnv[] = [];
-    for (const file of files) {
-      try {
-        const raw = readFileSync(join(ENVS_DIR, file), "utf-8");
-        envs.push(JSON.parse(raw));
-      } catch {
-        // Skip corrupt files
-      }
-    }
+    await Promise.all(
+      files.map(async (file) => {
+        try {
+          const raw = await readFile(join(ENVS_DIR, file), "utf-8");
+          envs.push(JSON.parse(raw));
+        } catch {
+          // Skip corrupt files
+        }
+      }),
+    );
     envs.sort((a, b) => a.name.localeCompare(b.name));
     return envs;
   } catch {
@@ -65,26 +70,26 @@ export function listEnvs(): CompanionEnv[] {
   }
 }
 
-export function getEnv(slug: string): CompanionEnv | null {
+export async function getEnv(slug: string): Promise<CompanionEnv | null> {
   ensureDir();
   try {
-    const raw = readFileSync(filePath(slug), "utf-8");
+    const raw = await readFile(filePath(slug), "utf-8");
     return JSON.parse(raw) as CompanionEnv;
   } catch {
     return null;
   }
 }
 
-export function createEnv(
+export async function createEnv(
   name: string,
   variables: Record<string, string> = {},
-): CompanionEnv {
+): Promise<CompanionEnv> {
   if (!name || !name.trim()) throw new Error("Environment name is required");
   const slug = slugify(name.trim());
   if (!slug) throw new Error("Environment name must contain alphanumeric characters");
 
   ensureDir();
-  if (existsSync(filePath(slug))) {
+  if (await fileExists(filePath(slug))) {
     throw new Error(`An environment with a similar name already exists ("${slug}")`);
   }
 
@@ -96,16 +101,16 @@ export function createEnv(
     createdAt: now,
     updatedAt: now,
   };
-  writeFileSync(filePath(slug), JSON.stringify(env, null, 2), "utf-8");
+  await writeFile(filePath(slug), JSON.stringify(env, null, 2), "utf-8");
   return env;
 }
 
-export function updateEnv(
+export async function updateEnv(
   slug: string,
   updates: { name?: string; variables?: Record<string, string> },
-): CompanionEnv | null {
+): Promise<CompanionEnv | null> {
   ensureDir();
-  const existing = getEnv(slug);
+  const existing = await getEnv(slug);
   if (!existing) return null;
 
   const newName = updates.name?.trim() || existing.name;
@@ -113,7 +118,7 @@ export function updateEnv(
   if (!newSlug) throw new Error("Environment name must contain alphanumeric characters");
 
   // If name changed, check for slug collision with a different env
-  if (newSlug !== slug && existsSync(filePath(newSlug))) {
+  if (newSlug !== slug && await fileExists(filePath(newSlug))) {
     throw new Error(`An environment with a similar name already exists ("${newSlug}")`);
   }
 
@@ -127,18 +132,18 @@ export function updateEnv(
 
   // If slug changed, delete old file
   if (newSlug !== slug) {
-    try { unlinkSync(filePath(slug)); } catch { /* ok */ }
+    try { await unlink(filePath(slug)); } catch { /* ok */ }
   }
 
-  writeFileSync(filePath(newSlug), JSON.stringify(env, null, 2), "utf-8");
+  await writeFile(filePath(newSlug), JSON.stringify(env, null, 2), "utf-8");
   return env;
 }
 
-export function deleteEnv(slug: string): boolean {
+export async function deleteEnv(slug: string): Promise<boolean> {
   ensureDir();
-  if (!existsSync(filePath(slug))) return false;
+  if (!await fileExists(filePath(slug))) return false;
   try {
-    unlinkSync(filePath(slug));
+    await unlink(filePath(slug));
     return true;
   } catch {
     return false;

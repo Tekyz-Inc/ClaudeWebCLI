@@ -9,9 +9,9 @@ vi.mock("./env-manager.js", () => ({
   deleteEnv: vi.fn(),
 }));
 
-vi.mock("node:child_process", () => ({
-  execSync: vi.fn(() => ""),
-}));
+const mockExecFile = vi.hoisted(() => vi.fn());
+vi.mock("node:child_process", () => ({ execFile: vi.fn() }));
+vi.mock("node:util", () => ({ promisify: (_fn: unknown) => mockExecFile }));
 
 vi.mock("./git-utils.js", () => ({
   getRepoInfo: vi.fn(() => null),
@@ -31,7 +31,6 @@ vi.mock("./session-names.js", () => ({
 }));
 
 import { Hono } from "hono";
-import { execSync } from "node:child_process";
 import { createRoutes } from "./routes.js";
 import * as envManager from "./env-manager.js";
 import * as gitUtils from "./git-utils.js";
@@ -88,6 +87,8 @@ let tracker: ReturnType<typeof createMockTracker>;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Default: execFileAsync resolves with empty stdout (e.g., for git diff / git pull ahead-behind)
+  mockExecFile.mockResolvedValue({ stdout: "", stderr: "" });
   launcher = createMockLauncher();
   bridge = createMockBridge();
   sessionStore = createMockStore();
@@ -667,7 +668,7 @@ describe("GET /api/fs/diff", () => {
 -old line
 +new line
  line3`;
-    vi.mocked(execSync).mockReturnValueOnce(diffOutput);
+    mockExecFile.mockResolvedValueOnce({ stdout: diffOutput, stderr: "" });
 
     const res = await app.request("/api/fs/diff?path=/repo/file.ts", { method: "GET" });
 
@@ -675,16 +676,15 @@ describe("GET /api/fs/diff", () => {
     const json = await res.json();
     expect(json.diff).toBe(diffOutput);
     expect(json.path).toContain("file.ts");
-    expect(vi.mocked(execSync)).toHaveBeenCalledWith(
-      expect.stringContaining("git diff HEAD"),
+    expect(mockExecFile).toHaveBeenCalledWith(
+      "git",
+      ["diff", "HEAD", "--", expect.stringContaining("file.ts")],
       expect.objectContaining({ encoding: "utf-8", timeout: 5000 }),
     );
   });
 
   it("returns empty diff when git command fails", async () => {
-    vi.mocked(execSync).mockImplementationOnce(() => {
-      throw new Error("not a git repository");
-    });
+    mockExecFile.mockRejectedValueOnce(new Error("not a git repository"));
 
     const res = await app.request("/api/fs/diff?path=/not-a-repo/file.ts", { method: "GET" });
 

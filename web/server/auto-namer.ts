@@ -1,15 +1,19 @@
-import { execSync } from "node:child_process";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 let resolvedBinary: string | null = null;
 
-function resolveClaudeBinary(): string {
+async function resolveClaudeBinary(): Promise<string> {
   if (resolvedBinary) return resolvedBinary;
   try {
-    const cmd = process.platform === "win32" ? "where claude" : "which claude";
-    const lines = execSync(cmd, { encoding: "utf-8" }).trim().split("\n").map(l => l.trim());
+    const cmd = process.platform === "win32" ? "where" : "which";
+    const { stdout } = await execFileAsync(cmd, ["claude"], { encoding: "utf-8" });
+    const lines = stdout.trim().split("\n").map((l) => l.trim());
     if (process.platform === "win32") {
       // On Windows, prefer .cmd/.exe over extensionless shell scripts
-      resolvedBinary = lines.find(l => /\.(cmd|exe)$/i.test(l)) || "claude";
+      resolvedBinary = lines.find((l) => /\.(cmd|exe)$/i.test(l)) || "claude";
     } else {
       resolvedBinary = lines[0] || "claude";
     }
@@ -33,7 +37,7 @@ export async function generateSessionTitle(
     timeoutMs?: number;
   },
 ): Promise<string | null> {
-  const binary = options?.claudeBinary || resolveClaudeBinary();
+  const binary = options?.claudeBinary || await resolveClaudeBinary();
   const timeout = options?.timeoutMs || 30_000;
 
   // Truncate message to keep the prompt small

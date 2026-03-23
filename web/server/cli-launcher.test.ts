@@ -8,48 +8,58 @@ import { tmpdir } from "node:os";
 // Mock randomUUID so session IDs are deterministic
 vi.mock("node:crypto", () => ({ randomUUID: () => "test-session-id" }));
 
-// Mock execSync for `which`/`where` command resolution
+// Mock execFile (promisified) for `which`/`where` command resolution
 const isWin = process.platform === "win32";
 const mockClaudePath = isWin ? "C:\\Program Files\\claude.cmd" : "/usr/bin/claude";
-const mockExecSync = vi.hoisted(() => vi.fn(() => "/usr/bin/claude"));
-vi.mock("node:child_process", () => ({ execSync: mockExecSync }));
+const mockExecFile = vi.hoisted(() => vi.fn());
+vi.mock("node:child_process", () => ({ execFile: vi.fn() }));
+vi.mock("node:util", () => ({
+  promisify: (_fn: unknown) => mockExecFile,
+}));
 
 // Mock fs operations for worktree guardrails (CLAUDE.md in .claude dirs)
-const mockMkdirSync = vi.hoisted(() => vi.fn());
+const mockMkdirAsync = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const mockExistsSync = vi.hoisted(() => vi.fn((..._args: any[]) => false));
-const mockReadFileSync = vi.hoisted(() => vi.fn((..._args: any[]) => ""));
-const mockWriteFileSync = vi.hoisted(() => vi.fn());
+const mockReadFileAsync = vi.hoisted(() => vi.fn((..._args: any[]) => Promise.reject(Object.assign(new Error("ENOENT"), { code: "ENOENT" }))));
+const mockWriteFileAsync = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const isMockedPath = vi.hoisted(() => (path: string): boolean => {
   return path.includes(".claude") || path.startsWith("/tmp/worktrees/") || path.startsWith("/tmp/main-repo");
+});
+
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = (await importOriginal()) as any;
+  return {
+    ...actual,
+    mkdir: (...args: any[]) => {
+      if (typeof args[0] === "string" && isMockedPath(args[0])) {
+        return mockMkdirAsync(...args);
+      }
+      return actual.mkdir(...args);
+    },
+    readFile: (...args: any[]) => {
+      if (typeof args[0] === "string" && isMockedPath(args[0])) {
+        return mockReadFileAsync(...args);
+      }
+      return actual.readFile(...args);
+    },
+    writeFile: (...args: any[]) => {
+      if (typeof args[0] === "string" && isMockedPath(args[0])) {
+        return mockWriteFileAsync(...args);
+      }
+      return actual.writeFile(...args);
+    },
+  };
 });
 
 vi.mock("node:fs", async (importOriginal) => {
   const actual = (await importOriginal()) as any;
   return {
     ...actual,
-    mkdirSync: (...args: any[]) => {
-      if (typeof args[0] === "string" && isMockedPath(args[0])) {
-        return mockMkdirSync(...args);
-      }
-      return actual.mkdirSync(...args);
-    },
     existsSync: (...args: any[]) => {
       if (typeof args[0] === "string" && isMockedPath(args[0])) {
         return mockExistsSync(...args);
       }
       return actual.existsSync(...args);
-    },
-    readFileSync: (...args: any[]) => {
-      if (typeof args[0] === "string" && isMockedPath(args[0])) {
-        return mockReadFileSync(...args);
-      }
-      return actual.readFileSync(...args);
-    },
-    writeFileSync: (...args: any[]) => {
-      if (typeof args[0] === "string" && isMockedPath(args[0])) {
-        return mockWriteFileSync(...args);
-      }
-      return actual.writeFileSync(...args);
     },
   };
 });
@@ -94,7 +104,7 @@ beforeEach(() => {
   launcher = new CliLauncher(3456);
   launcher.setStore(store);
   mockSpawn.mockReturnValue(createMockProc());
-  mockExecSync.mockReturnValue(mockClaudePath);
+  mockExecFile.mockResolvedValue({ stdout: mockClaudePath, stderr: "" });
 });
 
 afterEach(() => {
@@ -113,13 +123,14 @@ describe("launch", () => {
     expect(info.createdAt).toBeGreaterThan(0);
   });
 
-  it("spawns CLI with correct --sdk-url and flags", () => {
+  it("spawns CLI with correct --sdk-url and flags", async () => {
     launcher.launch({ cwd: "/tmp/project" });
+    await new Promise((r) => setTimeout(r, 20));
 
     expect(mockSpawn).toHaveBeenCalledOnce();
     const [cmdAndArgs, options] = mockSpawn.mock.calls[0];
 
-    // Binary should be resolved via execSync
+    // Binary should be resolved via execFile (async)
     expect(cmdAndArgs[0]).toBe(mockClaudePath);
 
     // Core required flags
@@ -141,8 +152,9 @@ describe("launch", () => {
     expect(options.stderr).toBe("pipe");
   });
 
-  it("passes --model when provided", () => {
+  it("passes --model when provided", async () => {
     launcher.launch({ model: "claude-opus-4-20250514", cwd: "/tmp" });
+    await new Promise((r) => setTimeout(r, 20));
 
     const [cmdAndArgs] = mockSpawn.mock.calls[0];
     const modelIdx = cmdAndArgs.indexOf("--model");
@@ -150,8 +162,9 @@ describe("launch", () => {
     expect(cmdAndArgs[modelIdx + 1]).toBe("claude-opus-4-20250514");
   });
 
-  it("passes --permission-mode when provided", () => {
+  it("passes --permission-mode when provided", async () => {
     launcher.launch({ permissionMode: "bypassPermissions", cwd: "/tmp" });
+    await new Promise((r) => setTimeout(r, 20));
 
     const [cmdAndArgs] = mockSpawn.mock.calls[0];
     const modeIdx = cmdAndArgs.indexOf("--permission-mode");
@@ -159,11 +172,12 @@ describe("launch", () => {
     expect(cmdAndArgs[modeIdx + 1]).toBe("bypassPermissions");
   });
 
-  it("passes --allowedTools for each tool", () => {
+  it("passes --allowedTools for each tool", async () => {
     launcher.launch({
       allowedTools: ["Read", "Write", "Bash"],
       cwd: "/tmp",
     });
+    await new Promise((r) => setTimeout(r, 20));
 
     const [cmdAndArgs] = mockSpawn.mock.calls[0];
     // Each tool gets its own --allowedTools flag
@@ -177,22 +191,26 @@ describe("launch", () => {
     expect(toolFlags).toEqual(["Read", "Write", "Bash"]);
   });
 
-  it("resolves binary path with `which`/`where` when not absolute", () => {
+  it("resolves binary path with `which`/`where` when not absolute", async () => {
     launcher.launch({ claudeBinary: "claude-dev", cwd: "/tmp" });
+    // Allow async binary resolution to complete
+    await new Promise((r) => setTimeout(r, 20));
 
-    const expectedCmd = isWin ? "where claude-dev" : "which claude-dev";
-    expect(mockExecSync).toHaveBeenCalledWith(expectedCmd, {
+    const expectedBin = isWin ? "where" : "which";
+    expect(mockExecFile).toHaveBeenCalledWith(expectedBin, ["claude-dev"], {
       encoding: "utf-8",
     });
   });
 
-  it("skips `which` resolution when binary path is absolute", () => {
+  it("skips `which` resolution when binary path is absolute", async () => {
     launcher.launch({
       claudeBinary: "/opt/bin/claude",
       cwd: "/tmp",
     });
+    // Allow async spawn to complete
+    await new Promise((r) => setTimeout(r, 20));
 
-    expect(mockExecSync).not.toHaveBeenCalled();
+    expect(mockExecFile).not.toHaveBeenCalled();
     const [cmdAndArgs] = mockSpawn.mock.calls[0];
     expect(cmdAndArgs[0]).toBe("/opt/bin/claude");
   });
@@ -215,7 +233,7 @@ describe("launch", () => {
     expect(info.actualBranch).toBe("feature-branch");
   });
 
-  it("injects worktree guardrails when isWorktree=true", () => {
+  it("injects worktree guardrails when isWorktree=true", async () => {
     // existsSync returns true for the worktree path (it exists on disk)
     mockExistsSync.mockImplementation((path: string) => {
       if (path === "/tmp/worktrees/feature-x") return true;
@@ -234,15 +252,18 @@ describe("launch", () => {
       },
     });
 
+    // Allow async guardrails injection to complete
+    await new Promise((r) => setTimeout(r, 20));
+
     // Should create .claude directory
-    expect(mockMkdirSync).toHaveBeenCalledWith(
+    expect(mockMkdirAsync).toHaveBeenCalledWith(
       join("/tmp/worktrees/feature-x", ".claude"),
       { recursive: true },
     );
 
     // Should write CLAUDE.md with guardrails content
-    expect(mockWriteFileSync).toHaveBeenCalled();
-    const writeCall = mockWriteFileSync.mock.calls[0];
+    expect(mockWriteFileAsync).toHaveBeenCalled();
+    const writeCall = mockWriteFileAsync.mock.calls[0];
     expect(writeCall[0]).toBe(
       join("/tmp/worktrees/feature-x", ".claude", "CLAUDE.md"),
     );
@@ -253,7 +274,7 @@ describe("launch", () => {
     expect(content).toContain("DO NOT run `git checkout`");
   });
 
-  it("injects guardrails with parent branch label when actualBranch differs", () => {
+  it("injects guardrails with parent branch label when actualBranch differs", async () => {
     mockExistsSync.mockImplementation((path: string) => {
       if (path === "/tmp/worktrees/main-wt-2") return true;
       if (typeof path === "string" && path.includes(".claude")) return false;
@@ -271,15 +292,18 @@ describe("launch", () => {
       },
     });
 
-    expect(mockWriteFileSync).toHaveBeenCalled();
-    const content = mockWriteFileSync.mock.calls[0][1] as string;
+    // Allow async guardrails injection to complete
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(mockWriteFileAsync).toHaveBeenCalled();
+    const content = mockWriteFileAsync.mock.calls[0][1] as string;
     // Should mention the actual branch and the parent branch
     expect(content).toContain("main-wt-2");
     expect(content).toContain("(created from `main`)");
     expect(content).toContain("MUST stay on the `main-wt-2` branch");
   });
 
-  it("does NOT inject guardrails when worktree path equals main repo root", () => {
+  it("does NOT inject guardrails when worktree path equals main repo root", async () => {
     mockExistsSync.mockReturnValue(true);
 
     launcher.launch({
@@ -293,12 +317,15 @@ describe("launch", () => {
       },
     });
 
+    // Allow async guardrails injection to complete
+    await new Promise((r) => setTimeout(r, 20));
+
     // Should NOT write CLAUDE.md — worktree path is the main repo
-    expect(mockWriteFileSync).not.toHaveBeenCalled();
-    expect(mockMkdirSync).not.toHaveBeenCalled();
+    expect(mockWriteFileAsync).not.toHaveBeenCalled();
+    expect(mockMkdirAsync).not.toHaveBeenCalled();
   });
 
-  it("does NOT inject guardrails when worktree path does not exist on disk", () => {
+  it("does NOT inject guardrails when worktree path does not exist on disk", async () => {
     // Worktree path doesn't exist (git worktree add failed or not yet run)
     mockExistsSync.mockReturnValue(false);
 
@@ -313,33 +340,40 @@ describe("launch", () => {
       },
     });
 
+    // Allow async guardrails injection to complete
+    await new Promise((r) => setTimeout(r, 20));
+
     // Should NOT write CLAUDE.md — path doesn't exist
-    expect(mockWriteFileSync).not.toHaveBeenCalled();
-    expect(mockMkdirSync).not.toHaveBeenCalled();
+    expect(mockWriteFileAsync).not.toHaveBeenCalled();
+    expect(mockMkdirAsync).not.toHaveBeenCalled();
   });
 
-  it("sets session pid from spawned process", () => {
+  it("sets session pid from spawned process", async () => {
     mockSpawn.mockReturnValue(createMockProc(99999));
     const info = launcher.launch({ cwd: "/tmp" });
+    await new Promise((r) => setTimeout(r, 20));
     expect(info.pid).toBe(99999);
   });
 
-  it("includes CLAUDECODE=1 in environment", () => {
+  it("strips CLAUDECODE from environment to prevent nested session launch errors", async () => {
     launcher.launch({ cwd: "/tmp" });
+    await new Promise((r) => setTimeout(r, 20));
 
     const [, options] = mockSpawn.mock.calls[0];
-    expect(options.env.CLAUDECODE).toBe("1");
+    expect(options.env.CLAUDECODE).toBeUndefined();
   });
 
-  it("merges custom env variables", () => {
+  it("merges custom env variables", async () => {
     launcher.launch({
       cwd: "/tmp",
       env: { MY_VAR: "hello" },
     });
+    await new Promise((r) => setTimeout(r, 20));
 
     const [, options] = mockSpawn.mock.calls[0];
     expect(options.env.MY_VAR).toBe("hello");
-    expect(options.env.CLAUDECODE).toBe("1");
+    // CLAUDECODE is stripped to prevent nested session launch errors
+    expect(options.env.CLAUDECODE).toBeUndefined();
   });
 
   it("pre-populates cliSessionId when resumeCliId is provided", () => {
@@ -348,8 +382,9 @@ describe("launch", () => {
     expect(info.cliSessionId).toBe("native-cli-uuid");
   });
 
-  it("spawns CLI with --resume when resumeCliId is set", () => {
+  it("spawns CLI with --resume when resumeCliId is set", async () => {
     launcher.launch({ cwd: "/tmp/project", resumeCliId: "native-cli-uuid" });
+    await new Promise((r) => setTimeout(r, 20));
 
     const [cmdAndArgs] = mockSpawn.mock.calls[0];
     const resumeIdx = cmdAndArgs.indexOf("--resume");
@@ -512,6 +547,8 @@ describe("state management", () => {
 describe("kill", () => {
   it("sends SIGTERM via proc.kill", async () => {
     launcher.launch({ cwd: "/tmp" });
+    // Wait for async spawn to complete so mockSpawn.mock.results is populated
+    await new Promise((r) => setTimeout(r, 20));
 
     // Grab the mock proc
     const mockProc = mockSpawn.mock.results[0].value;
@@ -527,6 +564,8 @@ describe("kill", () => {
 
   it("marks session as exited", async () => {
     launcher.launch({ cwd: "/tmp" });
+    // Wait for async spawn to complete
+    await new Promise((r) => setTimeout(r, 20));
 
     setTimeout(() => exitResolve(0), 5);
     await launcher.kill("test-session-id");
@@ -558,6 +597,8 @@ describe("relaunch", () => {
     mockSpawn.mockReturnValueOnce(firstProc);
 
     launcher.launch({ cwd: "/tmp/project", model: "claude-sonnet-4-5-20250929" });
+    // Wait for async spawn to complete so the first process is registered
+    await new Promise((r) => setTimeout(r, 20));
     launcher.setCLISessionId("test-session-id", "cli-resume-id");
 
     // Second proc for the relaunch — never exits during test
@@ -593,7 +634,7 @@ describe("relaunch", () => {
 
 describe("persistence", () => {
   describe("restoreFromDisk", () => {
-    it("recovers sessions from the store", () => {
+    it("recovers sessions from the store", async () => {
       // Manually write launcher data to disk to simulate a previous run
       const savedSessions = [
         {
@@ -605,7 +646,7 @@ describe("persistence", () => {
           cliSessionId: "cli-abc",
         },
       ];
-      store.saveLauncher(savedSessions);
+      await store.saveLauncher(savedSessions);
 
       // Mock process.kill(pid, 0) to succeed (process is alive)
       const origKill = process.kill;
@@ -619,7 +660,7 @@ describe("persistence", () => {
 
       const newLauncher = new CliLauncher(3456);
       newLauncher.setStore(store);
-      const recovered = newLauncher.restoreFromDisk();
+      const recovered = await newLauncher.restoreFromDisk();
 
       expect(recovered).toBe(1);
 
@@ -632,7 +673,7 @@ describe("persistence", () => {
       killSpy.mockRestore();
     });
 
-    it("marks dead PIDs as exited", () => {
+    it("marks dead PIDs as exited", async () => {
       const savedSessions = [
         {
           sessionId: "dead-1",
@@ -642,7 +683,7 @@ describe("persistence", () => {
           createdAt: Date.now(),
         },
       ];
-      store.saveLauncher(savedSessions);
+      await store.saveLauncher(savedSessions);
 
       // Mock process.kill(pid, 0) to throw (process is dead)
       const killSpy = vi.spyOn(process, "kill").mockImplementation(((
@@ -655,7 +696,7 @@ describe("persistence", () => {
 
       const newLauncher = new CliLauncher(3456);
       newLauncher.setStore(store);
-      const recovered = newLauncher.restoreFromDisk();
+      const recovered = await newLauncher.restoreFromDisk();
 
       // Dead sessions don't count as recovered
       expect(recovered).toBe(0);
@@ -668,20 +709,20 @@ describe("persistence", () => {
       killSpy.mockRestore();
     });
 
-    it("returns 0 when no store is set", () => {
+    it("returns 0 when no store is set", async () => {
       const newLauncher = new CliLauncher(3456);
       // No setStore call
-      expect(newLauncher.restoreFromDisk()).toBe(0);
+      expect(await newLauncher.restoreFromDisk()).toBe(0);
     });
 
-    it("returns 0 when store has no launcher data", () => {
+    it("returns 0 when store has no launcher data", async () => {
       const newLauncher = new CliLauncher(3456);
       newLauncher.setStore(store);
       // Store is empty, no launcher.json file
-      expect(newLauncher.restoreFromDisk()).toBe(0);
+      expect(await newLauncher.restoreFromDisk()).toBe(0);
     });
 
-    it("preserves already-exited sessions from disk", () => {
+    it("preserves already-exited sessions from disk", async () => {
       const savedSessions = [
         {
           sessionId: "already-exited",
@@ -692,11 +733,11 @@ describe("persistence", () => {
           createdAt: Date.now(),
         },
       ];
-      store.saveLauncher(savedSessions);
+      await store.saveLauncher(savedSessions);
 
       const newLauncher = new CliLauncher(3456);
       newLauncher.setStore(store);
-      const recovered = newLauncher.restoreFromDisk();
+      const recovered = await newLauncher.restoreFromDisk();
 
       // Already-exited sessions are loaded but not "recovered"
       expect(recovered).toBe(0);
