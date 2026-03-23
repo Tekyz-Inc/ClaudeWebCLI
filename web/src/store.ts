@@ -1,212 +1,60 @@
 import { create } from "zustand";
-import type { SessionState, PermissionRequest, ChatMessage, SdkSessionInfo, TaskItem, AgentSpawn, TestRun } from "./types.js";
-import { api } from "./api.js";
+import type { AppState } from "./store/types.js";
+import {
+  getInitialSessionNames,
+  getInitialSessionId,
+  getInitialPromptHistory,
+  getInitialDarkMode,
+  getInitialHiddenProjects,
+} from "./store/initial-state.js";
+import { buildRemoveSessionState } from "./store/remove-session.js";
+import { resumeNativeSessionImpl } from "./store/resume-session.js";
 
-interface AppState {
-  // Sessions
-  sessions: Map<string, SessionState>;
-  sdkSessions: SdkSessionInfo[];
-  currentSessionId: string | null;
+export type { AppState };
 
-  // Messages per session
-  messages: Map<string, ChatMessage[]>;
-
-  // Streaming partial text per session
-  streaming: Map<string, string>;
-
-  // Streaming stats: start time + output tokens
-  streamingStartedAt: Map<string, number>;
-  streamingOutputTokens: Map<string, number>;
-
-  // Pending permissions per session (outer key = sessionId, inner key = request_id)
-  pendingPermissions: Map<string, Map<string, PermissionRequest>>;
-
-  // Connection state per session
-  connectionStatus: Map<string, "connecting" | "connected" | "disconnected">;
-  cliConnected: Map<string, boolean>;
-
-  // Session status
-  sessionStatus: Map<string, "idle" | "submitted" | "running" | "compacting" | null>;
-
-  // Plan mode: stores previous permission mode per session so we can restore it
-  previousPermissionMode: Map<string, string>;
-
-  // Tasks per session
-  sessionTasks: Map<string, TaskItem[]>;
-
-  // Files changed by the agent per session (Edit/Write tool calls)
-  changedFiles: Map<string, Set<string>>;
-
-  // Files read per session (Read tool calls)
-  filesRead: Map<string, Set<string>>;
-
-  // Commands executed per session (Bash tool calls), most recent first, capped at 20
-  commandsExecuted: Map<string, string[]>;
-
-  // Agents spawned per session (Agent tool calls)
-  agentsSpawned: Map<string, AgentSpawn[]>;
-
-  // Tests executed per session (test-like Bash commands)
-  testsExecuted: Map<string, TestRun[]>;
-
-  // Session display names
-  sessionNames: Map<string, string>;
-  // Track sessions that were just renamed (for animation)
-  recentlyRenamed: Set<string>;
-
-  // UI
-  darkMode: boolean;
-  sidebarOpen: boolean;
-  taskPanelOpen: boolean;
-  chatExpanded: boolean;
-  chatExpandTick: number;
-  homeResetKey: number;
-  activeTab: "chat" | "editor";
-  editorOpenFile: Map<string, string>;
-  editorUrl: Map<string, string>;
-  editorLoading: Map<string, boolean>;
-
-  // Actions
-  setDarkMode: (v: boolean) => void;
-  toggleDarkMode: () => void;
-  setSidebarOpen: (v: boolean) => void;
-  setTaskPanelOpen: (open: boolean) => void;
-  setChatExpanded: (expanded: boolean) => void;
-  newSession: () => void;
-  resumeNativeSession: (cliId: string, cwd: string) => Promise<void>;
-
-  // Session actions
-  setCurrentSession: (id: string | null) => void;
-  addSession: (session: SessionState) => void;
-  updateSession: (sessionId: string, updates: Partial<SessionState>) => void;
-  removeSession: (sessionId: string) => void;
-  setSdkSessions: (sessions: SdkSessionInfo[]) => void;
-
-  // Message actions
-  appendMessage: (sessionId: string, msg: ChatMessage) => void;
-  setMessages: (sessionId: string, msgs: ChatMessage[]) => void;
-  updateLastAssistantMessage: (sessionId: string, updater: (msg: ChatMessage) => ChatMessage) => void;
-  setStreaming: (sessionId: string, text: string | null) => void;
-  setStreamingStats: (sessionId: string, stats: { startedAt?: number; outputTokens?: number } | null) => void;
-
-  // Permission actions
-  addPermission: (sessionId: string, perm: PermissionRequest) => void;
-  removePermission: (sessionId: string, requestId: string) => void;
-
-  // Task actions
-  addTask: (sessionId: string, task: TaskItem) => void;
-  setTasks: (sessionId: string, tasks: TaskItem[]) => void;
-  updateTask: (sessionId: string, taskId: string, updates: Partial<TaskItem>) => void;
-
-  // Changed files actions
-  addChangedFile: (sessionId: string, filePath: string) => void;
-  clearChangedFiles: (sessionId: string) => void;
-
-  // Activity tracking actions
-  addReadFile: (sessionId: string, filePath: string) => void;
-  addCommandExecuted: (sessionId: string, cmd: string) => void;
-  addAgentSpawned: (sessionId: string, agent: AgentSpawn) => void;
-  addTestExecuted: (sessionId: string, test: TestRun) => void;
-
-  // Session name actions
-  setSessionName: (sessionId: string, name: string) => void;
-  markRecentlyRenamed: (sessionId: string) => void;
-  clearRecentlyRenamed: (sessionId: string) => void;
-
-  // Plan mode actions
-  setPreviousPermissionMode: (sessionId: string, mode: string) => void;
-
-  // Connection actions
-  setConnectionStatus: (sessionId: string, status: "connecting" | "connected" | "disconnected") => void;
-  setCliConnected: (sessionId: string, connected: boolean) => void;
-  setSessionStatus: (sessionId: string, status: "idle" | "submitted" | "running" | "compacting" | null) => void;
-
-  // Prompt history per session
-  promptHistory: Map<string, string[]>;
-  addPromptToHistory: (sessionId: string, prompt: string) => void;
-
-  // Editor actions
-  setActiveTab: (tab: "chat" | "editor") => void;
-  setEditorOpenFile: (sessionId: string, filePath: string | null) => void;
-  setEditorUrl: (sessionId: string, url: string) => void;
-  setEditorLoading: (sessionId: string, loading: boolean) => void;
-
-  // Project tab bar
-  activeProjectCwd: string | null;
-  setActiveProjectCwd: (cwd: string | null) => void;
-
-  // Terminal panel
-  terminalOpen: boolean;
-  setTerminalOpen: (open: boolean) => void;
-
-  reset: () => void;
-}
-
-function getInitialSessionNames(): Map<string, string> {
-  if (typeof window === "undefined") return new Map();
-  try {
-    return new Map(JSON.parse(localStorage.getItem("cc-session-names") || "[]"));
-  } catch {
-    return new Map();
-  }
-}
-
-function getInitialSessionId(): string | null {
-  if (typeof window === "undefined") return null;
-  // sessionStorage is per-tab: new tabs start fresh, refresh restores the session
-  return sessionStorage.getItem("cc-current-session") || null;
-}
-
-function getInitialPromptHistory(): Map<string, string[]> {
-  if (typeof window === "undefined") return new Map();
-  try {
-    return new Map(JSON.parse(localStorage.getItem("cc-prompt-history") || "[]"));
-  } catch {
-    return new Map();
-  }
-}
-
-function getInitialDarkMode(): boolean {
-  if (typeof window === "undefined") return false;
-  const stored = localStorage.getItem("cc-dark-mode");
-  if (stored !== null) return stored === "true";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
-}
+// ─── HMR-safe store: preserve state across Vite hot-module replacement ──
+const WIN_STORE = window as unknown as { __cc_store_state?: Partial<AppState> };
 
 export const useStore = create<AppState>((set) => ({
-  sessions: new Map(),
-  sdkSessions: [],
-  currentSessionId: getInitialSessionId(),
-  messages: new Map(),
-  streaming: new Map(),
-  streamingStartedAt: new Map(),
-  streamingOutputTokens: new Map(),
-  pendingPermissions: new Map(),
-  connectionStatus: new Map(),
-  cliConnected: new Map(),
-  sessionStatus: new Map(),
-  previousPermissionMode: new Map(),
-  sessionTasks: new Map(),
-  changedFiles: new Map(),
-  filesRead: new Map(),
-  commandsExecuted: new Map(),
-  agentsSpawned: new Map(),
-  testsExecuted: new Map(),
-  promptHistory: getInitialPromptHistory(),
-  sessionNames: getInitialSessionNames(),
-  recentlyRenamed: new Set(),
-  darkMode: getInitialDarkMode(),
-  sidebarOpen: false,
-  taskPanelOpen: true,
-  chatExpanded: true,
-  chatExpandTick: 0,
-  homeResetKey: 0,
-  activeTab: "chat",
-  editorOpenFile: new Map(),
-  editorUrl: new Map(),
-  editorLoading: new Map(),
-  activeProjectCwd: null,
-  terminalOpen: false,
+  // Restore from HMR snapshot if available, otherwise use fresh defaults
+  sessions: WIN_STORE.__cc_store_state?.sessions ?? new Map(),
+  sdkSessions: WIN_STORE.__cc_store_state?.sdkSessions ?? [],
+  currentSessionId: WIN_STORE.__cc_store_state?.currentSessionId ?? getInitialSessionId(),
+  messages: WIN_STORE.__cc_store_state?.messages ?? new Map(),
+  streaming: WIN_STORE.__cc_store_state?.streaming ?? new Map(),
+  streamingStartedAt: WIN_STORE.__cc_store_state?.streamingStartedAt ?? new Map(),
+  streamingOutputTokens: WIN_STORE.__cc_store_state?.streamingOutputTokens ?? new Map(),
+  pendingPermissions: WIN_STORE.__cc_store_state?.pendingPermissions ?? new Map(),
+  connectionStatus: WIN_STORE.__cc_store_state?.connectionStatus ?? new Map(),
+  cliConnected: WIN_STORE.__cc_store_state?.cliConnected ?? new Map(),
+  sessionStatus: WIN_STORE.__cc_store_state?.sessionStatus ?? new Map(),
+  previousPermissionMode: WIN_STORE.__cc_store_state?.previousPermissionMode ?? new Map(),
+  sessionTasks: WIN_STORE.__cc_store_state?.sessionTasks ?? new Map(),
+  changedFiles: WIN_STORE.__cc_store_state?.changedFiles ?? new Map(),
+  filesRead: WIN_STORE.__cc_store_state?.filesRead ?? new Map(),
+  commandsExecuted: WIN_STORE.__cc_store_state?.commandsExecuted ?? new Map(),
+  agentsSpawned: WIN_STORE.__cc_store_state?.agentsSpawned ?? new Map(),
+  testsExecuted: WIN_STORE.__cc_store_state?.testsExecuted ?? new Map(),
+  modelsInvoked: WIN_STORE.__cc_store_state?.modelsInvoked ?? new Map(),
+  clearOnNextResult: WIN_STORE.__cc_store_state?.clearOnNextResult ?? new Set(),
+  queuedMessages: WIN_STORE.__cc_store_state?.queuedMessages ?? new Map(),
+  promptHistory: WIN_STORE.__cc_store_state?.promptHistory ?? getInitialPromptHistory(),
+  sessionNames: WIN_STORE.__cc_store_state?.sessionNames ?? getInitialSessionNames(),
+  recentlyRenamed: WIN_STORE.__cc_store_state?.recentlyRenamed ?? new Set(),
+  darkMode: WIN_STORE.__cc_store_state?.darkMode ?? getInitialDarkMode(),
+  sidebarOpen: WIN_STORE.__cc_store_state?.sidebarOpen ?? false,
+  taskPanelOpen: WIN_STORE.__cc_store_state?.taskPanelOpen ?? true,
+  chatExpanded: WIN_STORE.__cc_store_state?.chatExpanded ?? true,
+  chatExpandTick: WIN_STORE.__cc_store_state?.chatExpandTick ?? 0,
+  homeResetKey: WIN_STORE.__cc_store_state?.homeResetKey ?? 0,
+  activeTab: WIN_STORE.__cc_store_state?.activeTab ?? "chat",
+  editorOpenFile: WIN_STORE.__cc_store_state?.editorOpenFile ?? new Map(),
+  editorUrl: WIN_STORE.__cc_store_state?.editorUrl ?? new Map(),
+  editorLoading: WIN_STORE.__cc_store_state?.editorLoading ?? new Map(),
+  activeProjectCwd: WIN_STORE.__cc_store_state?.activeProjectCwd ?? null,
+  hiddenProjects: WIN_STORE.__cc_store_state?.hiddenProjects ?? getInitialHiddenProjects(),
+  projectSessionMap: WIN_STORE.__cc_store_state?.projectSessionMap ?? new Map(),
+  terminalOpen: WIN_STORE.__cc_store_state?.terminalOpen ?? false,
 
   setDarkMode: (v) => {
     localStorage.setItem("cc-dark-mode", String(v));
@@ -228,41 +76,29 @@ export const useStore = create<AppState>((set) => ({
   },
 
   resumeNativeSession: async (cliId, cwd) => {
-    // Fetch history, activity, and create session in parallel
-    const [historyResult, activityResult, result] = await Promise.all([
-      api.getClaudeSessionMessages(cwd, cliId).catch(() => []),
-      api.getClaudeSessionActivity(cwd, cliId).catch(() => ({ filesRead: [], changedFiles: [], commands: [] })),
-      api.createSession({ cwd, resumeCliId: cliId }),
-    ]);
-    const { sessionId } = result;
-
-    // Pre-populate message history before connecting so it shows immediately
-    if (historyResult.length > 0) {
-      let idSeq = 0;
-      const chatMessages = historyResult.map((m) => ({
-        id: `hist-${cliId}-${idSeq++}`,
-        role: m.role as "user" | "assistant",
-        content: m.content,
-        contentBlocks: m.contentBlocks as import("./types.js").ContentBlock[] | undefined,
-        timestamp: new Date(m.timestamp).getTime() || Date.now(),
-      }));
-      useStore.getState().setMessages(sessionId, chatMessages);
-    }
-
-    // Pre-populate activity data (files read, changed files, commands)
-    set((s) => {
-      const filesRead = new Map(s.filesRead);
-      filesRead.set(sessionId, new Set(activityResult.filesRead));
-      const changedFiles = new Map(s.changedFiles);
-      changedFiles.set(sessionId, new Set(activityResult.changedFiles));
-      const commandsExecuted = new Map(s.commandsExecuted);
-      // Only keep slash commands (skills/GSD-T); strip raw bash commands
-      const slashCmds = activityResult.commands.filter((c: string) => c.startsWith("/"));
-      commandsExecuted.set(sessionId, slashCmds);
-      return { filesRead, changedFiles, commandsExecuted };
-    });
-
-    // Dynamic import avoids circular dependency (ws.ts imports store.ts)
+    const sessionId = await resumeNativeSessionImpl(
+      cliId,
+      cwd,
+      (sid, msgs) => useStore.getState().setMessages(sid, msgs),
+      (sid, filesRead, changedFiles, slashCmds) => {
+        set((s) => {
+          const fr = new Map(s.filesRead);
+          fr.set(sid, new Set(filesRead));
+          const cf = new Map(s.changedFiles);
+          cf.set(sid, new Set(changedFiles));
+          const ce = new Map(s.commandsExecuted);
+          ce.set(sid, slashCmds);
+          return { filesRead: fr, changedFiles: cf, commandsExecuted: ce };
+        });
+      },
+      (normCwd, sid) => {
+        set((s) => {
+          const projectSessionMap = new Map(s.projectSessionMap);
+          projectSessionMap.set(normCwd, sid);
+          return { projectSessionMap };
+        });
+      },
+    );
     const { connectSession } = await import("./ws.js");
     connectSession(sessionId);
     set({ currentSessionId: sessionId });
@@ -295,87 +131,16 @@ export const useStore = create<AppState>((set) => ({
     }),
 
   removeSession: (sessionId) =>
-    set((s) => {
-      const sessions = new Map(s.sessions);
-      sessions.delete(sessionId);
-      const messages = new Map(s.messages);
-      messages.delete(sessionId);
-      const streaming = new Map(s.streaming);
-      streaming.delete(sessionId);
-      const streamingStartedAt = new Map(s.streamingStartedAt);
-      streamingStartedAt.delete(sessionId);
-      const streamingOutputTokens = new Map(s.streamingOutputTokens);
-      streamingOutputTokens.delete(sessionId);
-      const connectionStatus = new Map(s.connectionStatus);
-      connectionStatus.delete(sessionId);
-      const cliConnected = new Map(s.cliConnected);
-      cliConnected.delete(sessionId);
-      const sessionStatus = new Map(s.sessionStatus);
-      sessionStatus.delete(sessionId);
-      const previousPermissionMode = new Map(s.previousPermissionMode);
-      previousPermissionMode.delete(sessionId);
-      const pendingPermissions = new Map(s.pendingPermissions);
-      pendingPermissions.delete(sessionId);
-      const sessionTasks = new Map(s.sessionTasks);
-      sessionTasks.delete(sessionId);
-      const changedFiles = new Map(s.changedFiles);
-      changedFiles.delete(sessionId);
-      const filesRead = new Map(s.filesRead);
-      filesRead.delete(sessionId);
-      const commandsExecuted = new Map(s.commandsExecuted);
-      commandsExecuted.delete(sessionId);
-      const agentsSpawned = new Map(s.agentsSpawned);
-      agentsSpawned.delete(sessionId);
-      const testsExecuted = new Map(s.testsExecuted);
-      testsExecuted.delete(sessionId);
-      const sessionNames = new Map(s.sessionNames);
-      sessionNames.delete(sessionId);
-      const recentlyRenamed = new Set(s.recentlyRenamed);
-      recentlyRenamed.delete(sessionId);
-      const editorOpenFile = new Map(s.editorOpenFile);
-      editorOpenFile.delete(sessionId);
-      const editorUrl = new Map(s.editorUrl);
-      editorUrl.delete(sessionId);
-      const editorLoading = new Map(s.editorLoading);
-      editorLoading.delete(sessionId);
-      localStorage.setItem("cc-session-names", JSON.stringify(Array.from(sessionNames.entries())));
-      if (s.currentSessionId === sessionId) {
-        sessionStorage.removeItem("cc-current-session");
-      }
-      return {
-        sessions,
-        messages,
-        streaming,
-        streamingStartedAt,
-        streamingOutputTokens,
-        connectionStatus,
-        cliConnected,
-        sessionStatus,
-        previousPermissionMode,
-        pendingPermissions,
-        sessionTasks,
-        changedFiles,
-        filesRead,
-        commandsExecuted,
-        agentsSpawned,
-        testsExecuted,
-        sessionNames,
-        recentlyRenamed,
-        editorOpenFile,
-        editorUrl,
-        editorLoading,
-        sdkSessions: s.sdkSessions.filter((sdk) => sdk.sessionId !== sessionId),
-        currentSessionId: s.currentSessionId === sessionId ? null : s.currentSessionId,
-      };
-    }),
+    set((s) => buildRemoveSessionState(s, sessionId)),
 
   setSdkSessions: (sessions) => set({ sdkSessions: sessions }),
 
   appendMessage: (sessionId, msg) =>
     set((s) => {
       const messages = new Map(s.messages);
-      const list = [...(messages.get(sessionId) || []), msg];
-      messages.set(sessionId, list);
+      const existing = messages.get(sessionId) || [];
+      if (msg.id && existing.some((m) => m.id === msg.id)) return s;
+      messages.set(sessionId, [...existing, msg]);
       return { messages };
     }),
 
@@ -403,11 +168,8 @@ export const useStore = create<AppState>((set) => ({
   setStreaming: (sessionId, text) =>
     set((s) => {
       const streaming = new Map(s.streaming);
-      if (text === null) {
-        streaming.delete(sessionId);
-      } else {
-        streaming.set(sessionId, text);
-      }
+      if (text === null) streaming.delete(sessionId);
+      else streaming.set(sessionId, text);
       return { streaming };
     }),
 
@@ -521,6 +283,22 @@ export const useStore = create<AppState>((set) => ({
       return { testsExecuted };
     }),
 
+  mergeModelUsage: (sessionId, modelUsage) =>
+    set((s) => {
+      const modelsInvoked = new Map(s.modelsInvoked);
+      const existing = new Map(modelsInvoked.get(sessionId) || []);
+      for (const [model, usage] of Object.entries(modelUsage)) {
+        const prev = existing.get(model) || { inputTokens: 0, outputTokens: 0, costUSD: 0 };
+        existing.set(model, {
+          inputTokens: prev.inputTokens + usage.inputTokens,
+          outputTokens: prev.outputTokens + usage.outputTokens,
+          costUSD: prev.costUSD + usage.costUSD,
+        });
+      }
+      modelsInvoked.set(sessionId, existing);
+      return { modelsInvoked };
+    }),
+
   setSessionName: (sessionId, name) =>
     set((s) => {
       const sessionNames = new Map(s.sessionNames);
@@ -543,11 +321,31 @@ export const useStore = create<AppState>((set) => ({
       return { recentlyRenamed };
     }),
 
+  markClearOnNextResult: (sessionId) =>
+    set((s) => {
+      const clearOnNextResult = new Set(s.clearOnNextResult);
+      clearOnNextResult.add(sessionId);
+      return { clearOnNextResult };
+    }),
+
+  setQueuedMessage: (sessionId, msg) =>
+    set((s) => {
+      const queuedMessages = new Map(s.queuedMessages);
+      queuedMessages.set(sessionId, msg);
+      return { queuedMessages };
+    }),
+
+  clearQueuedMessage: (sessionId) =>
+    set((s) => {
+      const queuedMessages = new Map(s.queuedMessages);
+      queuedMessages.delete(sessionId);
+      return { queuedMessages };
+    }),
+
   addPromptToHistory: (sessionId, prompt) =>
     set((s) => {
       const promptHistory = new Map(s.promptHistory);
       const history = [...(promptHistory.get(sessionId) || []), prompt];
-      // Cap at 50 entries per session
       if (history.length > 50) history.splice(0, history.length - 50);
       promptHistory.set(sessionId, history);
       localStorage.setItem("cc-prompt-history", JSON.stringify(Array.from(promptHistory.entries())));
@@ -583,17 +381,51 @@ export const useStore = create<AppState>((set) => ({
     }),
 
   setActiveTab: (tab) => set({ activeTab: tab }),
-  setActiveProjectCwd: (cwd) => set({ activeProjectCwd: cwd }),
+
+  setActiveProjectCwd: (cwd) => {
+    const prev = useStore.getState();
+    if (prev.activeProjectCwd && prev.currentSessionId) {
+      const norm = prev.activeProjectCwd.replace(/\\/g, "/");
+      const curState = prev.sessions.get(prev.currentSessionId);
+      const sdkInfo = prev.sdkSessions.find((s) => s.sessionId === prev.currentSessionId);
+      const curCwd = (curState?.cwd || sdkInfo?.cwd || "").replace(/\\/g, "/");
+      if (!curCwd || curCwd === norm || curCwd.startsWith(norm + "/")) {
+        console.log("[store] saving project→session mapping:", norm, "→", prev.currentSessionId);
+        const projectSessionMap = new Map(prev.projectSessionMap);
+        projectSessionMap.set(norm, prev.currentSessionId);
+        set({ activeProjectCwd: cwd, projectSessionMap });
+      } else {
+        console.log("[store] skipping project→session mapping: session CWD", curCwd, "doesn't match project", norm);
+        set({ activeProjectCwd: cwd });
+      }
+    } else {
+      set({ activeProjectCwd: cwd });
+    }
+  },
+
+  setProjectSession: (cwd, sessionId) =>
+    set((s) => {
+      const projectSessionMap = new Map(s.projectSessionMap);
+      projectSessionMap.set(cwd.replace(/\\/g, "/"), sessionId);
+      return { projectSessionMap };
+    }),
+
+  toggleHiddenProject: (path) =>
+    set((s) => {
+      const hiddenProjects = new Set(s.hiddenProjects);
+      if (hiddenProjects.has(path)) hiddenProjects.delete(path);
+      else hiddenProjects.add(path);
+      localStorage.setItem("cc-hidden-projects", JSON.stringify([...hiddenProjects]));
+      return { hiddenProjects };
+    }),
+
   setTerminalOpen: (open) => set({ terminalOpen: open }),
 
   setEditorOpenFile: (sessionId, filePath) =>
     set((s) => {
       const editorOpenFile = new Map(s.editorOpenFile);
-      if (filePath) {
-        editorOpenFile.set(sessionId, filePath);
-      } else {
-        editorOpenFile.delete(sessionId);
-      }
+      if (filePath) editorOpenFile.set(sessionId, filePath);
+      else editorOpenFile.delete(sessionId);
       return { editorOpenFile };
     }),
 
@@ -631,6 +463,9 @@ export const useStore = create<AppState>((set) => ({
       commandsExecuted: new Map(),
       agentsSpawned: new Map(),
       testsExecuted: new Map(),
+      modelsInvoked: new Map(),
+      clearOnNextResult: new Set(),
+      queuedMessages: new Map(),
       promptHistory: new Map(),
       sessionNames: new Map(),
       recentlyRenamed: new Set(),
@@ -640,3 +475,14 @@ export const useStore = create<AppState>((set) => ({
       editorLoading: new Map(),
     }),
 }));
+
+// Clear the HMR snapshot after store is created (only needed once per HMR cycle)
+delete WIN_STORE.__cc_store_state;
+
+// ─── HMR: snapshot store state before module is replaced ────────────────
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    WIN_STORE.__cc_store_state = useStore.getState();
+  });
+  import.meta.hot.accept();
+}
