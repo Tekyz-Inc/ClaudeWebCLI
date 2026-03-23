@@ -59,6 +59,7 @@ function createMockLauncher() {
 function createMockBridge() {
   return {
     closeSession: vi.fn(),
+    isInitReceived: vi.fn(() => true),
   } as any;
 }
 
@@ -218,8 +219,8 @@ describe("GET /api/sessions", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json).toEqual([
-      { sessionId: "s1", state: "running", cwd: "/a", name: "Fix auth bug" },
-      { sessionId: "s2", state: "stopped", cwd: "/b" },
+      { sessionId: "s1", state: "running", cwd: "/a", name: "Fix auth bug", initReceived: true },
+      { sessionId: "s2", state: "stopped", cwd: "/b", initReceived: true },
     ]);
   });
 });
