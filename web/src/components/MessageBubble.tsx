@@ -1,4 +1,4 @@
-import { useState, useMemo, type ComponentProps } from "react";
+import { useState, useMemo, useRef, type ComponentProps } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ChatMessage, ContentBlock } from "../types.js";
@@ -6,6 +6,7 @@ import { ToolBlock, ToolIcon } from "./ToolBlock.js";
 import { getToolIcon, getToolLabel } from "./tool-utils.js";
 import { CopyButton } from "./CopyButton.js";
 import { linkifyText } from "../utils/linkify.js";
+import { groupContentBlocks, type ToolGroupItem } from "../utils/toolGrouping.js";
 
 export function MessageBubble({ message }: { message: ChatMessage }) {
   if (message.role === "system") {
@@ -60,38 +61,6 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
   );
 }
 
-interface ToolGroupItem {
-  id: string;
-  name: string;
-  input: Record<string, unknown>;
-}
-
-type GroupedBlock =
-  | { kind: "content"; block: ContentBlock }
-  | { kind: "tool_group"; name: string; items: ToolGroupItem[] };
-
-function groupContentBlocks(blocks: ContentBlock[]): GroupedBlock[] {
-  const groups: GroupedBlock[] = [];
-
-  for (const block of blocks) {
-    if (block.type === "tool_use") {
-      const last = groups[groups.length - 1];
-      if (last?.kind === "tool_group" && last.name === block.name) {
-        last.items.push({ id: block.id, name: block.name, input: block.input });
-      } else {
-        groups.push({
-          kind: "tool_group",
-          name: block.name,
-          items: [{ id: block.id, name: block.name, input: block.input }],
-        });
-      }
-    } else {
-      groups.push({ kind: "content", block });
-    }
-  }
-
-  return groups;
-}
 
 function getAssistantText(blocks: ContentBlock[], fallback: string): string {
   if (blocks.length === 0) return fallback;
@@ -150,6 +119,21 @@ function AssistantMessage({ message }: { message: ChatMessage }) {
 function AssistantAvatar() {
   return (
     <span className="text-cc-primary shrink-0 text-[11px] mt-[3px] select-none leading-none">●</span>
+  );
+}
+
+function CopyableTable({ children }: { children: React.ReactNode }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  return (
+    <div ref={containerRef} className="overflow-x-auto my-2 relative group/table">
+      <table className="min-w-full text-sm border border-cc-border rounded-lg overflow-hidden">
+        {children}
+      </table>
+      <CopyButton
+        text={() => containerRef.current?.querySelector("table")?.innerText ?? ""}
+        className="absolute top-1 right-1 w-5 h-5 rounded hover:bg-cc-hover opacity-0 group-hover/table:opacity-100 transition-opacity"
+      />
+    </div>
   );
 }
 
@@ -228,6 +212,21 @@ function MarkdownContent({ text }: { text: string }) {
               );
             }
 
+            // Inline code that is a URL — render as a clickable link with code styling
+            const codeStr = typeof children === "string" ? children : null;
+            if (codeStr && /^https?:\/\//.test(codeStr)) {
+              return (
+                <a
+                  href={codeStr}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-1 py-0.5 rounded bg-cc-code-bg/30 text-[13px] font-mono-code text-cc-primary hover:underline break-all"
+                >
+                  {codeStr}
+                </a>
+              );
+            }
+
             return (
               <code className="px-1 py-0.5 rounded bg-cc-code-bg/30 text-[13px] font-mono-code text-cc-primary">
                 {children}
@@ -236,11 +235,7 @@ function MarkdownContent({ text }: { text: string }) {
           },
           pre: ({ children }) => <>{children}</>,
           table: ({ children }) => (
-            <div className="overflow-x-auto my-2">
-              <table className="min-w-full text-sm border border-cc-border rounded-lg overflow-hidden">
-                {children}
-              </table>
-            </div>
+            <CopyableTable>{children}</CopyableTable>
           ),
           thead: ({ children }) => (
             <thead className="bg-cc-code-bg/50">{children}</thead>

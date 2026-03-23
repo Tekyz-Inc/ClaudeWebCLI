@@ -2,8 +2,9 @@ import { useEffect, useRef, useMemo, useState } from "react";
 import { useStore } from "../store.js";
 import { MessageBubble } from "./MessageBubble.js";
 import { ToolBlock, ToolIcon } from "./ToolBlock.js";
-import { getToolIcon, getToolLabel, getPreview } from "./tool-utils.js";
+import { getToolIcon, getToolLabel } from "./tool-utils.js";
 import type { ChatMessage, ContentBlock } from "../types.js";
+import { groupMessages, type FeedEntry, type ToolMsgGroup, type SubagentGroup } from "../utils/toolGrouping.js";
 
 function formatElapsed(ms: number): string {
   const secs = Math.floor(ms / 1000);
@@ -18,173 +19,6 @@ function formatTokens(n: number): string {
 }
 
 const EMPTY_MESSAGES: ChatMessage[] = [];
-
-// ─── Message-level grouping ─────────────────────────────────────────────────
-
-interface ToolItem { id: string; name: string; input: Record<string, unknown> }
-
-interface ToolMsgGroup {
-  kind: "tool_msg_group";
-  toolName: string;
-  items: ToolItem[];
-  firstId: string;
-}
-
-interface SubagentGroup {
-  kind: "subagent";
-  taskToolUseId: string;
-  description: string;
-  agentType: string;
-  children: FeedEntry[];
-}
-
-type FeedEntry =
-  | { kind: "message"; msg: ChatMessage }
-  | ToolMsgGroup
-  | SubagentGroup;
-
-/**
- * Get the dominant tool name if this message is "tool-only"
- * (assistant message whose contentBlocks are ALL tool_use of the same name).
- * Returns null if it has text/thinking or mixed tool types.
- */
-function getToolOnlyName(msg: ChatMessage): string | null {
-  if (msg.role !== "assistant") return null;
-  const blocks = msg.contentBlocks;
-  if (!blocks || blocks.length === 0) return null;
-
-  let toolName: string | null = null;
-  for (const b of blocks) {
-    if (b.type === "text" && b.text.trim()) return null;
-    if (b.type === "thinking") return null;
-    if (b.type === "tool_use") {
-      if (toolName === null) toolName = b.name;
-      else if (toolName !== b.name) return null;
-    }
-  }
-  return toolName;
-}
-
-function extractToolItems(msg: ChatMessage): ToolItem[] {
-  const blocks = msg.contentBlocks || [];
-  return blocks
-    .filter((b): b is ContentBlock & { type: "tool_use"; id: string; name: string; input: Record<string, unknown> } => b.type === "tool_use")
-    .map((b) => ({ id: b.id, name: b.name, input: b.input }));
-}
-
-/** Get Task tool_use IDs from a feed entry */
-function getTaskIdsFromEntry(entry: FeedEntry): string[] {
-  if (entry.kind === "message") {
-    const blocks = entry.msg.contentBlocks || [];
-    return blocks
-      .filter((b): b is Extract<ContentBlock, { type: "tool_use" }> => b.type === "tool_use")
-      .filter(b => b.name === "Task")
-      .map(b => b.id);
-  }
-  if (entry.kind === "tool_msg_group" && entry.toolName === "Task") {
-    return entry.items.map(item => item.id);
-  }
-  return [];
-}
-
-/** Group consecutive same-tool messages */
-function groupToolMessages(messages: ChatMessage[]): FeedEntry[] {
-  const entries: FeedEntry[] = [];
-
-  for (const msg of messages) {
-    const toolName = getToolOnlyName(msg);
-
-    if (toolName) {
-      const last = entries[entries.length - 1];
-      if (last?.kind === "tool_msg_group" && last.toolName === toolName) {
-        last.items.push(...extractToolItems(msg));
-        continue;
-      }
-      entries.push({
-        kind: "tool_msg_group",
-        toolName,
-        items: extractToolItems(msg),
-        firstId: msg.id,
-      });
-    } else {
-      entries.push({ kind: "message", msg });
-    }
-  }
-
-  return entries;
-}
-
-/** Build feed entries with subagent nesting */
-function buildEntries(
-  messages: ChatMessage[],
-  taskInfo: Map<string, { description: string; agentType: string }>,
-  childrenByParent: Map<string, ChatMessage[]>,
-): FeedEntry[] {
-  const grouped = groupToolMessages(messages);
-
-  const result: FeedEntry[] = [];
-  for (const entry of grouped) {
-    result.push(entry);
-
-    // After each entry containing Task tool_use(s), insert subagent groups
-    const taskIds = getTaskIdsFromEntry(entry);
-    for (const taskId of taskIds) {
-      const children = childrenByParent.get(taskId);
-      if (children && children.length > 0) {
-        const info = taskInfo.get(taskId) || { description: "Subagent", agentType: "" };
-        const childEntries = buildEntries(children, taskInfo, childrenByParent);
-        result.push({
-          kind: "subagent",
-          taskToolUseId: taskId,
-          description: info.description,
-          agentType: info.agentType,
-          children: childEntries,
-        });
-      }
-    }
-  }
-
-  return result;
-}
-
-function groupMessages(messages: ChatMessage[]): FeedEntry[] {
-  // Phase 1: Find all Task tool_use IDs across all messages
-  const taskInfo = new Map<string, { description: string; agentType: string }>();
-  for (const msg of messages) {
-    if (!msg.contentBlocks) continue;
-    for (const b of msg.contentBlocks) {
-      if (b.type === "tool_use" && b.name === "Task") {
-        const { input, id } = b;
-        taskInfo.set(id, {
-          description: String(input?.description || "Subagent"),
-          agentType: String(input?.subagent_type || ""),
-        });
-      }
-    }
-  }
-
-  // If no Task tool_uses found, skip the overhead
-  if (taskInfo.size === 0) {
-    return groupToolMessages(messages);
-  }
-
-  // Phase 2: Partition into top-level and child messages
-  const childrenByParent = new Map<string, ChatMessage[]>();
-  const topLevel: ChatMessage[] = [];
-
-  for (const msg of messages) {
-    if (msg.parentToolUseId && taskInfo.has(msg.parentToolUseId)) {
-      let arr = childrenByParent.get(msg.parentToolUseId);
-      if (!arr) { arr = []; childrenByParent.set(msg.parentToolUseId, arr); }
-      arr.push(msg);
-    } else {
-      topLevel.push(msg);
-    }
-  }
-
-  // Phase 3: Build grouped entries with subagent nesting
-  return buildEntries(topLevel, taskInfo, childrenByParent);
-}
 
 // ─── Components ──────────────────────────────────────────────────────────────
 
@@ -346,7 +180,8 @@ export function MessageFeed({ sessionId }: { sessionId: string }) {
 
   const grouped = useMemo(() => groupMessages(messages), [messages]);
 
-  // Tick elapsed time every second while generating
+  // Tick elapsed time every second while actively streaming; freeze once streaming stops
+  const isFinishing = sessionStatus === "running" && !streamingText;
   useEffect(() => {
     if (!streamingStartedAt && sessionStatus !== "running") {
       setElapsed(0);
@@ -354,9 +189,11 @@ export function MessageFeed({ sessionId }: { sessionId: string }) {
     }
     const start = streamingStartedAt || Date.now();
     setElapsed(Date.now() - start);
+    // Stop ticking once streaming ends (waiting for result event)
+    if (isFinishing) return;
     const interval = setInterval(() => setElapsed(Date.now() - start), 1000);
     return () => clearInterval(interval);
-  }, [streamingStartedAt, sessionStatus]);
+  }, [streamingStartedAt, sessionStatus, isFinishing]);
 
   // On session switch: reset near-bottom flag and jump to bottom immediately
   useEffect(() => {
@@ -424,17 +261,23 @@ export function MessageFeed({ sessionId }: { sessionId: string }) {
           {/* Generation stats bar */}
           {sessionStatus === "running" && elapsed > 0 && (
             <div className="flex items-center gap-1.5 text-[11px] text-cc-muted font-mono-code pl-9">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-cc-primary animate-pulse" />
-              <span>Generating...</span>
-              <span className="text-cc-muted/60">(</span>
-              <span>{formatElapsed(elapsed)}</span>
-              {(streamingOutputTokens ?? 0) > 0 && (
+              {isFinishing ? (
+                <span className="opacity-40">Working...</span>
+              ) : (
                 <>
-                  <span className="text-cc-muted/40">·</span>
-                  <span>↓ {formatTokens(streamingOutputTokens!)}</span>
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-cc-primary animate-pulse" />
+                  <span>Generating...</span>
+                  <span className="text-cc-muted/60">(</span>
+                  <span>{formatElapsed(elapsed)}</span>
+                  {(streamingOutputTokens ?? 0) > 0 && (
+                    <>
+                      <span className="text-cc-muted/40">·</span>
+                      <span>↓ {formatTokens(streamingOutputTokens!)}</span>
+                    </>
+                  )}
+                  <span className="text-cc-muted/60">)</span>
                 </>
               )}
-              <span className="text-cc-muted/60">)</span>
             </div>
           )}
 
