@@ -1,4 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
+import { join, normalize } from "node:path";
 
 // ─── Hoisted mocks ───────────────────────────────────────────────────────────
 
@@ -397,7 +398,7 @@ describe("ensureWorktree", () => {
     mockExistsSync.mockReturnValue(false);
 
     const result = await gitUtils.ensureWorktree("/repo", "feat/local");
-    expect(result.worktreePath).toBe("/fake/home/.companion/worktrees/repo/feat--local");
+    expect(result.worktreePath).toBe(normalize("/fake/home/.companion/worktrees/repo/feat--local"));
     expect(result.actualBranch).toBe("feat/local");
     expect(result.isNew).toBe(false);
 
@@ -507,7 +508,7 @@ describe("ensureWorktree", () => {
     await gitUtils.ensureWorktree("/repo", "feat/new");
 
     expect(mockMkdirSync).toHaveBeenCalledWith(
-      "/fake/home/.companion/worktrees/repo",
+      normalize("/fake/home/.companion/worktrees/repo"),
       { recursive: true },
     );
   });
@@ -537,7 +538,7 @@ describe("ensureWorktree", () => {
     const result = await gitUtils.ensureWorktree("/repo", "main");
     // Should NOT return the main repo path
     expect(result.worktreePath).not.toBe("/repo");
-    expect(result.worktreePath).toBe("/fake/home/.companion/worktrees/repo/main");
+    expect(result.worktreePath).toBe(normalize("/fake/home/.companion/worktrees/repo/main"));
     expect(result.branch).toBe("main");
     expect(result.actualBranch).toMatch(/^main-wt-\d{4}$/);
     // Should create a branch-tracking worktree
@@ -561,7 +562,7 @@ describe("ensureWorktree", () => {
       return Promise.reject(new Error(`Unmocked: ${cmd}`));
     });
     // Base path exists, random suffix path does not
-    const basePath = "/fake/home/.companion/worktrees/repo/feat--x";
+    const basePath = normalize("/fake/home/.companion/worktrees/repo/feat--x");
     mockExistsSync.mockImplementation((path: string) => {
       if (path === basePath) return true;
       return false; // Any random-suffixed path is free
@@ -597,7 +598,7 @@ describe("ensureWorktree", () => {
     mockExistsSync.mockReturnValue(false);
 
     const result = await gitUtils.ensureWorktree("/repo", "feat/existing", { forceNew: true });
-    expect(result.worktreePath).toBe("/fake/home/.companion/worktrees/repo/feat--existing");
+    expect(result.worktreePath).toBe(normalize("/fake/home/.companion/worktrees/repo/feat--existing"));
     expect(result.branch).toBe("feat/existing");
     expect(result.actualBranch).toMatch(/^feat\/existing-wt-\d{4}$/);
 

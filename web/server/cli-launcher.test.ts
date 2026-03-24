@@ -192,12 +192,13 @@ describe("launch", () => {
   });
 
   it("resolves binary path with `which`/`where` when not absolute", async () => {
-    launcher.launch({ claudeBinary: "claude-dev", cwd: "/tmp" });
+    // "claude" is the only bare name accepted by validateBinary
+    launcher.launch({ claudeBinary: "claude", cwd: "/tmp" });
     // Allow async binary resolution to complete
     await new Promise((r) => setTimeout(r, 20));
 
     const expectedBin = isWin ? "where" : "which";
-    expect(mockExecFile).toHaveBeenCalledWith(expectedBin, ["claude-dev"], {
+    expect(mockExecFile).toHaveBeenCalledWith(expectedBin, ["claude"], {
       encoding: "utf-8",
     });
   });
