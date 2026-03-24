@@ -1,11 +1,11 @@
 # GSD-T Progress
 
 ## Project: ClaudeWebCLI
-## Version: 0.12.10
+## Version: 0.13.10
 ## Current Milestone
 | # | Milestone | Status | Domains |
 |---|-----------|--------|---------|
-| 8 | Codebase Refactor & Stability | EXECUTED    | test-repair, client-decomposition, server-async, route-modularization, terminal-fix |
+| 8 | Codebase Refactor & Stability | COMPLETE    | test-repair, client-decomposition, server-async, route-modularization, terminal-fix |
 
 **Goal:** Fix all 96 failing tests, decompose monolithic client/server files into focused modules, migrate all sync I/O to async, modularize routes with validation, and fix terminal keyboard input bug. Zero test regressions, all files under 400 lines.
 
@@ -19,6 +19,7 @@
 ## Completed Milestones
 | # | Milestone | Version | Completed | Tag |
 |---|-----------|---------|-----------|-----|
+| 8 | Codebase Refactor & Stability | 0.13.10 | 2026-03-23 | v0.13.10 |
 | 7 | Session Resume List | 0.8.10 | 2026-03-04 | v0.8.10 |
 | 6 | DiffView + ProjectTabBar + TerminalPanel | 0.7.0 | 2026-02-24 | v0.7.0 |
 | 5 | Unified Voice Mode Selector | 0.6.0 | 2026-02-17 | v0.6.0 |
@@ -34,6 +35,7 @@
 | 2.1 | Fix Windows Path Test Failures | MEDIUM   | TD-011 |
 
 ## Decision Log
+- 2026-03-23 18:10: [success] M8 COMPLETE — v0.13.10. All 5 domains delivered: test-repair (1 fix), server-async (sync→async migration), client-decomposition (7 files decomposed into 20+ modules), route-modularization (routes.ts split into 5 modules + Zod), terminal-fix (already resolved). 570/575 tests pass, tsc 0 errors. Minor residual: store.ts 488 lines (down from 776), HomePage.tsx 416 (down from 692) — both near target. session-names.ts and worktree-tracker.ts retain sync I/O (out of scope, can be future debt).
 - 2026-03-23 17:56: [success] M8 Execute phase complete — all 4 waves done. Wave 1: test-repair (1 fix routes.test.ts, d7e722c) + terminal-fix (already resolved). Wave 2: server-async (all sync I/O → async, execFile w/ array args, 58f610a). Wave 3: client-decomposition (6 tasks — store.ts 776→488, ws.ts 615→223, Sidebar 678→252, Composer 653→353, HomePage 692→295). Wave 4: route-modularization (routes.ts 561→28, 5 route modules + Zod schemas, e3bdb94). TS fix commit 737f645. Final: 570/575 tests pass (5 pre-existing TD-011), tsc clean with 0 errors.
 - 2026-03-22 14:40: [milestone] Milestone 8 "Codebase Refactor & Stability" defined. Supersedes previously suggested M8 "Test Suite Repair" — expanded scope to include client decomposition (TD-005/006), server async I/O migration (TD-004/001), route modularization (TD-014), and terminal keyboard bug fix. Baseline: 496/592 tests pass (96 fail), tsc clean. Target version: 0.13.10 (minor bump). Complexity: Complex (5 domains). Auto-partitioning immediately.
 - 2026-03-20 12:50: [scan] Deep codebase scan #2 completed. 30 source + 19 test files analyzed (~13,200 source lines, ~11,000 test lines). Key findings: (1) CRITICAL test regression — 96 failures (up from 5), caused by ad-hoc polishing v0.9–v0.12 modifying source without updating tests. (2) File size growth — ws-bridge.ts 743→930, store.ts 510→776, ws.ts 465→615. (3) All 4 CRITICAL security items from scan #1 remain unaddressed. (4) 3 new debt items (TD-024 test regression, TD-025 dual polling, TD-026 STT worker TODO). (5) xterm deps no longer unused (TerminalPanel.tsx). (6) Contract drift on voice-mode-contract.md and store-contract.md. Suggested 2 urgent milestones: Test Suite Repair (TD-024+TD-007) and Security Hardening (TD-001–003+008–010+015+017–018). Previous techdebt archived to .gsd-t/archive/techdebt-2026-02-10.md.
