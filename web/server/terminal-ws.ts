@@ -1,4 +1,5 @@
 import * as pty from "node-pty";
+import path from "node:path";
 import type { ServerWebSocket } from "bun";
 import type { SocketData } from "./ws-bridge.js";
 
@@ -9,7 +10,10 @@ const processes = new Map<string, pty.IPty>();
 export function handleTerminalOpen(ws: TermWS): void {
   const data = ws.data;
   if (data.kind !== "terminal") return;
-  const { terminalId, cwd } = data;
+  const { terminalId } = data;
+  // Normalize cwd to OS-native path separators — node-pty on Windows
+  // requires backslashes, but the browser sends forward-slash paths.
+  const cwd = data.cwd ? path.normalize(data.cwd) : undefined;
 
   const isWindows = process.platform === "win32";
   const shell = isWindows ? "powershell.exe" : (process.env.SHELL || "bash");

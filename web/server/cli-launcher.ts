@@ -569,7 +569,7 @@ ${MARKER_END}`;
   }
 
   private pipeOutput(sessionId: string, proc: Subprocess): void {
-    mkdirSync(LOG_DIR, { recursive: true });
+    try { mkdirSync(LOG_DIR, { recursive: true }); } catch {}
     const logPath = join(LOG_DIR, `${sessionId}.log`);
     this.pruneLogFiles();
 
