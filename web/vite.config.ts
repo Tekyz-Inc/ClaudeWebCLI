@@ -15,10 +15,14 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5174,
     proxy: {
-      "/api": `http://localhost:${apiPort}`,
+      "/api": {
+        target: `http://localhost:${apiPort}`,
+        changeOrigin: false,
+      },
       "/ws": {
         target: `ws://localhost:${apiPort}`,
         ws: true,
+        changeOrigin: false,
       },
     },
   },

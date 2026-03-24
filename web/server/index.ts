@@ -23,6 +23,7 @@ import * as sessionNames from "./session-names.js";
 import type { SocketData } from "./ws-bridge.js";
 import { handleTerminalOpen, handleTerminalMessage, handleTerminalClose } from "./terminal-ws.js";
 import type { ServerWebSocket } from "bun";
+import { AUTH_TOKEN, createAuthMiddleware, validateWsToken } from "./auth.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageRoot = process.env.__VIBE_PACKAGE_ROOT || resolve(__dirname, "..");
@@ -112,7 +113,14 @@ console.log(`[server] Session persistence: ${sessionStore.directory}`);
 
 const app = new Hono();
 
-app.use("/api/*", cors());
+app.use("/api/*", cors({
+  origin: (origin) => {
+    if (!origin) return origin;
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return origin;
+    return null;
+  },
+}));
+app.use("/api/*", createAuthMiddleware());
 app.route("/api", createRoutes(launcher, wsBridge, sessionStore, worktreeTracker));
 
 // In production, serve built frontend using absolute path (works when installed as npm package)
@@ -124,15 +132,21 @@ if (process.env.NODE_ENV === "production") {
 
 const server = Bun.serve<SocketData>({
   port,
-  hostname: "0.0.0.0",
+  hostname: "127.0.0.1",
   reusePort: true,
   async fetch(req, server) {
     const url = new URL(req.url);
 
     // ── CLI WebSocket — Claude Code CLI connects here via --sdk-url ────
+    // CLI connections are authenticated via the Authorization header (Bearer token)
     const cliMatch = url.pathname.match(/^\/ws\/cli\/([a-f0-9-]+)$/);
     if (cliMatch) {
       const sessionId = cliMatch[1];
+      const authHeader = req.headers.get("Authorization");
+      const tokenFromHeader = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+      if (tokenFromHeader !== AUTH_TOKEN && !validateWsToken(req.url, AUTH_TOKEN)) {
+        return new Response("Unauthorized", { status: 401 });
+      }
       const upgraded = server.upgrade(req, {
         data: { kind: "cli" as const, sessionId },
       });
@@ -144,6 +158,9 @@ const server = Bun.serve<SocketData>({
     const browserMatch = url.pathname.match(/^\/ws\/browser\/([a-f0-9-]+)$/);
     if (browserMatch) {
       const sessionId = browserMatch[1];
+      if (!validateWsToken(req.url, AUTH_TOKEN)) {
+        return new Response("Unauthorized", { status: 401 });
+      }
       const upgraded = server.upgrade(req, {
         data: { kind: "browser" as const, sessionId },
       });
@@ -155,6 +172,9 @@ const server = Bun.serve<SocketData>({
     const terminalMatch = url.pathname.match(/^\/ws\/terminal\/([^/]+)$/);
     if (terminalMatch) {
       const terminalId = terminalMatch[1];
+      if (!validateWsToken(req.url, AUTH_TOKEN)) {
+        return new Response("Unauthorized", { status: 401 });
+      }
       const cwd = url.searchParams.get("cwd") || undefined;
       const upgraded = server.upgrade(req, {
         data: { kind: "terminal" as const, terminalId, cwd },
@@ -205,9 +225,10 @@ const server = Bun.serve<SocketData>({
 console.log(`Server running on http://localhost:${server.port}`);
 console.log(`  CLI WebSocket:     ws://localhost:${server.port}/ws/cli/:sessionId`);
 console.log(`  Browser WebSocket: ws://localhost:${server.port}/ws/browser/:sessionId`);
+console.log(`\nAccess URL: http://localhost:${server.port}?token=${AUTH_TOKEN}`);
 
 if (process.env.NODE_ENV !== "production") {
-  console.log("Dev mode: frontend at http://localhost:5174");
+  console.log(`Dev mode: http://localhost:5174?token=${AUTH_TOKEN}`);
 }
 
 // ── Reconnection watchdog ────────────────────────────────────────────────────

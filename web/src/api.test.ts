@@ -48,9 +48,8 @@ describe("listSessions", () => {
     const result = await api.listSessions();
 
     expect(mockFetch).toHaveBeenCalledOnce();
-    const [url, opts] = mockFetch.mock.calls[0];
+    const [url] = mockFetch.mock.calls[0];
     expect(url).toBe("/api/sessions");
-    expect(opts).toBeUndefined();
     expect(result).toEqual(sessions);
   });
 });

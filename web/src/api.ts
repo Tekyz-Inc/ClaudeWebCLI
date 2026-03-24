@@ -2,10 +2,34 @@ import type { SdkSessionInfo, ClaudeSession } from "./types.js";
 
 const BASE = "/api";
 
+// Read auth token from URL search params on page load
+let _authToken: string | null = null;
+try {
+  _authToken = new URLSearchParams(window.location.search).get("token");
+  if (_authToken) {
+    // Persist to sessionStorage so sub-navigations don't lose the token
+    sessionStorage.setItem("auth_token", _authToken);
+  } else {
+    _authToken = sessionStorage.getItem("auth_token");
+  }
+} catch {
+  // window not available (SSR / test environment)
+}
+
+export function getToken(): string | null {
+  return _authToken;
+}
+
+function authHeaders(extra?: Record<string, string>): Record<string, string> {
+  const headers: Record<string, string> = { ...extra };
+  if (_authToken) headers["Authorization"] = `Bearer ${_authToken}`;
+  return headers;
+}
+
 async function post<T = unknown>(path: string, body?: object): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders({ "Content-Type": "application/json" }),
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
@@ -16,7 +40,9 @@ async function post<T = unknown>(path: string, body?: object): Promise<T> {
 }
 
 async function get<T = unknown>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`);
+  const res = await fetch(`${BASE}${path}`, {
+    headers: authHeaders(),
+  });
   if (!res.ok) throw new Error(res.statusText);
   return res.json();
 }
@@ -24,7 +50,7 @@ async function get<T = unknown>(path: string): Promise<T> {
 async function put<T = unknown>(path: string, body?: object): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders({ "Content-Type": "application/json" }),
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
@@ -37,7 +63,7 @@ async function put<T = unknown>(path: string, body?: object): Promise<T> {
 async function patch<T = unknown>(path: string, body?: object): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders({ "Content-Type": "application/json" }),
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
@@ -50,7 +76,7 @@ async function patch<T = unknown>(path: string, body?: object): Promise<T> {
 async function del<T = unknown>(path: string, body?: object): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "DELETE",
-    headers: body ? { "Content-Type": "application/json" } : undefined,
+    headers: authHeaders(body ? { "Content-Type": "application/json" } : undefined),
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {

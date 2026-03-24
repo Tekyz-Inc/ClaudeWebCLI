@@ -1,4 +1,5 @@
 import { useStore } from "./store.js";
+import { getToken } from "./api.js";
 import type { BrowserIncomingMessage, BrowserOutgoingMessage } from "./types.js";
 import {
   handleSessionInit,
@@ -52,7 +53,9 @@ const RECONNECT_MAX_MS = 30000;
 
 function getWsUrl(sessionId: string): string {
   const proto = location.protocol === "https:" ? "wss:" : "ws:";
-  return `${proto}//${location.host}/ws/browser/${sessionId}`;
+  const token = getToken();
+  const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+  return `${proto}//${location.host}/ws/browser/${sessionId}${tokenParam}`;
 }
 
 function handleMessage(sessionId: string, event: MessageEvent) {
