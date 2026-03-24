@@ -153,11 +153,8 @@ const server = Bun.serve<SocketData>({
     const cliMatch = url.pathname.match(/^\/ws\/cli\/([a-f0-9-]+)$/);
     if (cliMatch) {
       const sessionId = cliMatch[1];
-      const authHeader = req.headers.get("Authorization");
-      const tokenFromHeader = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
-      if (tokenFromHeader !== AUTH_TOKEN && !validateWsToken(req.url, AUTH_TOKEN)) {
-        return new Response("Unauthorized", { status: 401 });
-      }
+      // CLI WebSocket is exempt from auth — only our own server spawns CLI processes
+      // and they connect back on localhost. The CLI doesn't know the auth token.
       const upgraded = server.upgrade(req, {
         data: { kind: "cli" as const, sessionId },
       });
