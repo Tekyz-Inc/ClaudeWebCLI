@@ -25,6 +25,7 @@ interface Props {
 
 export function TerminalPanel({ cwd, isVisible }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -33,10 +34,19 @@ export function TerminalPanel({ cwd, isVisible }: Props) {
   const idRef = useRef(Math.random().toString(36).slice(2, 10));
   const [connected, setConnected] = useState(false);
 
-  // Create terminal object + WebSocket once on mount.
-  // Do NOT call term.open() here — the container is zero-size until the panel
-  // first becomes visible, and xterm v6 requires non-zero dimensions at open time.
+  // Build or rebuild the WebSocket + xterm terminal.
+  // Runs on mount and whenever `cwd` changes so the shell always starts in the right directory.
   useEffect(() => {
+    // Tear down any previous terminal before creating a new one
+    observerRef.current?.disconnect();
+    observerRef.current = null;
+    wsRef.current?.close();
+    wsRef.current = null;
+    termRef.current?.dispose();
+    termRef.current = null;
+    fitRef.current = null;
+    openedRef.current = false;
+
     const term = new Terminal({
       cols: 80,
       rows: 24,
@@ -63,6 +73,7 @@ export function TerminalPanel({ cwd, isVisible }: Props) {
         const msg = JSON.parse(e.data) as { type: string; data?: string; code?: number };
         if (msg.type === "output" && msg.data) term.write(msg.data);
         else if (msg.type === "exit") term.writeln(`\r\n\x1b[33m● Exited (${msg.code})\x1b[0m`);
+        else if (msg.type === "error" && msg.data) term.writeln(`\r\n\x1b[31m● Error: ${msg.data}\x1b[0m`);
       } catch {}
     };
     ws.onclose = () => { setConnected(false); term.writeln("\r\n\x1b[31m● Disconnected\x1b[0m"); };
@@ -73,57 +84,91 @@ export function TerminalPanel({ cwd, isVisible }: Props) {
       }
     });
 
+    // If the panel is already open when cwd changes, attach xterm immediately
+    if (isVisible && containerRef.current && !openedRef.current) {
+      openedRef.current = true;
+      term.open(containerRef.current);
+      _attachResizeObserver(term, fit, containerRef.current);
+    }
+
     return () => {
       observerRef.current?.disconnect();
+      observerRef.current = null;
       ws.close();
       term.dispose();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cwd]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function _attachResizeObserver(term: Terminal, fit: FitAddon, container: HTMLDivElement) {
+    const observer = new ResizeObserver(() => {
+      if (!containerRef.current || containerRef.current.clientWidth < 10) return;
+      fit.fit();
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
+      }
+    });
+    observer.observe(container);
+    observerRef.current = observer;
+  }
 
   // When the panel becomes visible: open xterm into the DOM (first time only),
   // fit to container, then focus so keystrokes work immediately.
+  // Uses a one-shot ResizeObserver on the root div to detect when the panel
+  // has expanded to a non-zero width — this fires after the CSS slide transition
+  // completes, avoiding the overflow-hidden clipping that silently swallows keystrokes.
   useEffect(() => {
     if (!isVisible) return;
     const term = termRef.current;
     const fit = fitRef.current;
     const container = containerRef.current;
+    const panel = panelRef.current;
     if (!term || !fit || !container) return;
 
     // Attach xterm to the DOM the very first time the panel is shown
     if (!openedRef.current) {
       openedRef.current = true;
       term.open(container);
-
-      // Watch for resize after first open
-      const observer = new ResizeObserver(() => {
-        if (!containerRef.current || containerRef.current.clientWidth < 10) return;
-        fit.fit();
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-          wsRef.current.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
-        }
-      });
-      observer.observe(container);
-      observerRef.current = observer;
+      _attachResizeObserver(term, fit, container);
     }
 
-    // Fit + focus after the CSS slide transition completes (200ms in App.tsx).
-    // Focusing before the panel is fully expanded causes the xterm textarea to be
-    // clipped by overflow-hidden on the parent, silently swallowing all keystrokes.
-    const id = setTimeout(() => {
+    const fitAndFocus = () => {
       fit.fit();
       term.focus();
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
       }
-    }, 220);
+    };
 
-    return () => clearTimeout(id);
+    // Wait until the panel's root element has non-zero width (transition done),
+    // then fit+focus. Fall back to 300ms timeout if ResizeObserver never fires
+    // with sufficient width (e.g., panel is already open).
+    if (panel && panel.clientWidth > 10) {
+      // Panel already fully expanded (e.g., cwd changed while visible)
+      fitAndFocus();
+      return;
+    }
+
+    const fallbackId = setTimeout(fitAndFocus, 300);
+    let fired = false;
+    const sizeWatcher = new ResizeObserver(() => {
+      if (!panel || panel.clientWidth < 10 || fired) return;
+      fired = true;
+      sizeWatcher.disconnect();
+      clearTimeout(fallbackId);
+      fitAndFocus();
+    });
+    if (panel) sizeWatcher.observe(panel);
+
+    return () => {
+      clearTimeout(fallbackId);
+      sizeWatcher.disconnect();
+    };
   }, [isVisible]);
 
   const cwdLabel = cwd ? cwd.replace(/\\/g, "/").split("/").pop() : undefined;
 
   return (
-    <div className="h-full flex flex-col" style={{ background: DARK_THEME.background }}>
+    <div ref={panelRef} className="h-full flex flex-col" style={{ background: DARK_THEME.background }}>
       {/* Header */}
       <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-white/10">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5 text-white/50 shrink-0">

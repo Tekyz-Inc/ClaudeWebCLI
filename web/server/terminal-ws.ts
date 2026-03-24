@@ -15,13 +15,20 @@ export function handleTerminalOpen(ws: TermWS): void {
   const shell = isWindows ? "powershell.exe" : (process.env.SHELL || "bash");
   const args = isWindows ? ["-NoLogo"] : ["--login"];
 
-  const proc = pty.spawn(shell, args, {
-    name: "xterm-256color",
-    cols: 80,
-    rows: 24,
-    cwd: cwd || undefined,
-    env: process.env as Record<string, string>,
-  });
+  let proc: pty.IPty;
+  try {
+    proc = pty.spawn(shell, args, {
+      name: "xterm-256color",
+      cols: 80,
+      rows: 24,
+      cwd: cwd || undefined,
+      env: process.env as Record<string, string>,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    try { ws.send(JSON.stringify({ type: "error", data: `Failed to start terminal: ${msg}` })); } catch {}
+    return;
+  }
 
   processes.set(terminalId, proc);
 
