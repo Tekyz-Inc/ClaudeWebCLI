@@ -42,7 +42,8 @@
     "@tekyzinc/stt-component": "0.3.3",
     "highlight.js": "^11.11.1",
     "hono": "^4.7.0",
-    "node-pty": "^1.1.0"
+    "node-pty": "^1.1.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@codemirror/lang-css": "^6.3.1",
