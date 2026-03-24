@@ -18,6 +18,9 @@ export function useAutoResumeSession(): {
 } {
   const [nativeSessions, setNativeSessions] = useState<ClaudeSession[]>([]);
   const [resumingId, setResumingId] = useState<string | null>(null);
+  // Use a ref outside React's closure to track the last CWD we actually processed.
+  // This survives re-renders but resets on unmount — that's fine, because on
+  // remount we want to treat the current activeProjectCwd as a "first load".
   const prevCwdRef = useRef<string | null>(null);
   const activeProjectCwd = useStore((s) => s.activeProjectCwd);
   const resumeNativeSession = useStore((s) => s.resumeNativeSession);
@@ -31,8 +34,13 @@ export function useAutoResumeSession(): {
     }
 
     const prevCwd = prevCwdRef.current;
+    // A tab switch: CWD changed from a known previous value to a new one.
     const isTabSwitch = prevCwd !== null && prevCwd !== activeProjectCwd;
-    const isFirstLoad = prevCwd === null && !useStore.getState().currentSessionId;
+    // First load: no previous CWD known in this mount.
+    const isFirstLoad = prevCwd === null;
+    // Auto-resume whenever the project changes (tab switch or first mount).
+    // We don't gate on currentSessionId here — the resume logic below handles
+    // the case where a session already exists for this project.
     let shouldAutoResume = isTabSwitch || isFirstLoad;
     prevCwdRef.current = activeProjectCwd;
     let active = true;

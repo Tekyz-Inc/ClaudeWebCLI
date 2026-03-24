@@ -192,18 +192,74 @@ export function Sidebar() {
       )}
 
       <div className="flex-1 overflow-y-auto px-2 pb-2">
-        {nativeSessions.length === 0 ? (
-          <p className="px-3 py-8 text-xs text-cc-muted text-center leading-relaxed">
-            {activeProjectCwd ? "No sessions for this project." : "Select a project tab to see sessions."}
-          </p>
-        ) : (
-          <div className="pt-0.5">
-            <div className="px-2 py-0.5">
-              <span className="text-[9px] font-semibold text-cc-muted uppercase tracking-widest">Resume Sessions</span>
+        {(() => {
+          // Active bridge sessions for the current project (running or recently exited)
+          const pNorm = (activeProjectCwd || "").replace(/\\/g, "/");
+          const activeBridgeSessions = pNorm
+            ? sdkSessions.filter((s) => {
+                if (s.archived) return false;
+                const sCwd = (s.cwd || "").replace(/\\/g, "/");
+                return sCwd === pNorm || sCwd.startsWith(pNorm + "/");
+              })
+            : [];
+
+          // IDs already shown via native sessions so we don't duplicate
+          const nativeIds = new Set(nativeSessions.map((s) => s.id));
+          const bridgeOnlyIds = activeBridgeSessions.filter((s) => !nativeIds.has(s.sessionId));
+
+          const hasAnySessions = nativeSessions.length > 0 || bridgeOnlyIds.length > 0;
+
+          if (!hasAnySessions) {
+            return (
+              <p className="px-3 py-8 text-xs text-cc-muted text-center leading-relaxed">
+                {activeProjectCwd ? "No sessions for this project." : "Select a project tab to see sessions."}
+              </p>
+            );
+          }
+
+          return (
+            <div className="pt-0.5">
+              {bridgeOnlyIds.length > 0 && (
+                <>
+                  <div className="px-2 py-0.5">
+                    <span className="text-[9px] font-semibold text-cc-muted uppercase tracking-widest">Active Sessions</span>
+                  </div>
+                  <div>
+                    {bridgeOnlyIds.map((s) => {
+                      const isCurrent = currentSessionId === s.sessionId;
+                      const status = sessionStatus.get(s.sessionId);
+                      const label = sessionNames.get(s.sessionId) || s.name || s.sessionId.slice(0, 8);
+                      return (
+                        <button
+                          key={s.sessionId}
+                          onClick={() => handleSelectSession(s.sessionId)}
+                          className={`w-full px-2 py-px text-left rounded-[6px] hover:bg-cc-hover transition-colors cursor-pointer ${isCurrent ? "bg-cc-hover" : ""}`}
+                        >
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            {status === "running" ? (
+                              <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                            ) : (
+                              <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-cc-muted/40" />
+                            )}
+                            <span className="text-[10px] text-cc-fg/75 truncate">{label}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+              {nativeSessions.length > 0 && (
+                <>
+                  <div className="px-2 py-0.5">
+                    <span className="text-[9px] font-semibold text-cc-muted uppercase tracking-widest">Resume Sessions</span>
+                  </div>
+                  <div>{nativeSessions.map((s) => renderNativeSessionItem(s))}</div>
+                </>
+              )}
             </div>
-            <div>{nativeSessions.map((s) => renderNativeSessionItem(s))}</div>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       <div className="px-3 py-1.5 border-t border-cc-border flex items-center justify-between">
