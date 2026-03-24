@@ -6,6 +6,7 @@ import type { WorktreeTracker } from "../worktree-tracker.js";
 import * as envManager from "../env-manager.js";
 import * as gitUtils from "../git-utils.js";
 import * as sessionNames from "../session-names.js";
+import { z } from "zod";
 import { CreateSessionBody, PatchSessionNameBody, ArchiveSessionBody } from "./schemas.js";
 import { cleanupWorktree } from "./worktree-helper.js";
 
@@ -22,7 +23,7 @@ export function registerSessionRoutes(api: Hono, deps: Deps): void {
   api.post("/sessions/create", async (c) => {
     const raw = await c.req.json().catch(() => ({}));
     const parsed = CreateSessionBody.safeParse(raw);
-    const body = parsed.success ? parsed.data : raw as typeof parsed.data;
+    const body = (parsed.success ? parsed.data : raw) as z.infer<typeof CreateSessionBody>;
     try {
       let envVars: Record<string, string> | undefined = body.env;
       if (body.envSlug) {

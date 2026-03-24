@@ -3,7 +3,18 @@
 ## Project: ClaudeWebCLI
 ## Version: 0.12.10
 ## Current Milestone
-None — ready for next milestone
+| # | Milestone | Status | Domains |
+|---|-----------|--------|---------|
+| 8 | Codebase Refactor & Stability | PARTITIONED | test-repair, client-decomposition, server-async, route-modularization, terminal-fix |
+
+**Goal:** Fix all 96 failing tests, decompose monolithic client/server files into focused modules, migrate all sync I/O to async, modularize routes with validation, and fix terminal keyboard input bug. Zero test regressions, all files under 400 lines.
+
+**Success Criteria:**
+1. 0 test failures (currently 96) — all tests green
+2. No source file exceeds 400 lines (currently 8 files over 400)
+3. Zero `execSync`/`readFileSync`/`writeFileSync` in server request paths
+4. Terminal panel keyboard input works on slide-out
+5. TypeScript strict mode passes with zero errors
 
 ## Completed Milestones
 | # | Milestone | Version | Completed | Tag |
@@ -19,9 +30,12 @@ None — ready for next milestone
 ## Upcoming
 | # | Milestone | Priority | Source |
 |---|-----------|----------|--------|
-| 2.1 | Fix Windows Path Test Failures | MEDIUM | TD-011 |
+| 9 | Security Hardening             | CRITICAL | TD-001–003, TD-008–010, TD-015, TD-017–018 (scan 2026-03-20) |
+| 2.1 | Fix Windows Path Test Failures | MEDIUM   | TD-011 |
 
 ## Decision Log
+- 2026-03-22 14:40: [milestone] Milestone 8 "Codebase Refactor & Stability" defined. Supersedes previously suggested M8 "Test Suite Repair" — expanded scope to include client decomposition (TD-005/006), server async I/O migration (TD-004/001), route modularization (TD-014), and terminal keyboard bug fix. Baseline: 496/592 tests pass (96 fail), tsc clean. Target version: 0.13.10 (minor bump). Complexity: Complex (5 domains). Auto-partitioning immediately.
+- 2026-03-20 12:50: [scan] Deep codebase scan #2 completed. 30 source + 19 test files analyzed (~13,200 source lines, ~11,000 test lines). Key findings: (1) CRITICAL test regression — 96 failures (up from 5), caused by ad-hoc polishing v0.9–v0.12 modifying source without updating tests. (2) File size growth — ws-bridge.ts 743→930, store.ts 510→776, ws.ts 465→615. (3) All 4 CRITICAL security items from scan #1 remain unaddressed. (4) 3 new debt items (TD-024 test regression, TD-025 dual polling, TD-026 STT worker TODO). (5) xterm deps no longer unused (TerminalPanel.tsx). (6) Contract drift on voice-mode-contract.md and store-contract.md. Suggested 2 urgent milestones: Test Suite Repair (TD-024+TD-007) and Security Hardening (TD-001–003+008–010+015+017–018). Previous techdebt archived to .gsd-t/archive/techdebt-2026-02-10.md.
 - 2026-03-06 14:25: [ad-hoc] v0.10.14→0.10.15 — UI polish + prompt latency fix. ProjectTabBar: replaced overflow dropdown with horizontal scroll + left/right chevron arrows; Barlow Condensed font, data-active attr for scrollIntoView. TopBar: added + New Session button left of Chat/Editor toggle; Barlow Condensed on all tab/toggle labels. Sidebar: default collapsed (sidebarOpen:false), auto-resume most recent session on first load, removed redundant + button from Resume Sessions header. Composer: optimistic setSessionStatus("running") on send so Thinking indicator and stop button appear immediately (was 10-30s delay). Barlow Condensed typography + tabs-scroll CSS added to index.css + index.html.
 - 2026-03-06 12:00: [visualize] Launched GSD-T dashboard at http://localhost:7433 — real-time SSE agent visualization. Server spawned in detached mode on port 7433, browser auto-opened.
 - 2026-03-05 10:30: [ad-hoc] v0.10.13→0.10.14 — Kill All Sessions button in sidebar footer. handleKillAll calls api.killSession on all non-archived, non-exited sdkSessions. Stop-circle icon, hover:text-red-400.

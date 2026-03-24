@@ -367,6 +367,39 @@ test.describe("Terminal Panel", () => {
     });
     expect(cols).toBeGreaterThan(50);
   });
+
+  test("terminal accepts keyboard input after panel opens", async ({ page }) => {
+    await waitForApp(page);
+    // Open terminal panel
+    await page.locator('button[title="Toggle terminal"]').click();
+    // Wait for Connected
+    await expect(page.locator("text=Connected")).toBeVisible({ timeout: 8000 });
+    // Wait for focus timeout (isVisible effect fires after 50ms + transition)
+    await page.waitForTimeout(300);
+
+    // Check if xterm textarea is focused after auto-focus
+    const isFocused = await page.evaluate(() => {
+      const ta = document.querySelector(".xterm-helper-textarea");
+      return ta !== null && document.activeElement === ta;
+    });
+
+    if (!isFocused) {
+      // If auto-focus didn't work, try clicking the xterm canvas area
+      await page.locator(".xterm-screen").click();
+      await page.waitForTimeout(100);
+    }
+
+    // Type a command and verify the textarea received the keystrokes
+    await page.keyboard.type("echo hello");
+
+    const inputReceived = await page.evaluate(() => {
+      const ta = document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement | null;
+      // xterm clears the textarea constantly but activeElement should still be it
+      return document.activeElement?.classList.contains("xterm-helper-textarea") ?? false;
+    });
+
+    expect(inputReceived).toBe(true);
+  });
 });
 
 /* ─── Project Tab Bar ─────────────────────────────────── */

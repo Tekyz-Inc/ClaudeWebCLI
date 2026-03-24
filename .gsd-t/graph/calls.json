@@ -1,0 +1,3274 @@
+{
+  "edges": [
+    {
+      "caller": "web/dev.ts:46:_caller",
+      "callee": "web/dev.ts:20:prefix",
+      "line": 46
+    },
+    {
+      "caller": "web/dev.ts:47:_caller",
+      "callee": "web/dev.ts:20:prefix",
+      "line": 47
+    },
+    {
+      "caller": "web/dev.ts:57:_caller",
+      "callee": "web/dev.ts:20:prefix",
+      "line": 57
+    },
+    {
+      "caller": "web/dev.ts:58:_caller",
+      "callee": "web/dev.ts:20:prefix",
+      "line": 58
+    },
+    {
+      "caller": "web/dev.ts:72:_caller",
+      "callee": "web/dev.ts:61:cleanup",
+      "line": 72
+    },
+    {
+      "caller": "web/server/auto-namer.test.ts:36:_caller",
+      "callee": "web/server/auto-namer.test.ts:20:makeStdout",
+      "line": 36
+    },
+    {
+      "caller": "web/server/auto-namer.test.ts:47:_caller",
+      "callee": "web/server/auto-namer.test.ts:20:makeStdout",
+      "line": 47
+    },
+    {
+      "caller": "web/server/auto-namer.test.ts:58:_caller",
+      "callee": "web/server/auto-namer.test.ts:20:makeStdout",
+      "line": 58
+    },
+    {
+      "caller": "web/server/auto-namer.test.ts:70:_caller",
+      "callee": "web/server/auto-namer.test.ts:20:makeStdout",
+      "line": 70
+    },
+    {
+      "caller": "web/server/auto-namer.test.ts:81:_caller",
+      "callee": "web/server/auto-namer.test.ts:20:makeStdout",
+      "line": 81
+    },
+    {
+      "caller": "web/server/auto-namer.test.ts:92:_caller",
+      "callee": "web/server/auto-namer.test.ts:20:makeStdout",
+      "line": 92
+    },
+    {
+      "caller": "web/server/auto-namer.test.ts:103:_caller",
+      "callee": "web/server/auto-namer.test.ts:20:makeStdout",
+      "line": 103
+    },
+    {
+      "caller": "web/server/auto-namer.test.ts:115:_caller",
+      "callee": "web/server/auto-namer.test.ts:20:makeStdout",
+      "line": 115
+    },
+    {
+      "caller": "web/server/auto-namer.test.ts:130:_caller",
+      "callee": "web/server/auto-namer.test.ts:20:makeStdout",
+      "line": 130
+    },
+    {
+      "caller": "web/server/auto-namer.test.ts:145:_caller",
+      "callee": "web/server/auto-namer.test.ts:20:makeStdout",
+      "line": 145
+    },
+    {
+      "caller": "web/server/auto-namer.test.ts:169:_caller",
+      "callee": "web/server/auto-namer.test.ts:20:makeStdout",
+      "line": 169
+    },
+    {
+      "caller": "web/server/claude-sessions.test.ts:31:_caller",
+      "callee": "web/server/claude-sessions.test.ts:31:makeTempDir",
+      "line": 31
+    },
+    {
+      "caller": "web/server/claude-sessions.test.ts:71:_caller",
+      "callee": "web/server/claude-sessions.test.ts:42:makeUserLine",
+      "line": 71
+    },
+    {
+      "caller": "web/server/claude-sessions.test.ts:89:_caller",
+      "callee": "web/server/claude-sessions.test.ts:42:makeUserLine",
+      "line": 89
+    },
+    {
+      "caller": "web/server/claude-sessions.test.ts:102:_caller",
+      "callee": "web/server/claude-sessions.test.ts:42:makeUserLine",
+      "line": 102
+    },
+    {
+      "caller": "web/server/claude-sessions.test.ts:118:_caller",
+      "callee": "web/server/claude-sessions.test.ts:42:makeUserLine",
+      "line": 118
+    },
+    {
+      "caller": "web/server/claude-sessions.test.ts:126:_caller",
+      "callee": "web/server/claude-sessions.test.ts:42:makeUserLine",
+      "line": 126
+    },
+    {
+      "caller": "web/server/claude-sessions.test.ts:155:_caller",
+      "callee": "web/server/claude-sessions.test.ts:42:makeUserLine",
+      "line": 155
+    },
+    {
+      "caller": "web/server/claude-sessions.ts:116:_caller",
+      "callee": "web/server/claude-sessions.ts:60:readClaudeSessionsFromDir",
+      "line": 116
+    },
+    {
+      "caller": "web/server/cli-launcher.test.ts:96:_caller",
+      "callee": "web/server/cli-launcher.test.ts:66:createMockProc",
+      "line": 96
+    },
+    {
+      "caller": "web/server/cli-launcher.test.ts:322:_caller",
+      "callee": "web/server/cli-launcher.test.ts:66:createMockProc",
+      "line": 322
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:77:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 77
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:87:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 87
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:89:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 89
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:92:_caller",
+      "callee": "web/server/cli-launcher.ts:92:for",
+      "line": 92
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:93:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 93
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:96:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 96
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:113:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 113
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:137:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 137
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:145:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 145
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:161:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 161
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:165:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 165
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:174:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 174
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:198:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 198
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:206:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 206
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:210:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 210
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:231:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 231
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:234:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 234
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:237:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 237
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:238:_caller",
+      "callee": "web/server/cli-launcher.ts:92:for",
+      "line": 238
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:244:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 244
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:256:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 256
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:289:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 289
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:296:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 296
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:314:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 314
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:320:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 320
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:350:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 350
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:353:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 353
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:375:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 375
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:388:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 388
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:399:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 399
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:412:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 412
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:422:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 422
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:428:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 428
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:464:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 464
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:473:_caller",
+      "callee": "web/server/cli-launcher.ts:473:removeSession",
+      "line": 473
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:484:_caller",
+      "callee": "web/server/cli-launcher.ts:92:for",
+      "line": 484
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:485:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 485
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:512:_caller",
+      "callee": "web/server/cli-launcher.ts:512:while",
+      "line": 512
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:525:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 525
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:530:_caller",
+      "callee": "web/server/cli-launcher.ts:512:while",
+      "line": 530
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:532:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 532
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:534:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 534
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:536:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 536
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:555:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 555
+    },
+    {
+      "caller": "web/server/cli-launcher.ts:558:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 558
+    },
+    {
+      "caller": "web/server/env-manager.test.ts:106:_caller",
+      "callee": "web/server/env-manager.test.ts:40:envsDir",
+      "line": 106
+    },
+    {
+      "caller": "web/server/env-manager.ts:49:_caller",
+      "callee": "web/server/env-manager.ts:27:ensureDir",
+      "line": 49
+    },
+    {
+      "caller": "web/server/env-manager.ts:69:_caller",
+      "callee": "web/server/env-manager.ts:27:ensureDir",
+      "line": 69
+    },
+    {
+      "caller": "web/server/env-manager.ts:86:_caller",
+      "callee": "web/server/env-manager.ts:27:ensureDir",
+      "line": 86
+    },
+    {
+      "caller": "web/server/env-manager.ts:87:_caller",
+      "callee": "web/server/env-manager.ts:31:filePath",
+      "line": 87
+    },
+    {
+      "caller": "web/server/env-manager.ts:99:_caller",
+      "callee": "web/server/env-manager.ts:31:filePath",
+      "line": 99
+    },
+    {
+      "caller": "web/server/env-manager.ts:107:_caller",
+      "callee": "web/server/env-manager.ts:27:ensureDir",
+      "line": 107
+    },
+    {
+      "caller": "web/server/env-manager.ts:116:_caller",
+      "callee": "web/server/env-manager.ts:31:filePath",
+      "line": 116
+    },
+    {
+      "caller": "web/server/env-manager.ts:130:_caller",
+      "callee": "web/server/env-manager.ts:31:filePath",
+      "line": 130
+    },
+    {
+      "caller": "web/server/env-manager.ts:133:_caller",
+      "callee": "web/server/env-manager.ts:31:filePath",
+      "line": 133
+    },
+    {
+      "caller": "web/server/env-manager.ts:138:_caller",
+      "callee": "web/server/env-manager.ts:27:ensureDir",
+      "line": 138
+    },
+    {
+      "caller": "web/server/env-manager.ts:139:_caller",
+      "callee": "web/server/env-manager.ts:31:filePath",
+      "line": 139
+    },
+    {
+      "caller": "web/server/env-manager.ts:141:_caller",
+      "callee": "web/server/env-manager.ts:31:filePath",
+      "line": 141
+    },
+    {
+      "caller": "web/server/git-utils.test.ts:70:_caller",
+      "callee": "web/server/git-utils.test.ts:32:mockGitCommands",
+      "line": 70
+    },
+    {
+      "caller": "web/server/git-utils.test.ts:88:_caller",
+      "callee": "web/server/git-utils.test.ts:32:mockGitCommands",
+      "line": 88
+    },
+    {
+      "caller": "web/server/git-utils.test.ts:115:_caller",
+      "callee": "web/server/git-utils.test.ts:32:mockGitCommands",
+      "line": 115
+    },
+    {
+      "caller": "web/server/git-utils.test.ts:626:_caller",
+      "callee": "web/server/git-utils.test.ts:23:mockGitCommand",
+      "line": 626
+    },
+    {
+      "caller": "web/server/git-utils.test.ts:640:_caller",
+      "callee": "web/server/git-utils.test.ts:32:mockGitCommands",
+      "line": 640
+    },
+    {
+      "caller": "web/server/git-utils.test.ts:674:_caller",
+      "callee": "web/server/git-utils.test.ts:23:mockGitCommand",
+      "line": 674
+    },
+    {
+      "caller": "web/server/git-utils.test.ts:720:_caller",
+      "callee": "web/server/git-utils.test.ts:23:mockGitCommand",
+      "line": 720
+    },
+    {
+      "caller": "web/server/git-utils.test.ts:727:_caller",
+      "callee": "web/server/git-utils.test.ts:23:mockGitCommand",
+      "line": 727
+    },
+    {
+      "caller": "web/server/git-utils.test.ts:737:_caller",
+      "callee": "web/server/git-utils.test.ts:23:mockGitCommand",
+      "line": 737
+    },
+    {
+      "caller": "web/server/git-utils.test.ts:756:_caller",
+      "callee": "web/server/git-utils.test.ts:23:mockGitCommand",
+      "line": 756
+    },
+    {
+      "caller": "web/server/git-utils.ts:51:_caller",
+      "callee": "web/server/git-utils.ts:46:sanitizeBranch",
+      "line": 51
+    },
+    {
+      "caller": "web/server/git-utils.ts:67:_caller",
+      "callee": "web/server/git-utils.ts:56:git",
+      "line": 67
+    },
+    {
+      "caller": "web/server/git-utils.ts:201:_caller",
+      "callee": "web/server/git-utils.ts:330:isWorktreeDirty",
+      "line": 201
+    },
+    {
+      "caller": "web/server/git-utils.ts:244:_caller",
+      "callee": "web/server/git-utils.ts:56:git",
+      "line": 244
+    },
+    {
+      "caller": "web/server/git-utils.ts:250:_caller",
+      "callee": "web/server/git-utils.ts:65:gitSafe",
+      "line": 250
+    },
+    {
+      "caller": "web/server/git-utils.ts:252:_caller",
+      "callee": "web/server/git-utils.ts:65:gitSafe",
+      "line": 252
+    },
+    {
+      "caller": "web/server/git-utils.ts:256:_caller",
+      "callee": "web/server/git-utils.ts:56:git",
+      "line": 256
+    },
+    {
+      "caller": "web/server/git-utils.ts:262:_caller",
+      "callee": "web/server/git-utils.ts:56:git",
+      "line": 262
+    },
+    {
+      "caller": "web/server/git-utils.ts:269:_caller",
+      "callee": "web/server/git-utils.ts:56:git",
+      "line": 269
+    },
+    {
+      "caller": "web/server/git-utils.ts:285:_caller",
+      "callee": "web/server/git-utils.ts:65:gitSafe",
+      "line": 285
+    },
+    {
+      "caller": "web/server/git-utils.ts:300:_caller",
+      "callee": "web/server/git-utils.ts:65:gitSafe",
+      "line": 300
+    },
+    {
+      "caller": "web/server/git-utils.ts:302:_caller",
+      "callee": "web/server/git-utils.ts:65:gitSafe",
+      "line": 302
+    },
+    {
+      "caller": "web/server/git-utils.ts:307:_caller",
+      "callee": "web/server/git-utils.ts:330:isWorktreeDirty",
+      "line": 307
+    },
+    {
+      "caller": "web/server/git-utils.ts:316:_caller",
+      "callee": "web/server/git-utils.ts:56:git",
+      "line": 316
+    },
+    {
+      "caller": "web/server/git-utils.ts:319:_caller",
+      "callee": "web/server/git-utils.ts:65:gitSafe",
+      "line": 319
+    },
+    {
+      "caller": "web/server/git-utils.ts:358:_caller",
+      "callee": "web/server/git-utils.ts:56:git",
+      "line": 358
+    },
+    {
+      "caller": "web/server/routes.test.ts:90:_caller",
+      "callee": "web/server/routes.test.ts:42:createMockLauncher",
+      "line": 90
+    },
+    {
+      "caller": "web/server/routes.test.ts:91:_caller",
+      "callee": "web/server/routes.test.ts:59:createMockBridge",
+      "line": 91
+    },
+    {
+      "caller": "web/server/routes.test.ts:92:_caller",
+      "callee": "web/server/routes.test.ts:65:createMockStore",
+      "line": 92
+    },
+    {
+      "caller": "web/server/routes.test.ts:93:_caller",
+      "callee": "web/server/routes.test.ts:71:createMockTracker",
+      "line": 93
+    },
+    {
+      "caller": "web/server/routes.ts:153:_caller",
+      "callee": "web/server/routes.ts:153:readCommandDir",
+      "line": 153
+    },
+    {
+      "caller": "web/server/routes.ts:178:_caller",
+      "callee": "web/server/routes.ts:153:readCommandDir",
+      "line": 178
+    },
+    {
+      "caller": "web/server/routes.ts:306:_caller",
+      "callee": "web/server/routes.ts:306:buildTree",
+      "line": 306
+    },
+    {
+      "caller": "web/server/session-names.ts:41:_caller",
+      "callee": "web/server/session-names.ts:20:ensureLoaded",
+      "line": 41
+    },
+    {
+      "caller": "web/server/session-names.ts:46:_caller",
+      "callee": "web/server/session-names.ts:20:ensureLoaded",
+      "line": 46
+    },
+    {
+      "caller": "web/server/session-names.ts:48:_caller",
+      "callee": "web/server/session-names.ts:33:persist",
+      "line": 48
+    },
+    {
+      "caller": "web/server/session-names.ts:52:_caller",
+      "callee": "web/server/session-names.ts:20:ensureLoaded",
+      "line": 52
+    },
+    {
+      "caller": "web/server/session-names.ts:57:_caller",
+      "callee": "web/server/session-names.ts:20:ensureLoaded",
+      "line": 57
+    },
+    {
+      "caller": "web/server/session-names.ts:59:_caller",
+      "callee": "web/server/session-names.ts:33:persist",
+      "line": 59
+    },
+    {
+      "caller": "web/server/session-store.test.ts:167:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 167
+    },
+    {
+      "caller": "web/server/session-store.test.ts:168:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 168
+    },
+    {
+      "caller": "web/server/session-store.test.ts:169:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 169
+    },
+    {
+      "caller": "web/server/session-store.test.ts:177:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 177
+    },
+    {
+      "caller": "web/server/session-store.test.ts:186:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 186
+    },
+    {
+      "caller": "web/server/session-store.test.ts:204:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 204
+    },
+    {
+      "caller": "web/server/session-store.test.ts:214:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 214
+    },
+    {
+      "caller": "web/server/session-store.test.ts:233:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 233
+    },
+    {
+      "caller": "web/server/session-store.ts:37:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 37
+    },
+    {
+      "caller": "web/server/session-store.ts:70:_caller",
+      "callee": "web/server/cli-launcher.ts:92:for",
+      "line": 70
+    },
+    {
+      "caller": "web/server/session-store.ts:87:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 87
+    },
+    {
+      "caller": "web/server/session-store.ts:96:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 96
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:61:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:56:trackerFilePath",
+      "line": 61
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:76:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:56:trackerFilePath",
+      "line": 76
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:84:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:56:trackerFilePath",
+      "line": 84
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:120:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "line": 120
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:121:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "line": 121
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:122:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "line": 122
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:174:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "line": 174
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:175:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "line": 175
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:176:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "line": 176
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:185:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "line": 185
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:197:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "line": 197
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:198:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "line": 198
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:199:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "line": 199
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:218:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "line": 218
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:230:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "line": 230
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:237:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "line": 237
+    },
+    {
+      "caller": "web/server/worktree-tracker.test.ts:238:_caller",
+      "callee": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "line": 238
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:23:_caller",
+      "callee": "web/server/ws-bridge.test.ts:13:createMockSocket",
+      "line": 23
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:27:_caller",
+      "callee": "web/server/ws-bridge.test.ts:13:createMockSocket",
+      "line": 27
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:212:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 212
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:235:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 235
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:248:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 248
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:283:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 283
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:484:_caller",
+      "callee": "web/server/ws-bridge.test.ts:22:makeCliSocket",
+      "line": 484
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:485:_caller",
+      "callee": "web/server/ws-bridge.test.ts:26:makeBrowserSocket",
+      "line": 485
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:739:_caller",
+      "callee": "web/server/ws-bridge.test.ts:22:makeCliSocket",
+      "line": 739
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:740:_caller",
+      "callee": "web/server/ws-bridge.test.ts:26:makeBrowserSocket",
+      "line": 740
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:1029:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 1029
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:1109:_caller",
+      "callee": "web/server/ws-bridge.test.ts:22:makeCliSocket",
+      "line": 1109
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:1110:_caller",
+      "callee": "web/server/ws-bridge.test.ts:26:makeBrowserSocket",
+      "line": 1110
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:1181:_caller",
+      "callee": "web/server/ws-bridge.test.ts:22:makeCliSocket",
+      "line": 1181
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:1182:_caller",
+      "callee": "web/server/ws-bridge.test.ts:26:makeBrowserSocket",
+      "line": 1182
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:1508:_caller",
+      "callee": "web/server/ws-bridge.test.ts:22:makeCliSocket",
+      "line": 1508
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:1509:_caller",
+      "callee": "web/server/ws-bridge.test.ts:26:makeBrowserSocket",
+      "line": 1509
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:1850:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 1850
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:1885:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 1885
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:1939:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 1939
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:1972:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 1972
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:2023:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 2023
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:2051:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 2051
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:2062:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 2062
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:2113:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 2113
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:2141:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 2141
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:2173:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 2173
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:2203:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 2203
+    },
+    {
+      "caller": "web/server/ws-bridge.test.ts:2328:_caller",
+      "callee": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "line": 2328
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:146:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 146
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:149:_caller",
+      "callee": "web/server/cli-launcher.ts:92:for",
+      "line": 149
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:150:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 150
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:170:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 170
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:175:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 175
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:183:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 183
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:197:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 197
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:202:_caller",
+      "callee": "web/server/ws-bridge.ts:71:makeDefaultState",
+      "line": 202
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:236:_caller",
+      "callee": "web/server/cli-launcher.ts:473:removeSession",
+      "line": 236
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:245:_caller",
+      "callee": "web/server/ws-bridge.ts:245:closeSession",
+      "line": 245
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:247:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 247
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:250:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 250
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:257:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 257
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:263:_caller",
+      "callee": "web/server/cli-launcher.ts:92:for",
+      "line": 263
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:275:_caller",
+      "callee": "web/server/ws-bridge.ts:275:handleCLIOpen",
+      "line": 275
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:283:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 283
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:285:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 285
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:293:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 293
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:295:_caller",
+      "callee": "web/server/cli-launcher.ts:92:for",
+      "line": 295
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:302:_caller",
+      "callee": "web/server/ws-bridge.ts:302:handleCLIMessage",
+      "line": 302
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:306:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 306
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:310:_caller",
+      "callee": "web/server/cli-launcher.ts:92:for",
+      "line": 310
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:322:_caller",
+      "callee": "web/server/ws-bridge.ts:322:handleCLIClose",
+      "line": 322
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:325:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 325
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:328:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 328
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:338:_caller",
+      "callee": "web/server/cli-launcher.ts:92:for",
+      "line": 338
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:346:_caller",
+      "callee": "web/server/ws-bridge.ts:346:handleBrowserOpen",
+      "line": 346
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:349:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 349
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:361:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 361
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:369:_caller",
+      "callee": "web/server/cli-launcher.ts:92:for",
+      "line": 369
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:374:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 374
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:376:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 376
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:382:_caller",
+      "callee": "web/server/ws-bridge.ts:382:handleBrowserMessage",
+      "line": 382
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:386:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 386
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:399:_caller",
+      "callee": "web/server/ws-bridge.ts:399:handleBrowserClose",
+      "line": 399
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:402:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 402
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:414:_caller",
+      "callee": "web/server/ws-bridge.ts:414:switch",
+      "line": 414
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:461:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 461
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:465:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 465
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:474:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 474
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:477:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 477
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:487:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 487
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:502:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 502
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:548:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 548
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:551:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 551
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:586:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 586
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:589:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 589
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:594:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 594
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:595:_caller",
+      "callee": "web/server/cli-launcher.ts:92:for",
+      "line": 595
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:596:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 596
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:615:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 615
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:624:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 624
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:630:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 630
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:637:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 637
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:655:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 655
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:705:_caller",
+      "callee": "web/server/ws-bridge.ts:414:switch",
+      "line": 705
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:741:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 741
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:743:_caller",
+      "callee": "web/server/cli-launcher.ts:92:for",
+      "line": 743
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:749:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 749
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:782:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 782
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:787:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 787
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:849:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 849
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:854:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 854
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:857:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 857
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:859:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 859
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:882:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 882
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:891:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 891
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:908:_caller",
+      "callee": "web/server/cli-launcher.ts:96:if",
+      "line": 908
+    },
+    {
+      "caller": "web/server/ws-bridge.ts:914:_caller",
+      "callee": "web/server/cli-launcher.ts:92:for",
+      "line": 914
+    },
+    {
+      "caller": "web/src/api.test.ts:26:_caller",
+      "callee": "web/src/api.test.ts:7:mockResponse",
+      "line": 26
+    },
+    {
+      "caller": "web/src/api.test.ts:46:_caller",
+      "callee": "web/src/api.test.ts:7:mockResponse",
+      "line": 46
+    },
+    {
+      "caller": "web/src/api.test.ts:63:_caller",
+      "callee": "web/src/api.test.ts:7:mockResponse",
+      "line": 63
+    },
+    {
+      "caller": "web/src/api.test.ts:78:_caller",
+      "callee": "web/src/api.test.ts:7:mockResponse",
+      "line": 78
+    },
+    {
+      "caller": "web/src/api.test.ts:93:_caller",
+      "callee": "web/src/api.test.ts:7:mockResponse",
+      "line": 93
+    },
+    {
+      "caller": "web/src/api.test.ts:99:_caller",
+      "callee": "web/src/api.test.ts:7:mockResponse",
+      "line": 99
+    },
+    {
+      "caller": "web/src/api.test.ts:126:_caller",
+      "callee": "web/src/api.test.ts:7:mockResponse",
+      "line": 126
+    },
+    {
+      "caller": "web/src/api.test.ts:135:_caller",
+      "callee": "web/src/api.test.ts:7:mockResponse",
+      "line": 135
+    },
+    {
+      "caller": "web/src/api.test.ts:150:_caller",
+      "callee": "web/src/api.test.ts:7:mockResponse",
+      "line": 150
+    },
+    {
+      "caller": "web/src/api.test.ts:168:_caller",
+      "callee": "web/src/api.test.ts:7:mockResponse",
+      "line": 168
+    },
+    {
+      "caller": "web/src/api.test.ts:185:_caller",
+      "callee": "web/src/api.test.ts:7:mockResponse",
+      "line": 185
+    },
+    {
+      "caller": "web/src/api.test.ts:200:_caller",
+      "callee": "web/src/api.test.ts:7:mockResponse",
+      "line": 200
+    },
+    {
+      "caller": "web/src/api.test.ts:218:_caller",
+      "callee": "web/src/api.test.ts:7:mockResponse",
+      "line": 218
+    },
+    {
+      "caller": "web/src/components/Composer.test.tsx:83:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 83
+    },
+    {
+      "caller": "web/src/components/Composer.test.tsx:109:_caller",
+      "callee": "web/src/components/Composer.test.tsx:71:setupMockStore",
+      "line": 109
+    },
+    {
+      "caller": "web/src/components/Composer.test.tsx:135:_caller",
+      "callee": "web/src/components/Composer.test.tsx:71:setupMockStore",
+      "line": 135
+    },
+    {
+      "caller": "web/src/components/Composer.test.tsx:224:_caller",
+      "callee": "web/src/components/Composer.test.tsx:71:setupMockStore",
+      "line": 224
+    },
+    {
+      "caller": "web/src/components/Composer.test.tsx:234:_caller",
+      "callee": "web/src/components/Composer.test.tsx:71:setupMockStore",
+      "line": 234
+    },
+    {
+      "caller": "web/src/components/Composer.test.tsx:243:_caller",
+      "callee": "web/src/components/Composer.test.tsx:71:setupMockStore",
+      "line": 243
+    },
+    {
+      "caller": "web/src/components/Composer.test.tsx:255:_caller",
+      "callee": "web/src/components/Composer.test.tsx:71:setupMockStore",
+      "line": 255
+    },
+    {
+      "caller": "web/src/components/Composer.test.tsx:273:_caller",
+      "callee": "web/src/components/Composer.test.tsx:71:setupMockStore",
+      "line": 273
+    },
+    {
+      "caller": "web/src/components/Composer.test.tsx:291:_caller",
+      "callee": "web/src/components/Composer.test.tsx:71:setupMockStore",
+      "line": 291
+    },
+    {
+      "caller": "web/src/components/Composer.test.tsx:307:_caller",
+      "callee": "web/src/components/Composer.test.tsx:71:setupMockStore",
+      "line": 307
+    },
+    {
+      "caller": "web/src/components/Composer.test.tsx:330:_caller",
+      "callee": "web/src/components/Composer.test.tsx:71:setupMockStore",
+      "line": 330
+    },
+    {
+      "caller": "web/src/components/Composer.test.tsx:338:_caller",
+      "callee": "web/src/components/Composer.test.tsx:71:setupMockStore",
+      "line": 338
+    },
+    {
+      "caller": "web/src/components/Composer.test.tsx:346:_caller",
+      "callee": "web/src/components/Composer.test.tsx:71:setupMockStore",
+      "line": 346
+    },
+    {
+      "caller": "web/src/components/Composer.tsx:135:_caller",
+      "callee": "web/src/components/Composer.tsx:17:getDraft",
+      "line": 135
+    },
+    {
+      "caller": "web/src/components/Composer.tsx:137:_caller",
+      "callee": "web/src/components/Composer.tsx:21:setDraft",
+      "line": 137
+    },
+    {
+      "caller": "web/src/components/Composer.tsx:227:_caller",
+      "callee": "web/src/components/Composer.tsx:227:handleSend",
+      "line": 227
+    },
+    {
+      "caller": "web/src/components/Composer.tsx:263:_caller",
+      "callee": "web/src/components/Composer.tsx:21:setDraft",
+      "line": 263
+    },
+    {
+      "caller": "web/src/components/Composer.tsx:330:_caller",
+      "callee": "web/src/components/Composer.tsx:422:cycleMode",
+      "line": 330
+    },
+    {
+      "caller": "web/src/components/Composer.tsx:335:_caller",
+      "callee": "web/src/components/Composer.tsx:227:handleSend",
+      "line": 335
+    },
+    {
+      "caller": "web/src/components/Composer.tsx:355:_caller",
+      "callee": "web/src/components/Composer.tsx:355:handleFileSelect",
+      "line": 355
+    },
+    {
+      "caller": "web/src/components/Composer.tsx:372:_caller",
+      "callee": "web/src/components/Composer.tsx:372:handlePaste",
+      "line": 372
+    },
+    {
+      "caller": "web/src/components/Composer.tsx:405:_caller",
+      "callee": "web/src/components/Composer.tsx:405:handleDrop",
+      "line": 405
+    },
+    {
+      "caller": "web/src/components/Composer.tsx:463:_caller",
+      "callee": "web/src/components/Composer.tsx:368:removeImage",
+      "line": 463
+    },
+    {
+      "caller": "web/src/components/DiffView.tsx:125:_caller",
+      "callee": "web/src/components/DiffView.tsx:108:splitHighlightedHtml",
+      "line": 125
+    },
+    {
+      "caller": "web/src/components/DiffView.tsx:127:_caller",
+      "callee": "web/src/components/DiffView.tsx:103:escHtml",
+      "line": 127
+    },
+    {
+      "caller": "web/src/components/DiffView.tsx:172:_caller",
+      "callee": "web/src/components/DiffView.tsx:121:buildHighlights",
+      "line": 172
+    },
+    {
+      "caller": "web/src/components/DiffView.tsx:173:_caller",
+      "callee": "web/src/components/DiffView.tsx:121:buildHighlights",
+      "line": 173
+    },
+    {
+      "caller": "web/src/components/DiffView.tsx:215:_caller",
+      "callee": "web/src/components/DiffView.tsx:133:cellBg",
+      "line": 215
+    },
+    {
+      "caller": "web/src/components/DiffView.tsx:218:_caller",
+      "callee": "web/src/components/DiffView.tsx:133:cellBg",
+      "line": 218
+    },
+    {
+      "caller": "web/src/components/DiffView.tsx:221:_caller",
+      "callee": "web/src/components/DiffView.tsx:140:markerColor",
+      "line": 221
+    },
+    {
+      "caller": "web/src/components/DiffView.tsx:221:_caller",
+      "callee": "web/src/components/DiffView.tsx:146:marker",
+      "line": 221
+    },
+    {
+      "caller": "web/src/components/DiffView.tsx:229:_caller",
+      "callee": "web/src/components/DiffView.tsx:133:cellBg",
+      "line": 229
+    },
+    {
+      "caller": "web/src/components/DiffView.tsx:232:_caller",
+      "callee": "web/src/components/DiffView.tsx:133:cellBg",
+      "line": 232
+    },
+    {
+      "caller": "web/src/components/DiffView.tsx:235:_caller",
+      "callee": "web/src/components/DiffView.tsx:140:markerColor",
+      "line": 235
+    },
+    {
+      "caller": "web/src/components/DiffView.tsx:235:_caller",
+      "callee": "web/src/components/DiffView.tsx:146:marker",
+      "line": 235
+    },
+    {
+      "caller": "web/src/components/EditorPanel.test.tsx:81:_caller",
+      "callee": "web/src/components/EditorPanel.test.tsx:59:resetStore",
+      "line": 81
+    },
+    {
+      "caller": "web/src/components/EditorPanel.test.tsx:91:_caller",
+      "callee": "web/src/components/EditorPanel.test.tsx:59:resetStore",
+      "line": 91
+    },
+    {
+      "caller": "web/src/components/EditorPanel.test.tsx:104:_caller",
+      "callee": "web/src/components/EditorPanel.test.tsx:59:resetStore",
+      "line": 104
+    },
+    {
+      "caller": "web/src/components/EditorPanel.test.tsx:118:_caller",
+      "callee": "web/src/components/EditorPanel.test.tsx:59:resetStore",
+      "line": 118
+    },
+    {
+      "caller": "web/src/components/EditorPanel.test.tsx:144:_caller",
+      "callee": "web/src/components/EditorPanel.test.tsx:59:resetStore",
+      "line": 144
+    },
+    {
+      "caller": "web/src/components/EditorPanel.test.tsx:174:_caller",
+      "callee": "web/src/components/EditorPanel.test.tsx:59:resetStore",
+      "line": 174
+    },
+    {
+      "caller": "web/src/components/EditorPanel.test.tsx:201:_caller",
+      "callee": "web/src/components/EditorPanel.test.tsx:59:resetStore",
+      "line": 201
+    },
+    {
+      "caller": "web/src/components/EditorPanel.test.tsx:228:_caller",
+      "callee": "web/src/components/EditorPanel.test.tsx:59:resetStore",
+      "line": 228
+    },
+    {
+      "caller": "web/src/components/EditorPanel.test.tsx:261:_caller",
+      "callee": "web/src/components/EditorPanel.test.tsx:59:resetStore",
+      "line": 261
+    },
+    {
+      "caller": "web/src/components/EditorPanel.tsx:95:_caller",
+      "callee": "web/src/components/EditorPanel.tsx:92:hasChangedDescendant",
+      "line": 95
+    },
+    {
+      "caller": "web/src/components/EnvManager.tsx:31:_caller",
+      "callee": "web/src/components/EnvManager.tsx:27:refresh",
+      "line": 31
+    },
+    {
+      "caller": "web/src/components/EnvManager.tsx:47:_caller",
+      "callee": "web/src/components/EnvManager.tsx:47:saveEdit",
+      "line": 47
+    },
+    {
+      "caller": "web/src/components/EnvManager.tsx:58:_caller",
+      "callee": "web/src/components/EnvManager.tsx:27:refresh",
+      "line": 58
+    },
+    {
+      "caller": "web/src/components/EnvManager.tsx:64:_caller",
+      "callee": "web/src/components/EnvManager.tsx:64:handleDelete",
+      "line": 64
+    },
+    {
+      "caller": "web/src/components/EnvManager.tsx:68:_caller",
+      "callee": "web/src/components/EnvManager.tsx:27:refresh",
+      "line": 68
+    },
+    {
+      "caller": "web/src/components/EnvManager.tsx:74:_caller",
+      "callee": "web/src/components/EnvManager.tsx:74:handleCreate",
+      "line": 74
+    },
+    {
+      "caller": "web/src/components/EnvManager.tsx:88:_caller",
+      "callee": "web/src/components/EnvManager.tsx:27:refresh",
+      "line": 88
+    },
+    {
+      "caller": "web/src/components/EnvManager.tsx:148:_caller",
+      "callee": "web/src/components/EnvManager.tsx:33:startEdit",
+      "line": 148
+    },
+    {
+      "caller": "web/src/components/EnvManager.tsx:154:_caller",
+      "callee": "web/src/components/EnvManager.tsx:64:handleDelete",
+      "line": 154
+    },
+    {
+      "caller": "web/src/components/EnvManager.tsx:212:_caller",
+      "callee": "web/src/components/EnvManager.tsx:74:handleCreate",
+      "line": 212
+    },
+    {
+      "caller": "web/src/components/EnvManager.tsx:262:_caller",
+      "callee": "web/src/components/EnvManager.tsx:239:updateRow",
+      "line": 262
+    },
+    {
+      "caller": "web/src/components/EnvManager.tsx:270:_caller",
+      "callee": "web/src/components/EnvManager.tsx:239:updateRow",
+      "line": 270
+    },
+    {
+      "caller": "web/src/components/EnvManager.tsx:275:_caller",
+      "callee": "web/src/components/EnvManager.tsx:245:removeRow",
+      "line": 275
+    },
+    {
+      "caller": "web/src/components/FolderPicker.tsx:78:_caller",
+      "callee": "web/src/components/FolderPicker.tsx:46:selectDir",
+      "line": 78
+    },
+    {
+      "caller": "web/src/components/FolderPicker.tsx:101:_caller",
+      "callee": "web/src/components/FolderPicker.tsx:46:selectDir",
+      "line": 101
+    },
+    {
+      "caller": "web/src/components/FolderPicker.tsx:148:_caller",
+      "callee": "web/src/components/FolderPicker.tsx:46:selectDir",
+      "line": 148
+    },
+    {
+      "caller": "web/src/components/FolderPicker.tsx:168:_caller",
+      "callee": "web/src/components/FolderPicker.tsx:46:selectDir",
+      "line": 168
+    },
+    {
+      "caller": "web/src/components/HomePage.tsx:164:_caller",
+      "callee": "web/src/components/Composer.tsx:355:handleFileSelect",
+      "line": 164
+    },
+    {
+      "caller": "web/src/components/HomePage.tsx:181:_caller",
+      "callee": "web/src/components/Composer.tsx:372:handlePaste",
+      "line": 181
+    },
+    {
+      "caller": "web/src/components/HomePage.tsx:219:_caller",
+      "callee": "web/src/components/Composer.tsx:227:handleSend",
+      "line": 219
+    },
+    {
+      "caller": "web/src/components/HomePage.tsx:223:_caller",
+      "callee": "web/src/components/Composer.tsx:227:handleSend",
+      "line": 223
+    },
+    {
+      "caller": "web/src/components/HomePage.tsx:313:_caller",
+      "callee": "web/src/components/Composer.tsx:368:removeImage",
+      "line": 313
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:86:_caller",
+      "callee": "web/src/components/EditorPanel.test.tsx:59:resetStore",
+      "line": 86
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:99:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 99
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:99:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 99
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:100:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:59:setStoreStatus",
+      "line": 100
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:102:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:65:setStoreStreamingStartedAt",
+      "line": 102
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:112:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 112
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:112:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 112
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:113:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:59:setStoreStatus",
+      "line": 113
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:114:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:65:setStoreStreamingStartedAt",
+      "line": 114
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:127:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 127
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:127:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 127
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:128:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:59:setStoreStatus",
+      "line": 128
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:129:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:65:setStoreStreamingStartedAt",
+      "line": 129
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:130:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:71:setStoreStreamingOutputTokens",
+      "line": 130
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:140:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 140
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:140:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 140
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:141:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:59:setStoreStatus",
+      "line": 141
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:142:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:65:setStoreStreamingStartedAt",
+      "line": 142
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:143:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:71:setStoreStreamingOutputTokens",
+      "line": 143
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:156:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 156
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:166:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 166
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:167:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 167
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:181:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 181
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:182:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 182
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:183:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 183
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:195:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 195
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:196:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 196
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:197:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 197
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:212:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 212
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:213:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 213
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:215:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:53:setStoreStreaming",
+      "line": 215
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:227:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 227
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:228:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 228
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:244:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 244
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:244:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 244
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:245:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:59:setStoreStatus",
+      "line": 245
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:246:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:65:setStoreStreamingStartedAt",
+      "line": 246
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:255:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 255
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:255:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 255
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:256:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:59:setStoreStatus",
+      "line": 256
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:265:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 265
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:265:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 265
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:266:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:59:setStoreStatus",
+      "line": 266
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:267:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:65:setStoreStreamingStartedAt",
+      "line": 267
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:268:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:71:setStoreStreamingOutputTokens",
+      "line": 268
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:283:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 283
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:284:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 284
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:292:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 292
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:313:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 313
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:314:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 314
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:322:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 322
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:340:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 340
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:341:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 341
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:365:_caller",
+      "callee": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "line": 365
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:366:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 366
+    },
+    {
+      "caller": "web/src/components/MessageFeed.test.tsx:379:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 379
+    },
+    {
+      "caller": "web/src/components/MessageFeed.tsx:100:_caller",
+      "callee": "web/src/components/MessageFeed.tsx:68:extractToolItems",
+      "line": 100
+    },
+    {
+      "caller": "web/src/components/MessageFeed.tsx:106:_caller",
+      "callee": "web/src/components/MessageFeed.tsx:68:extractToolItems",
+      "line": 106
+    },
+    {
+      "caller": "web/src/components/MessageFeed.tsx:168:_caller",
+      "callee": "web/src/components/MessageFeed.tsx:91:groupToolMessages",
+      "line": 168
+    },
+    {
+      "caller": "web/src/components/MessageFeed.tsx:186:_caller",
+      "callee": "web/src/components/MessageFeed.tsx:118:buildEntries",
+      "line": 186
+    },
+    {
+      "caller": "web/src/components/MessageFeed.tsx:437:_caller",
+      "callee": "web/src/components/MessageFeed.tsx:8:formatElapsed",
+      "line": 437
+    },
+    {
+      "caller": "web/src/components/MessageFeed.tsx:441:_caller",
+      "callee": "web/src/components/MessageFeed.tsx:15:formatTokens",
+      "line": 441
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.test.tsx:52:_caller",
+      "callee": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "line": 52
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.test.tsx:60:_caller",
+      "callee": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "line": 60
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.test.tsx:79:_caller",
+      "callee": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "line": 79
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.test.tsx:100:_caller",
+      "callee": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "line": 100
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.test.tsx:125:_caller",
+      "callee": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "line": 125
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.test.tsx:143:_caller",
+      "callee": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "line": 143
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.test.tsx:165:_caller",
+      "callee": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "line": 165
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.test.tsx:182:_caller",
+      "callee": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "line": 182
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.test.tsx:196:_caller",
+      "callee": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "line": 196
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.test.tsx:213:_caller",
+      "callee": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "line": 213
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.test.tsx:232:_caller",
+      "callee": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "line": 232
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.test.tsx:248:_caller",
+      "callee": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "line": 248
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.tsx:96:_caller",
+      "callee": "web/src/components/PermissionBanner.tsx:35:handleAllow",
+      "line": 96
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.tsx:107:_caller",
+      "callee": "web/src/components/PermissionBanner.tsx:35:handleAllow",
+      "line": 107
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.tsx:121:_caller",
+      "callee": "web/src/components/PermissionBanner.tsx:35:handleAllow",
+      "line": 121
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.tsx:129:_caller",
+      "callee": "web/src/components/PermissionBanner.tsx:10:suggestionLabel",
+      "line": 129
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.tsx:284:_caller",
+      "callee": "web/src/components/PermissionBanner.tsx:215:handleOptionClick",
+      "line": 284
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.tsx:333:_caller",
+      "callee": "web/src/components/PermissionBanner.tsx:226:handleCustomSubmit",
+      "line": 333
+    },
+    {
+      "caller": "web/src/components/PermissionBanner.tsx:339:_caller",
+      "callee": "web/src/components/PermissionBanner.tsx:226:handleCustomSubmit",
+      "line": 339
+    },
+    {
+      "caller": "web/src/components/ProjectTabBar.tsx:162:_caller",
+      "callee": "web/src/components/ProjectTabBar.tsx:139:fetchProjects",
+      "line": 162
+    },
+    {
+      "caller": "web/src/components/ProjectTabBar.tsx:166:_caller",
+      "callee": "web/src/components/ProjectTabBar.tsx:139:fetchProjects",
+      "line": 166
+    },
+    {
+      "caller": "web/src/components/ProjectTabBar.tsx:204:_caller",
+      "callee": "web/src/components/ProjectTabBar.tsx:181:scroll",
+      "line": 204
+    },
+    {
+      "caller": "web/src/components/ProjectTabBar.tsx:220:_caller",
+      "callee": "web/src/components/ProjectTabBar.tsx:185:selectProject",
+      "line": 220
+    },
+    {
+      "caller": "web/src/components/ProjectTabBar.tsx:227:_caller",
+      "callee": "web/src/components/ProjectTabBar.tsx:181:scroll",
+      "line": 227
+    },
+    {
+      "caller": "web/src/components/ProjectTabBar.tsx:277:_caller",
+      "callee": "web/src/components/ProjectTabBar.tsx:185:selectProject",
+      "line": 277
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:153:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 153
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:170:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 170
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:189:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 189
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:206:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 206
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:218:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 218
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:230:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 230
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:246:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 246
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:265:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 265
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:278:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 278
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:293:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 293
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:317:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 317
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:335:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 335
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:351:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 351
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:364:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 364
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:382:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 382
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:394:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 394
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:409:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 409
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:424:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 424
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:442:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 442
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:464:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 464
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:488:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 488
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:501:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 501
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:514:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 514
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:527:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 527
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:540:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 540
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:556:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 556
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:572:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 572
+    },
+    {
+      "caller": "web/src/components/Sidebar.test.tsx:585:_caller",
+      "callee": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "line": 585
+    },
+    {
+      "caller": "web/src/components/Sidebar.tsx:38:_caller",
+      "callee": "web/src/components/Sidebar.tsx:38:poll",
+      "line": 38
+    },
+    {
+      "caller": "web/src/components/Sidebar.tsx:62:_caller",
+      "callee": "web/src/components/Sidebar.tsx:38:poll",
+      "line": 62
+    },
+    {
+      "caller": "web/src/components/Sidebar.tsx:86:_caller",
+      "callee": "web/src/components/Sidebar.tsx:86:fetchNative",
+      "line": 86
+    },
+    {
+      "caller": "web/src/components/Sidebar.tsx:176:_caller",
+      "callee": "web/src/components/Sidebar.tsx:86:fetchNative",
+      "line": 176
+    },
+    {
+      "caller": "web/src/components/Sidebar.tsx:398:_caller",
+      "callee": "web/src/components/Sidebar.tsx:184:handleSelectSession",
+      "line": 398
+    },
+    {
+      "caller": "web/src/components/Sidebar.tsx:449:_caller",
+      "callee": "web/src/components/Sidebar.tsx:216:confirmRename",
+      "line": 449
+    },
+    {
+      "caller": "web/src/components/Sidebar.tsx:452:_caller",
+      "callee": "web/src/components/Sidebar.tsx:225:cancelRename",
+      "line": 452
+    },
+    {
+      "caller": "web/src/components/Sidebar.tsx:615:_caller",
+      "callee": "web/src/components/Sidebar.tsx:350:renderNativeSessionItem",
+      "line": 615
+    },
+    {
+      "caller": "web/src/components/SpeechMonitor.tsx:86:_caller",
+      "callee": "web/src/components/SpeechMonitor.tsx:41:formatTime",
+      "line": 86
+    },
+    {
+      "caller": "web/src/components/TaskPanel.tsx:125:_caller",
+      "callee": "web/src/components/TaskPanel.tsx:19:shortModelName",
+      "line": 125
+    },
+    {
+      "caller": "web/src/components/TaskPanel.tsx:222:_caller",
+      "callee": "web/src/components/TaskPanel.tsx:14:basename",
+      "line": 222
+    },
+    {
+      "caller": "web/src/components/TaskPanel.tsx:304:_caller",
+      "callee": "web/src/components/SpeechMonitor.tsx:41:formatTime",
+      "line": 304
+    },
+    {
+      "caller": "web/src/components/TopBar.tsx:5:_caller",
+      "callee": "web/src/components/TopBar.tsx:5:createNewSession",
+      "line": 5
+    },
+    {
+      "caller": "web/src/components/TopBar.tsx:120:_caller",
+      "callee": "web/src/components/TopBar.tsx:5:createNewSession",
+      "line": 120
+    },
+    {
+      "caller": "web/src/hooks/use-voice-input.test.ts:63:_caller",
+      "callee": "web/src/hooks/use-voice-input.test.ts:9:MockSTTEngine",
+      "line": 63
+    },
+    {
+      "caller": "web/src/hooks/use-voice-input.ts:192:_caller",
+      "callee": "web/src/hooks/use-voice-input.ts:180:doStart",
+      "line": 192
+    },
+    {
+      "caller": "web/src/hooks/use-whisper.ts:28:_caller",
+      "callee": "web/src/hooks/use-whisper.ts:19:checkSupport",
+      "line": 28
+    },
+    {
+      "caller": "web/src/hooks/voice-events.ts:50:_caller",
+      "callee": "web/src/hooks/voice-events.ts:35:notifyBufferListeners",
+      "line": 50
+    },
+    {
+      "caller": "web/src/hooks/voice-events.ts:82:_caller",
+      "callee": "web/src/hooks/voice-events.ts:35:notifyBufferListeners",
+      "line": 82
+    },
+    {
+      "caller": "web/src/store.test.ts:137:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 137
+    },
+    {
+      "caller": "web/src/store.test.ts:140:_caller",
+      "callee": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "line": 140
+    },
+    {
+      "caller": "web/src/store.test.ts:141:_caller",
+      "callee": "web/src/store.test.ts:72:makeTask",
+      "line": 141
+    },
+    {
+      "caller": "web/src/store.test.ts:180:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 180
+    },
+    {
+      "caller": "web/src/store.test.ts:189:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 189
+    },
+    {
+      "caller": "web/src/store.test.ts:190:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 190
+    },
+    {
+      "caller": "web/src/store.test.ts:215:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 215
+    },
+    {
+      "caller": "web/src/store.test.ts:231:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 231
+    },
+    {
+      "caller": "web/src/store.test.ts:232:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 232
+    },
+    {
+      "caller": "web/src/store.test.ts:235:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 235
+    },
+    {
+      "caller": "web/src/store.test.ts:236:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 236
+    },
+    {
+      "caller": "web/src/store.test.ts:247:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 247
+    },
+    {
+      "caller": "web/src/store.test.ts:248:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 248
+    },
+    {
+      "caller": "web/src/store.test.ts:249:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 249
+    },
+    {
+      "caller": "web/src/store.test.ts:250:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 250
+    },
+    {
+      "caller": "web/src/store.test.ts:263:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 263
+    },
+    {
+      "caller": "web/src/store.test.ts:264:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 264
+    },
+    {
+      "caller": "web/src/store.test.ts:265:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 265
+    },
+    {
+      "caller": "web/src/store.test.ts:360:_caller",
+      "callee": "web/src/store.test.ts:72:makeTask",
+      "line": 360
+    },
+    {
+      "caller": "web/src/store.test.ts:362:_caller",
+      "callee": "web/src/store.test.ts:72:makeTask",
+      "line": 362
+    },
+    {
+      "caller": "web/src/store.test.ts:363:_caller",
+      "callee": "web/src/store.test.ts:72:makeTask",
+      "line": 363
+    },
+    {
+      "caller": "web/src/store.test.ts:427:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 427
+    },
+    {
+      "caller": "web/src/store.test.ts:466:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 466
+    },
+    {
+      "caller": "web/src/store.test.ts:468:_caller",
+      "callee": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "line": 468
+    },
+    {
+      "caller": "web/src/store.test.ts:471:_caller",
+      "callee": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "line": 471
+    },
+    {
+      "caller": "web/src/store.test.ts:472:_caller",
+      "callee": "web/src/store.test.ts:72:makeTask",
+      "line": 472
+    },
+    {
+      "caller": "web/src/store.ts:201:_caller",
+      "callee": "web/src/store.ts:172:getInitialSessionId",
+      "line": 201
+    },
+    {
+      "caller": "web/src/store.ts:220:_caller",
+      "callee": "web/src/store.ts:178:getInitialPromptHistory",
+      "line": 220
+    },
+    {
+      "caller": "web/src/store.ts:221:_caller",
+      "callee": "web/src/store.ts:163:getInitialSessionNames",
+      "line": 221
+    },
+    {
+      "caller": "web/src/store.ts:223:_caller",
+      "callee": "web/src/store.ts:187:getInitialDarkMode",
+      "line": 223
+    },
+    {
+      "caller": "web/src/utils/audio-utils.ts:104:_caller",
+      "callee": "web/src/utils/audio-utils.ts:56:resampleAudio",
+      "line": 104
+    },
+    {
+      "caller": "web/src/utils/names.ts:26:_caller",
+      "callee": "web/src/utils/names.ts:15:generateSessionName",
+      "line": 26
+    },
+    {
+      "caller": "web/src/utils/notifications.ts:10:_caller",
+      "callee": "web/src/utils/notifications.ts:4:isNotificationSupported",
+      "line": 10
+    },
+    {
+      "caller": "web/src/utils/notifications.ts:22:_caller",
+      "callee": "web/src/utils/notifications.ts:4:isNotificationSupported",
+      "line": 22
+    },
+    {
+      "caller": "web/src/utils/stt-component-worker.ts:63:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:63:loadModel",
+      "line": 63
+    },
+    {
+      "caller": "web/src/utils/stt-component-worker.ts:73:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 73
+    },
+    {
+      "caller": "web/src/utils/stt-component-worker.ts:83:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 83
+    },
+    {
+      "caller": "web/src/utils/stt-component-worker.ts:85:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 85
+    },
+    {
+      "caller": "web/src/utils/stt-component-worker.ts:95:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 95
+    },
+    {
+      "caller": "web/src/utils/stt-component-worker.ts:101:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 101
+    },
+    {
+      "caller": "web/src/utils/stt-component-worker.ts:103:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 103
+    },
+    {
+      "caller": "web/src/utils/stt-component-worker.ts:108:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:108:transcribe",
+      "line": 108
+    },
+    {
+      "caller": "web/src/utils/stt-component-worker.ts:112:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 112
+    },
+    {
+      "caller": "web/src/utils/stt-component-worker.ts:131:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 131
+    },
+    {
+      "caller": "web/src/utils/stt-component-worker.ts:131:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:52:filterArtifacts",
+      "line": 131
+    },
+    {
+      "caller": "web/src/utils/stt-component-worker.ts:134:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 134
+    },
+    {
+      "caller": "web/src/utils/stt-component-worker.ts:142:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:63:loadModel",
+      "line": 142
+    },
+    {
+      "caller": "web/src/utils/stt-component-worker.ts:144:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:108:transcribe",
+      "line": 144
+    },
+    {
+      "caller": "web/src/utils/whisper-worker.ts:28:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:63:loadModel",
+      "line": 28
+    },
+    {
+      "caller": "web/src/utils/whisper-worker.ts:39:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 39
+    },
+    {
+      "caller": "web/src/utils/whisper-worker.ts:44:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 44
+    },
+    {
+      "caller": "web/src/utils/whisper-worker.ts:57:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 57
+    },
+    {
+      "caller": "web/src/utils/whisper-worker.ts:62:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 62
+    },
+    {
+      "caller": "web/src/utils/whisper-worker.ts:64:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 64
+    },
+    {
+      "caller": "web/src/utils/whisper-worker.ts:69:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:108:transcribe",
+      "line": 69
+    },
+    {
+      "caller": "web/src/utils/whisper-worker.ts:71:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 71
+    },
+    {
+      "caller": "web/src/utils/whisper-worker.ts:95:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 95
+    },
+    {
+      "caller": "web/src/utils/whisper-worker.ts:98:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:48:post",
+      "line": 98
+    },
+    {
+      "caller": "web/src/utils/whisper-worker.ts:105:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:63:loadModel",
+      "line": 105
+    },
+    {
+      "caller": "web/src/utils/whisper-worker.ts:107:_caller",
+      "callee": "web/src/utils/stt-component-worker.ts:108:transcribe",
+      "line": 107
+    },
+    {
+      "caller": "web/src/ws.test.ts:163:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 163
+    },
+    {
+      "caller": "web/src/ws.test.ts:177:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 177
+    },
+    {
+      "caller": "web/src/ws.test.ts:177:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 177
+    },
+    {
+      "caller": "web/src/ws.test.ts:189:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 189
+    },
+    {
+      "caller": "web/src/ws.test.ts:189:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 189
+    },
+    {
+      "caller": "web/src/ws.test.ts:191:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 191
+    },
+    {
+      "caller": "web/src/ws.test.ts:203:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 203
+    },
+    {
+      "caller": "web/src/ws.test.ts:203:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 203
+    },
+    {
+      "caller": "web/src/ws.test.ts:208:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 208
+    },
+    {
+      "caller": "web/src/ws.test.ts:239:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 239
+    },
+    {
+      "caller": "web/src/ws.test.ts:239:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 239
+    },
+    {
+      "caller": "web/src/ws.test.ts:241:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 241
+    },
+    {
+      "caller": "web/src/ws.test.ts:247:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 247
+    },
+    {
+      "caller": "web/src/ws.test.ts:263:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 263
+    },
+    {
+      "caller": "web/src/ws.test.ts:263:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 263
+    },
+    {
+      "caller": "web/src/ws.test.ts:266:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 266
+    },
+    {
+      "caller": "web/src/ws.test.ts:282:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 282
+    },
+    {
+      "caller": "web/src/ws.test.ts:282:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 282
+    },
+    {
+      "caller": "web/src/ws.test.ts:286:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 286
+    },
+    {
+      "caller": "web/src/ws.test.ts:313:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 313
+    },
+    {
+      "caller": "web/src/ws.test.ts:313:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 313
+    },
+    {
+      "caller": "web/src/ws.test.ts:315:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 315
+    },
+    {
+      "caller": "web/src/ws.test.ts:346:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 346
+    },
+    {
+      "caller": "web/src/ws.test.ts:346:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 346
+    },
+    {
+      "caller": "web/src/ws.test.ts:356:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 356
+    },
+    {
+      "caller": "web/src/ws.test.ts:371:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 371
+    },
+    {
+      "caller": "web/src/ws.test.ts:371:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 371
+    },
+    {
+      "caller": "web/src/ws.test.ts:383:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 383
+    },
+    {
+      "caller": "web/src/ws.test.ts:396:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 396
+    },
+    {
+      "caller": "web/src/ws.test.ts:396:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 396
+    },
+    {
+      "caller": "web/src/ws.test.ts:398:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 398
+    },
+    {
+      "caller": "web/src/ws.test.ts:405:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 405
+    },
+    {
+      "caller": "web/src/ws.test.ts:405:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 405
+    },
+    {
+      "caller": "web/src/ws.test.ts:407:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 407
+    },
+    {
+      "caller": "web/src/ws.test.ts:419:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 419
+    },
+    {
+      "caller": "web/src/ws.test.ts:419:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 419
+    },
+    {
+      "caller": "web/src/ws.test.ts:423:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 423
+    },
+    {
+      "caller": "web/src/ws.test.ts:427:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 427
+    },
+    {
+      "caller": "web/src/ws.test.ts:438:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 438
+    },
+    {
+      "caller": "web/src/ws.test.ts:438:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 438
+    },
+    {
+      "caller": "web/src/ws.test.ts:440:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 440
+    },
+    {
+      "caller": "web/src/ws.test.ts:486:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 486
+    },
+    {
+      "caller": "web/src/ws.test.ts:486:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 486
+    },
+    {
+      "caller": "web/src/ws.test.ts:488:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 488
+    },
+    {
+      "caller": "web/src/ws.test.ts:524:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 524
+    },
+    {
+      "caller": "web/src/ws.test.ts:524:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 524
+    },
+    {
+      "caller": "web/src/ws.test.ts:526:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 526
+    },
+    {
+      "caller": "web/src/ws.test.ts:541:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 541
+    },
+    {
+      "caller": "web/src/ws.test.ts:541:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 541
+    },
+    {
+      "caller": "web/src/ws.test.ts:543:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 543
+    },
+    {
+      "caller": "web/src/ws.test.ts:560:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 560
+    },
+    {
+      "caller": "web/src/ws.test.ts:560:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 560
+    },
+    {
+      "caller": "web/src/ws.test.ts:562:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 562
+    },
+    {
+      "caller": "web/src/ws.test.ts:604:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 604
+    },
+    {
+      "caller": "web/src/ws.test.ts:604:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 604
+    },
+    {
+      "caller": "web/src/ws.test.ts:606:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 606
+    },
+    {
+      "caller": "web/src/ws.test.ts:641:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 641
+    },
+    {
+      "caller": "web/src/ws.test.ts:641:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 641
+    },
+    {
+      "caller": "web/src/ws.test.ts:644:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 644
+    },
+    {
+      "caller": "web/src/ws.test.ts:669:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 669
+    },
+    {
+      "caller": "web/src/ws.test.ts:701:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 701
+    },
+    {
+      "caller": "web/src/ws.test.ts:701:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 701
+    },
+    {
+      "caller": "web/src/ws.test.ts:706:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 706
+    },
+    {
+      "caller": "web/src/ws.test.ts:713:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 713
+    },
+    {
+      "caller": "web/src/ws.test.ts:713:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 713
+    },
+    {
+      "caller": "web/src/ws.test.ts:718:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 718
+    },
+    {
+      "caller": "web/src/ws.test.ts:725:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 725
+    },
+    {
+      "caller": "web/src/ws.test.ts:725:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 725
+    },
+    {
+      "caller": "web/src/ws.test.ts:730:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 730
+    },
+    {
+      "caller": "web/src/ws.test.ts:737:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 737
+    },
+    {
+      "caller": "web/src/ws.test.ts:737:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 737
+    },
+    {
+      "caller": "web/src/ws.test.ts:742:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 742
+    },
+    {
+      "caller": "web/src/ws.test.ts:749:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 749
+    },
+    {
+      "caller": "web/src/ws.test.ts:749:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 749
+    },
+    {
+      "caller": "web/src/ws.test.ts:756:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 756
+    },
+    {
+      "caller": "web/src/ws.test.ts:764:_caller",
+      "callee": "web/server/session-store.test.ts:9:makeSession",
+      "line": 764
+    },
+    {
+      "caller": "web/src/ws.test.ts:764:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 764
+    },
+    {
+      "caller": "web/src/ws.test.ts:768:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 768
+    },
+    {
+      "caller": "web/src/ws.test.ts:775:_caller",
+      "callee": "web/src/ws.test.ts:94:fireMessage",
+      "line": 775
+    },
+    {
+      "caller": "web/src/ws.ts:233:_caller",
+      "callee": "web/src/ws.ts:42:extractTasksFromBlocks",
+      "line": 233
+    },
+    {
+      "caller": "web/src/ws.ts:234:_caller",
+      "callee": "web/src/ws.ts:103:extractChangedFilesFromBlocks",
+      "line": 234
+    },
+    {
+      "caller": "web/src/ws.ts:235:_caller",
+      "callee": "web/src/ws.ts:116:extractActivityFromBlocks",
+      "line": 235
+    },
+    {
+      "caller": "web/src/ws.ts:304:_caller",
+      "callee": "web/src/ws.ts:594:sendToSession",
+      "line": 304
+    },
+    {
+      "caller": "web/src/ws.ts:324:_caller",
+      "callee": "web/src/ws.ts:149:nextId",
+      "line": 324
+    },
+    {
+      "caller": "web/src/ws.ts:349:_caller",
+      "callee": "web/src/ws.ts:42:extractTasksFromBlocks",
+      "line": 349
+    },
+    {
+      "caller": "web/src/ws.ts:350:_caller",
+      "callee": "web/src/ws.ts:103:extractChangedFilesFromBlocks",
+      "line": 350
+    },
+    {
+      "caller": "web/src/ws.ts:383:_caller",
+      "callee": "web/src/ws.ts:149:nextId",
+      "line": 383
+    },
+    {
+      "caller": "web/src/ws.ts:394:_caller",
+      "callee": "web/src/ws.ts:149:nextId",
+      "line": 394
+    },
+    {
+      "caller": "web/src/ws.ts:410:_caller",
+      "callee": "web/src/ws.ts:149:nextId",
+      "line": 410
+    },
+    {
+      "caller": "web/src/ws.ts:445:_caller",
+      "callee": "web/src/ws.ts:149:nextId",
+      "line": 445
+    },
+    {
+      "caller": "web/src/ws.ts:465:_caller",
+      "callee": "web/src/ws.ts:42:extractTasksFromBlocks",
+      "line": 465
+    },
+    {
+      "caller": "web/src/ws.ts:466:_caller",
+      "callee": "web/src/ws.ts:103:extractChangedFilesFromBlocks",
+      "line": 466
+    },
+    {
+      "caller": "web/src/ws.ts:467:_caller",
+      "callee": "web/src/ws.ts:116:extractActivityFromBlocks",
+      "line": 467
+    },
+    {
+      "caller": "web/src/ws.ts:473:_caller",
+      "callee": "web/src/ws.ts:149:nextId",
+      "line": 473
+    },
+    {
+      "caller": "web/src/ws.ts:517:_caller",
+      "callee": "web/src/ws.ts:169:handleMessage",
+      "line": 517
+    },
+    {
+      "caller": "web/src/ws.ts:525:_caller",
+      "callee": "web/src/ws.ts:536:scheduleReconnect",
+      "line": 525
+    },
+    {
+      "caller": "web/src/ws.ts:548:_caller",
+      "callee": "web/src/ws.ts:489:connectSession",
+      "line": 548
+    },
+    {
+      "caller": "web/src/ws.ts:573:_caller",
+      "callee": "web/src/ws.ts:554:disconnectSession",
+      "line": 573
+    },
+    {
+      "caller": "web/src/ws.ts:608:_caller",
+      "callee": "web/src/ws.ts:169:handleMessage",
+      "line": 608
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:28:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 28
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:39:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 39
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:53:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 53
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:60:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 60
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:70:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 70
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:80:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 80
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:85:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 85
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:109:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 109
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:117:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 117
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:139:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 139
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:152:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 152
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:164:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 164
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:178:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 178
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:189:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 189
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:204:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 204
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:232:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 232
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:253:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 253
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:275:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 275
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:282:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 282
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:292:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 292
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:312:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 312
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:325:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 325
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:331:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 331
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:339:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 339
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:352:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 352
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:359:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 359
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:372:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 372
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:409:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 409
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:425:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 425
+    },
+    {
+      "caller": "web/tests/e2e/app.spec.ts:433:_caller",
+      "callee": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "line": 433
+    },
+    {
+      "caller": "web/tests/global-teardown.ts:33:_caller",
+      "callee": "web/tests/global-teardown.ts:12:killPort",
+      "line": 33
+    }
+  ]
+}

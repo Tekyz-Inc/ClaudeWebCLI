@@ -50,6 +50,11 @@ beforeEach(async () => {
   vi.resetModules();
   vi.useFakeTimers();
 
+  // Clear HMR-safe window state so each test gets a fresh WebSocket map
+  const win = window as unknown as { __ws_state?: unknown; __cc_store_state?: unknown };
+  delete win.__ws_state;
+  delete win.__cc_store_state;
+
   const storeModule = await import("./store.js");
   useStore = storeModule.useStore;
   useStore.getState().reset();
@@ -400,13 +405,18 @@ describe("handleMessage: status_change", () => {
     expect(useStore.getState().sessionStatus.get("s1")).toBe("compacting");
   });
 
-  it("sets session status to arbitrary value", () => {
+  it("does not change session status for non-compacting values", () => {
     wsModule.connectSession("s1");
     fireMessage({ type: "session_init", session: makeSession("s1") });
 
+    // Set a known status first
+    useStore.getState().setSessionStatus("s1", "idle");
+
+    // status_change only handles "compacting" — other values are ignored
     fireMessage({ type: "status_change", status: "running" });
 
-    expect(useStore.getState().sessionStatus.get("s1")).toBe("running");
+    // Should remain unchanged
+    expect(useStore.getState().sessionStatus.get("s1")).toBe("idle");
   });
 });
 

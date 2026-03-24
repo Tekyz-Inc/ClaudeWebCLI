@@ -130,7 +130,7 @@ export default function App() {
               overflow-hidden
             `}
           >
-            {terminalMountedRef.current && <TerminalPanel cwd={termCwd} />}
+            {terminalMountedRef.current && <TerminalPanel cwd={termCwd} isVisible={terminalOpen} />}
           </div>
         );
       })()}

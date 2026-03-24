@@ -1,0 +1,3144 @@
+{
+  "mappings": [
+    {
+      "entity": "web/server/auto-namer.ts:67:raw",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:92:for",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:96:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:113:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:137:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:145:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:165:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:198:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:210:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:231:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:234:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:237:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:238:for",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:244:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:256:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:289:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:314:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:388:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:422:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:428:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:464:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:484:for",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:485:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:536:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:555:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:558:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/routes.ts:441:path",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:70:for",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:96:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:149:for",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:170:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:175:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:197:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:250:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:257:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:263:for",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:285:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:293:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:295:for",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:310:for",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:328:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:338:for",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:349:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:361:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:374:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:376:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:461:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:465:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:474:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:477:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:487:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:502:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:551:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:586:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:589:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:594:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:596:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:624:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:630:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:655:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:741:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:743:for",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:782:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:787:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:849:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:859:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:882:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:891:if",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:914:for",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:26:cwd",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:33:cwd",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:100:cwd",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:104:cwd",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:335:cwd",
+      "contract": "api-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/auto-namer.ts:67:raw",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:92:for",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:96:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:113:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:137:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:145:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:165:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:198:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:210:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:231:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:234:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:237:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:238:for",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:244:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:256:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:289:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:314:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:388:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:422:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:428:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:464:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:484:for",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:485:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:512:while",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:530:while",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:536:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:555:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:558:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/git-utils.ts:56:git",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/routes.ts:157:files",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:70:for",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:96:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:149:for",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:170:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:175:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:197:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:250:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:257:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:263:for",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:285:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:293:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:295:for",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:304:sessionId",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:310:for",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:323:sessionId",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:328:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:338:for",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:349:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:361:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:374:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:376:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:384:sessionId",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:400:sessionId",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:414:switch",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:461:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:465:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:474:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:477:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:487:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:502:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:551:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:586:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:589:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:594:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:596:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:624:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:630:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:655:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:705:switch",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:741:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:743:for",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:782:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:787:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:849:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:859:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:882:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:891:if",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:914:for",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:90:Composer",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/DiffView.tsx:146:marker",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:45:HomePage",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/TaskPanel.tsx:14:basename",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/TaskPanel.tsx:53:TaskPanel",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/hooks/use-prompt-history.ts:9:usePromptHistory",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/hooks/use-voice-input.ts:40:useVoiceInput",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/utils/notifications.ts:4:isNotificationSupported",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/utils/notifications.ts:9:requestNotificationPermission",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/utils/notifications.ts:18:sendNotification",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/utils/project-detector.ts:20:detectProject",
+      "contract": "component-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/auto-namer.ts:67:raw",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:92:for",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:96:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:113:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:137:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:145:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:165:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:198:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:210:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:231:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:234:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:237:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:238:for",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:244:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:256:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:289:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:314:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:388:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:422:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:428:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:464:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:484:for",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:485:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:536:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:555:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:558:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:70:for",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:96:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:149:for",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:170:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:175:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:197:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:250:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:257:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:263:for",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:285:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:293:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:295:for",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:310:for",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:328:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:338:for",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:349:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:361:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:374:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:376:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:461:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:465:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:474:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:477:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:487:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:502:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:551:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:586:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:589:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:594:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:596:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:624:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:630:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:655:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:741:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:743:for",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:782:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:787:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:849:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:859:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:882:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:891:if",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:914:for",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:90:Composer",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:45:HomePage",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/hooks/use-voice-input.ts:40:useVoiceInput",
+      "contract": "integration-points-m2.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:92:for",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:96:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:113:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:137:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:145:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:165:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:198:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:210:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:231:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:234:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:237:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:238:for",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:244:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:256:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:289:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:314:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:388:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:422:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:428:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:464:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:484:for",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:485:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:512:while",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:530:while",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:536:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:555:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:558:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:70:for",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:96:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:149:for",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:170:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:175:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:197:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:250:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:257:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:263:for",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:285:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:293:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:295:for",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:310:for",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:328:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:338:for",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:349:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:361:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:374:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:376:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:461:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:465:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:474:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:477:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:487:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:502:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:551:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:586:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:589:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:594:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:596:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:624:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:630:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:655:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:741:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:743:for",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:782:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:787:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:849:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:859:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:882:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:891:if",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:914:for",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/hooks/use-whisper.ts:23:useWhisper",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/utils/audio-utils.ts:49:snapshotAudio",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/utils/stt-component-worker.ts:108:transcribe",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/utils/whisper-worker.ts:69:transcribe",
+      "contract": "integration-points-m4.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:92:for",
+      "contract": "integration-points-m5.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:238:for",
+      "contract": "integration-points-m5.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:484:for",
+      "contract": "integration-points-m5.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:70:for",
+      "contract": "integration-points-m5.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:149:for",
+      "contract": "integration-points-m5.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:263:for",
+      "contract": "integration-points-m5.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:295:for",
+      "contract": "integration-points-m5.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:310:for",
+      "contract": "integration-points-m5.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:338:for",
+      "contract": "integration-points-m5.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:743:for",
+      "contract": "integration-points-m5.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:914:for",
+      "contract": "integration-points-m5.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/hooks/voice-events.ts:39:emitVoiceEvent",
+      "contract": "integration-points-m5.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/hooks/voice-events.ts:58:subscribeVoiceEvents",
+      "contract": "integration-points-m5.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:92:for",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:96:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:113:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:137:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:145:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:165:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:198:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:210:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:231:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:234:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:237:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:238:for",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:244:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:256:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:289:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:314:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:388:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:422:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:428:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:464:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:484:for",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:485:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:536:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:555:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:558:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/routes.ts:157:files",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/routes.ts:441:path",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:70:for",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:96:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:149:for",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:170:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:175:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:197:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:250:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:257:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:263:for",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:285:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:293:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:295:for",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:310:for",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:328:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:338:for",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:349:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:361:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:374:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:376:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:461:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:465:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:474:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:477:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:487:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:502:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:551:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:586:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:589:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:594:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:596:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:624:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:630:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:655:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:741:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:743:for",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:782:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:787:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:849:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:859:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:882:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:891:if",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:914:for",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:26:cwd",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:33:cwd",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:100:cwd",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:104:cwd",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:9:Sidebar",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:335:cwd",
+      "contract": "integration-points-m7.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:92:for",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:96:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:113:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:137:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:145:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:165:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:198:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:210:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:231:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:234:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:237:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:238:for",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:244:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:256:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:289:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:314:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:388:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:422:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:428:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:464:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:484:for",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:485:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:536:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:555:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:558:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/routes.ts:157:files",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:70:for",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:96:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:149:for",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:170:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:175:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:197:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:250:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:257:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:263:for",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:285:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:293:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:295:for",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:304:sessionId",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:310:for",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:323:sessionId",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:328:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:338:for",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:349:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:361:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:374:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:376:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:384:sessionId",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:400:sessionId",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:414:switch",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:461:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:465:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:474:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:477:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:487:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:502:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:551:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:586:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:589:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:594:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:596:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:624:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:630:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:655:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:705:switch",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:741:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:743:for",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:782:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:787:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:849:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:859:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:882:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:891:if",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:914:for",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:90:Composer",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:45:HomePage",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/utils/notifications.ts:18:sendNotification",
+      "contract": "integration-points.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:96:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:113:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:137:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:145:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:165:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:198:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:210:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:231:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:234:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:237:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:244:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:256:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:289:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:314:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:388:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:422:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:428:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:464:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:485:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:536:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:555:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:558:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-names.ts:33:persist",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:96:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:170:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:175:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:197:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:250:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:257:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:285:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:293:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:304:sessionId",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:323:sessionId",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:328:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:349:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:361:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:374:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:376:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:384:sessionId",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:400:sessionId",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:461:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:465:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:474:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:477:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:487:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:502:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:551:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:586:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:589:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:594:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:596:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:624:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:630:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:655:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:741:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:782:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:787:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:849:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:859:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:882:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:891:if",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:45:HomePage",
+      "contract": "store-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:92:for",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:238:for",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:484:for",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:70:for",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:149:for",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:263:for",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:295:for",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:310:for",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:338:for",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:743:for",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:914:for",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:90:Composer",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:45:HomePage",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/components/SpeechMonitor.tsx:18:SpeechMonitor",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/hooks/use-whisper.ts:23:useWhisper",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/hooks/voice-events.ts:39:emitVoiceEvent",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/hooks/voice-events.ts:58:subscribeVoiceEvents",
+      "contract": "voice-mode-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.test.ts:27:actual",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:92:for",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:96:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:113:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:137:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:145:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:165:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:198:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:210:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:231:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:234:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:237:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:238:for",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:244:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:256:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:289:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:314:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:388:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:422:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:428:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:464:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:484:for",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:485:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:512:while",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:530:while",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:536:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:555:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:558:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:70:for",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/session-store.ts:96:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:149:for",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:170:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:175:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:197:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:250:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:257:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:263:for",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:285:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:293:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:295:for",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:310:for",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:328:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:338:for",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:349:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:361:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:374:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:376:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:461:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:465:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:474:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:477:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:487:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:502:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:551:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:586:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:589:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:594:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:596:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:624:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:630:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:655:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:741:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:743:for",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:782:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:787:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:849:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:859:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:882:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:891:if",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:914:for",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/hooks/use-whisper.ts:23:useWhisper",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/utils/audio-utils.ts:49:snapshotAudio",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/utils/audio-utils.ts:88:stopRawCapture",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/utils/stt-component-worker.ts:63:loadModel",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/utils/stt-component-worker.ts:108:transcribe",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/utils/whisper-worker.ts:28:loadModel",
+      "contract": "whisper-contract.md",
+      "section": ""
+    },
+    {
+      "entity": "web/src/utils/whisper-worker.ts:69:transcribe",
+      "contract": "whisper-contract.md",
+      "section": ""
+    }
+  ]
+}

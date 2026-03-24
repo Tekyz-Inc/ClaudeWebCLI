@@ -20,20 +20,23 @@ const DARK_THEME = {
 
 interface Props {
   cwd?: string;
+  isVisible?: boolean;
 }
 
-export function TerminalPanel({ cwd }: Props) {
+export function TerminalPanel({ cwd, isVisible }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const observerRef = useRef<ResizeObserver | null>(null);
+  const openedRef = useRef(false);
   const idRef = useRef(Math.random().toString(36).slice(2, 10));
   const [connected, setConnected] = useState(false);
 
-  // Initialize once — terminal + WS persist across open/close
+  // Create terminal object + WebSocket once on mount.
+  // Do NOT call term.open() here — the container is zero-size until the panel
+  // first becomes visible, and xterm v6 requires non-zero dimensions at open time.
   useEffect(() => {
-    if (!containerRef.current) return;
-
     const term = new Terminal({
       cols: 80,
       rows: 24,
@@ -46,8 +49,6 @@ export function TerminalPanel({ cwd }: Props) {
     });
     const fit = new FitAddon();
     term.loadAddon(fit);
-    term.open(containerRef.current);
-    // Don't fit immediately — container may be hidden (0px); ResizeObserver handles it
     termRef.current = term;
     fitRef.current = fit;
 
@@ -72,23 +73,52 @@ export function TerminalPanel({ cwd }: Props) {
       }
     });
 
-    // Auto-refit when container resizes, then notify server of new dimensions
-    const observer = new ResizeObserver(() => {
-      const el = containerRef.current;
-      if (!el || el.clientWidth < 10) return;
-      fit.fit();
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
-      }
-    });
-    observer.observe(containerRef.current);
-
     return () => {
-      observer.disconnect();
+      observerRef.current?.disconnect();
       ws.close();
       term.dispose();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When the panel becomes visible: open xterm into the DOM (first time only),
+  // fit to container, then focus so keystrokes work immediately.
+  useEffect(() => {
+    if (!isVisible) return;
+    const term = termRef.current;
+    const fit = fitRef.current;
+    const container = containerRef.current;
+    if (!term || !fit || !container) return;
+
+    // Attach xterm to the DOM the very first time the panel is shown
+    if (!openedRef.current) {
+      openedRef.current = true;
+      term.open(container);
+
+      // Watch for resize after first open
+      const observer = new ResizeObserver(() => {
+        if (!containerRef.current || containerRef.current.clientWidth < 10) return;
+        fit.fit();
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
+        }
+      });
+      observer.observe(container);
+      observerRef.current = observer;
+    }
+
+    // Fit + focus after the CSS slide transition completes (200ms in App.tsx).
+    // Focusing before the panel is fully expanded causes the xterm textarea to be
+    // clipped by overflow-hidden on the parent, silently swallowing all keystrokes.
+    const id = setTimeout(() => {
+      fit.fit();
+      term.focus();
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
+      }
+    }, 220);
+
+    return () => clearTimeout(id);
+  }, [isVisible]);
 
   const cwdLabel = cwd ? cwd.replace(/\\/g, "/").split("/").pop() : undefined;
 
@@ -108,8 +138,13 @@ export function TerminalPanel({ cwd }: Props) {
           {connected ? "● Connected" : "● Disconnected"}
         </span>
       </div>
-      {/* xterm container */}
-      <div ref={containerRef} className="flex-1 overflow-hidden" style={{ padding: "4px 8px" }} />
+      {/* xterm container — click to re-focus the terminal */}
+      <div
+        ref={containerRef}
+        className="flex-1 overflow-hidden"
+        style={{ padding: "4px 8px" }}
+        onClickCapture={() => termRef.current?.focus()}
+      />
     </div>
   );
 }

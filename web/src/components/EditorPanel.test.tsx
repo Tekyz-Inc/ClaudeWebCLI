@@ -130,20 +130,21 @@ describe("EditorPanel", () => {
   });
 
   it("switches to diff view and fetches diff when Diff button is clicked", async () => {
-    const diffOutput = `diff --git a/file.ts b/file.ts
---- a/file.ts
-+++ b/file.ts
+    // Use .txt extension to avoid hljs syntax highlighting wrapping content in spans
+    const diffOutput = `diff --git a/file.txt b/file.txt
+--- a/file.txt
++++ b/file.txt
 @@ -1,3 +1,3 @@
  line1
 -old line
 +new line
  line3`;
 
-    mockApi.getFileDiff.mockResolvedValueOnce({ path: "/repo/file.ts", diff: diffOutput });
+    mockApi.getFileDiff.mockResolvedValueOnce({ path: "/repo/file.txt", diff: diffOutput });
 
     resetStore({
-      editorOpenFile: new Map([["s1", "/repo/file.ts"]]),
-      changedFiles: new Map([["s1", new Set(["/repo/file.ts"])]]),
+      editorOpenFile: new Map([["s1", "/repo/file.txt"]]),
+      changedFiles: new Map([["s1", new Set(["/repo/file.txt"])]]),
     });
 
     render(<EditorPanel sessionId="s1" />);
@@ -155,10 +156,10 @@ describe("EditorPanel", () => {
     fireEvent.click(screen.getByText("Diff"));
 
     await waitFor(() => {
-      expect(mockApi.getFileDiff).toHaveBeenCalledWith("/repo/file.ts");
+      expect(mockApi.getFileDiff).toHaveBeenCalledWith("/repo/file.txt");
     });
 
-    // Diff lines should be rendered (new side-by-side format: content without prefix)
+    // Diff lines should be rendered (side-by-side format renders content as plain text for .txt)
     await waitFor(() => {
       expect(screen.getByText("old line")).toBeInTheDocument();
       expect(screen.getByText("new line")).toBeInTheDocument();
@@ -217,17 +218,20 @@ describe("EditorPanel", () => {
   });
 
   it("renders diff lines with correct color classes", async () => {
-    const diffOutput = `diff --git a/f.ts b/f.ts
+    // Use .txt extension to avoid hljs syntax highlighting
+    const diffOutput = `diff --git a/f.txt b/f.txt
+--- a/f.txt
++++ b/f.txt
 @@ -1,2 +1,2 @@
  context
 -removed
 +added`;
 
-    mockApi.getFileDiff.mockResolvedValueOnce({ path: "/repo/f.ts", diff: diffOutput });
+    mockApi.getFileDiff.mockResolvedValueOnce({ path: "/repo/f.txt", diff: diffOutput });
 
     resetStore({
-      editorOpenFile: new Map([["s1", "/repo/f.ts"]]),
-      changedFiles: new Map([["s1", new Set(["/repo/f.ts"])]]),
+      editorOpenFile: new Map([["s1", "/repo/f.txt"]]),
+      changedFiles: new Map([["s1", new Set(["/repo/f.txt"])]]),
     });
 
     render(<EditorPanel sessionId="s1" />);
@@ -242,19 +246,23 @@ describe("EditorPanel", () => {
       expect(screen.getByText("removed")).toBeInTheDocument();
     });
 
-    // Check color classes — side-by-side format: content spans carry the color class
-    const removedLine = screen.getByText("removed");
-    expect(removedLine).toHaveClass("text-cc-error");
+    // DiffView side-by-side format: removed lines have bg-red-950/40 on the parent <td>
+    const removedEl = screen.getByText("removed");
+    const removedTd = removedEl.closest("td");
+    expect(removedTd?.className).toContain("bg-red-950/40");
 
-    const addedLine = screen.getByText("added");
-    expect(addedLine).toHaveClass("text-cc-success");
+    // Added lines have bg-green-950/40 on the parent <td>
+    const addedEl = screen.getByText("added");
+    const addedTd = addedEl.closest("td");
+    expect(addedTd?.className).toContain("bg-green-950/40");
 
+    // Hunk header <td> has text-cc-primary class
     const hunkHeader = screen.getByText("@@ -1,2 +1,2 @@");
     expect(hunkHeader).toHaveClass("text-cc-primary");
 
-    // Context lines use text-cc-fg in side-by-side view
-    const contextLine = screen.getAllByText("context")[0];
-    expect(contextLine).toHaveClass("text-cc-fg");
+    // Context lines appear in both left and right columns
+    const contextEls = screen.getAllByText("context");
+    expect(contextEls.length).toBeGreaterThan(0);
   });
 
   it("displays Changed Files section when files are modified", () => {

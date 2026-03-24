@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit",
+      "Write",
+      "Bash",
+      "Read",
+      "WebSearch",
+      "WebFetch",
+      "Skill"
+    ]
+  },
+  "outputStyle": "default",
+    "env": {
+      "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    }
+}

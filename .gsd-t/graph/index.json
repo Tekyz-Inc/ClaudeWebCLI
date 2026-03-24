@@ -1,0 +1,3703 @@
+{
+  "entities": [
+    {
+      "id": "web/dev.ts:20:prefix",
+      "name": "prefix",
+      "type": "function",
+      "file": "web/dev.ts",
+      "line": 20,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/dev.ts:61:cleanup",
+      "name": "cleanup",
+      "type": "function",
+      "file": "web/dev.ts",
+      "line": 61,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/auto-namer.test.ts:20:makeStdout",
+      "name": "makeStdout",
+      "type": "function",
+      "file": "web/server/auto-namer.test.ts",
+      "line": 20,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/auto-namer.test.ts:123:spawnArgs",
+      "name": "spawnArgs",
+      "type": "function",
+      "file": "web/server/auto-namer.test.ts",
+      "line": 123,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/auto-namer.test.ts:137:spawnArgs",
+      "name": "spawnArgs",
+      "type": "function",
+      "file": "web/server/auto-namer.test.ts",
+      "line": 137,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/auto-namer.test.ts:176:spawnArgs",
+      "name": "spawnArgs",
+      "type": "function",
+      "file": "web/server/auto-namer.test.ts",
+      "line": 176,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/auto-namer.ts:5:resolveClaudeBinary",
+      "name": "resolveClaudeBinary",
+      "type": "function",
+      "file": "web/server/auto-namer.ts",
+      "line": 5,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/auto-namer.ts:28:generateSessionTitle",
+      "name": "generateSessionTitle",
+      "type": "function",
+      "file": "web/server/auto-namer.ts",
+      "line": 28,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/auto-namer.ts:67:raw",
+      "name": "raw",
+      "type": "function",
+      "file": "web/server/auto-namer.ts",
+      "line": 67,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/claude-sessions.test.ts:31:makeTempDir",
+      "name": "makeTempDir",
+      "type": "function",
+      "file": "web/server/claude-sessions.test.ts",
+      "line": 31,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/claude-sessions.test.ts:42:makeUserLine",
+      "name": "makeUserLine",
+      "type": "function",
+      "file": "web/server/claude-sessions.test.ts",
+      "line": 42,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/claude-sessions.ts:14:encodeProjectSlug",
+      "name": "encodeProjectSlug",
+      "type": "function",
+      "file": "web/server/claude-sessions.ts",
+      "line": 14,
+      "domain": "claude-sessions-api",
+      "exported": true
+    },
+    {
+      "id": "web/server/claude-sessions.ts:36:extractFirstMessage",
+      "name": "extractFirstMessage",
+      "type": "function",
+      "file": "web/server/claude-sessions.ts",
+      "line": 36,
+      "domain": "claude-sessions-api",
+      "exported": false
+    },
+    {
+      "id": "web/server/claude-sessions.ts:60:readClaudeSessionsFromDir",
+      "name": "readClaudeSessionsFromDir",
+      "type": "function",
+      "file": "web/server/claude-sessions.ts",
+      "line": 60,
+      "domain": "claude-sessions-api",
+      "exported": true
+    },
+    {
+      "id": "web/server/claude-sessions.ts:113:readClaudeSessions",
+      "name": "readClaudeSessions",
+      "type": "function",
+      "file": "web/server/claude-sessions.ts",
+      "line": 113,
+      "domain": "claude-sessions-api",
+      "exported": true
+    },
+    {
+      "id": "web/server/claude-sessions.ts:140:readClaudeSessionActivity",
+      "name": "readClaudeSessionActivity",
+      "type": "function",
+      "file": "web/server/claude-sessions.ts",
+      "line": 140,
+      "domain": "claude-sessions-api",
+      "exported": true
+    },
+    {
+      "id": "web/server/claude-sessions.ts:171:readClaudeSessionMessages",
+      "name": "readClaudeSessionMessages",
+      "type": "function",
+      "file": "web/server/claude-sessions.ts",
+      "line": 171,
+      "domain": "claude-sessions-api",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.test.ts:27:actual",
+      "name": "actual",
+      "type": "function",
+      "file": "web/server/cli-launcher.test.ts",
+      "line": 27,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/cli-launcher.test.ts:66:createMockProc",
+      "name": "createMockProc",
+      "type": "function",
+      "file": "web/server/cli-launcher.test.ts",
+      "line": 66,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/cli-launcher.ts:60:CliLauncher",
+      "name": "CliLauncher",
+      "type": "class",
+      "file": "web/server/cli-launcher.ts",
+      "line": 60,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:92:for",
+      "name": "for",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 92,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:96:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 96,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:113:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 113,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:137:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 137,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:145:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 145,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:165:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 165,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:198:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 198,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:210:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 210,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:231:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 231,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:234:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 234,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:237:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 237,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:238:for",
+      "name": "for",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 238,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:244:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 244,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:256:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 256,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:289:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 289,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:314:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 314,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:388:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 388,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:422:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 422,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:428:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 428,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:464:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 464,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:473:removeSession",
+      "name": "removeSession",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 473,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:484:for",
+      "name": "for",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 484,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:485:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 485,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:512:while",
+      "name": "while",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 512,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:530:while",
+      "name": "while",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 530,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:536:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 536,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:555:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 555,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/cli-launcher.ts:558:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/cli-launcher.ts",
+      "line": 558,
+      "domain": "session-resume",
+      "exported": true
+    },
+    {
+      "id": "web/server/env-manager.test.ts:40:envsDir",
+      "name": "envsDir",
+      "type": "function",
+      "file": "web/server/env-manager.test.ts",
+      "line": 40,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/env-manager.ts:27:ensureDir",
+      "name": "ensureDir",
+      "type": "function",
+      "file": "web/server/env-manager.ts",
+      "line": 27,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/env-manager.ts:31:filePath",
+      "name": "filePath",
+      "type": "function",
+      "file": "web/server/env-manager.ts",
+      "line": 31,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/env-manager.ts:37:slugify",
+      "name": "slugify",
+      "type": "function",
+      "file": "web/server/env-manager.ts",
+      "line": 37,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/env-manager.ts:48:listEnvs",
+      "name": "listEnvs",
+      "type": "function",
+      "file": "web/server/env-manager.ts",
+      "line": 48,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/env-manager.ts:68:getEnv",
+      "name": "getEnv",
+      "type": "function",
+      "file": "web/server/env-manager.ts",
+      "line": 68,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/env-manager.ts:78:createEnv",
+      "name": "createEnv",
+      "type": "function",
+      "file": "web/server/env-manager.ts",
+      "line": 78,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/env-manager.ts:103:updateEnv",
+      "name": "updateEnv",
+      "type": "function",
+      "file": "web/server/env-manager.ts",
+      "line": 103,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/env-manager.ts:137:deleteEnv",
+      "name": "deleteEnv",
+      "type": "function",
+      "file": "web/server/env-manager.ts",
+      "line": 137,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/git-utils.test.ts:23:mockGitCommand",
+      "name": "mockGitCommand",
+      "type": "function",
+      "file": "web/server/git-utils.test.ts",
+      "line": 23,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/git-utils.test.ts:32:mockGitCommands",
+      "name": "mockGitCommands",
+      "type": "function",
+      "file": "web/server/git-utils.test.ts",
+      "line": 32,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/git-utils.ts:46:sanitizeBranch",
+      "name": "sanitizeBranch",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 46,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/git-utils.ts:50:worktreeDir",
+      "name": "worktreeDir",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 50,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/git-utils.ts:56:git",
+      "name": "git",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 56,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/git-utils.ts:65:gitSafe",
+      "name": "gitSafe",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 65,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/git-utils.ts:75:getRepoInfo",
+      "name": "getRepoInfo",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 75,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/git-utils.ts:95:resolveDefaultBranch",
+      "name": "resolveDefaultBranch",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 95,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/git-utils.ts:109:listBranches",
+      "name": "listBranches",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 109,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/git-utils.ts:167:listWorktrees",
+      "name": "listWorktrees",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 167,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/git-utils.ts:207:ensureWorktree",
+      "name": "ensureWorktree",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 207,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/git-utils.ts:281:generateUniqueWorktreeBranch",
+      "name": "generateUniqueWorktreeBranch",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 281,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/git-utils.ts:293:removeWorktree",
+      "name": "removeWorktree",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 293,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/git-utils.ts:330:isWorktreeDirty",
+      "name": "isWorktreeDirty",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 330,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/git-utils.ts:336:gitFetch",
+      "name": "gitFetch",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 336,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/git-utils.ts:345:gitPull",
+      "name": "gitPull",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 345,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/git-utils.ts:357:checkoutBranch",
+      "name": "checkoutBranch",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 357,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/git-utils.ts:361:getBranchStatus",
+      "name": "getBranchStatus",
+      "type": "function",
+      "file": "web/server/git-utils.ts",
+      "line": 361,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/index.ts:59:count",
+      "name": "count",
+      "type": "function",
+      "file": "web/server/index.ts",
+      "line": 59,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/routes.test.ts:42:createMockLauncher",
+      "name": "createMockLauncher",
+      "type": "function",
+      "file": "web/server/routes.test.ts",
+      "line": 42,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/routes.test.ts:59:createMockBridge",
+      "name": "createMockBridge",
+      "type": "function",
+      "file": "web/server/routes.test.ts",
+      "line": 59,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/routes.test.ts:65:createMockStore",
+      "name": "createMockStore",
+      "type": "function",
+      "file": "web/server/routes.test.ts",
+      "line": 65,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/routes.test.ts:71:createMockTracker",
+      "name": "createMockTracker",
+      "type": "function",
+      "file": "web/server/routes.test.ts",
+      "line": 71,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/routes.ts:15:createRoutes",
+      "name": "createRoutes",
+      "type": "function",
+      "file": "web/server/routes.ts",
+      "line": 15,
+      "domain": "claude-sessions-api",
+      "exported": true
+    },
+    {
+      "id": "web/server/routes.ts:143:parseArgumentHint",
+      "name": "parseArgumentHint",
+      "type": "function",
+      "file": "web/server/routes.ts",
+      "line": 143,
+      "domain": "claude-sessions-api",
+      "exported": false
+    },
+    {
+      "id": "web/server/routes.ts:153:readCommandDir",
+      "name": "readCommandDir",
+      "type": "function",
+      "file": "web/server/routes.ts",
+      "line": 153,
+      "domain": "claude-sessions-api",
+      "exported": false
+    },
+    {
+      "id": "web/server/routes.ts:157:files",
+      "name": "files",
+      "type": "function",
+      "file": "web/server/routes.ts",
+      "line": 157,
+      "domain": "claude-sessions-api",
+      "exported": false
+    },
+    {
+      "id": "web/server/routes.ts:306:buildTree",
+      "name": "buildTree",
+      "type": "function",
+      "file": "web/server/routes.ts",
+      "line": 306,
+      "domain": "claude-sessions-api",
+      "exported": false
+    },
+    {
+      "id": "web/server/routes.ts:441:path",
+      "name": "path",
+      "type": "function",
+      "file": "web/server/routes.ts",
+      "line": 441,
+      "domain": "claude-sessions-api",
+      "exported": false
+    },
+    {
+      "id": "web/server/routes.ts:529:cleanupWorktree",
+      "name": "cleanupWorktree",
+      "type": "function",
+      "file": "web/server/routes.ts",
+      "line": 529,
+      "domain": "claude-sessions-api",
+      "exported": false
+    },
+    {
+      "id": "web/server/session-names.ts:20:ensureLoaded",
+      "name": "ensureLoaded",
+      "type": "function",
+      "file": "web/server/session-names.ts",
+      "line": 20,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/session-names.ts:33:persist",
+      "name": "persist",
+      "type": "function",
+      "file": "web/server/session-names.ts",
+      "line": 33,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/session-names.ts:40:getName",
+      "name": "getName",
+      "type": "function",
+      "file": "web/server/session-names.ts",
+      "line": 40,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/session-names.ts:45:setName",
+      "name": "setName",
+      "type": "function",
+      "file": "web/server/session-names.ts",
+      "line": 45,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/session-names.ts:51:getAllNames",
+      "name": "getAllNames",
+      "type": "function",
+      "file": "web/server/session-names.ts",
+      "line": 51,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/session-names.ts:56:removeName",
+      "name": "removeName",
+      "type": "function",
+      "file": "web/server/session-names.ts",
+      "line": 56,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/session-names.ts:63:_resetForTest",
+      "name": "_resetForTest",
+      "type": "function",
+      "file": "web/server/session-names.ts",
+      "line": 63,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/session-store.test.ts:9:makeSession",
+      "name": "makeSession",
+      "type": "function",
+      "file": "web/server/session-store.test.ts",
+      "line": 9,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/session-store.ts:21:SessionStore",
+      "name": "SessionStore",
+      "type": "class",
+      "file": "web/server/session-store.ts",
+      "line": 21,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/session-store.ts:70:for",
+      "name": "for",
+      "type": "method",
+      "file": "web/server/session-store.ts",
+      "line": 70,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/session-store.ts:96:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/session-store.ts",
+      "line": 96,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/terminal-ws.ts:9:handleTerminalOpen",
+      "name": "handleTerminalOpen",
+      "type": "function",
+      "file": "web/server/terminal-ws.ts",
+      "line": 9,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/terminal-ws.ts:38:handleTerminalMessage",
+      "name": "handleTerminalMessage",
+      "type": "function",
+      "file": "web/server/terminal-ws.ts",
+      "line": 38,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/terminal-ws.ts:56:handleTerminalClose",
+      "name": "handleTerminalClose",
+      "type": "function",
+      "file": "web/server/terminal-ws.ts",
+      "line": 56,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "name": "makeMapping",
+      "type": "function",
+      "file": "web/server/worktree-tracker.test.ts",
+      "line": 45,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/worktree-tracker.test.ts:56:trackerFilePath",
+      "name": "trackerFilePath",
+      "type": "function",
+      "file": "web/server/worktree-tracker.test.ts",
+      "line": 56,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/worktree-tracker.test.ts:60:readTrackerFile",
+      "name": "readTrackerFile",
+      "type": "function",
+      "file": "web/server/worktree-tracker.test.ts",
+      "line": 60,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/worktree-tracker.ts:28:WorktreeTracker",
+      "name": "WorktreeTracker",
+      "type": "class",
+      "file": "web/server/worktree-tracker.ts",
+      "line": 28,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.test.ts:13:createMockSocket",
+      "name": "createMockSocket",
+      "type": "function",
+      "file": "web/server/ws-bridge.test.ts",
+      "line": 13,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/ws-bridge.test.ts:22:makeCliSocket",
+      "name": "makeCliSocket",
+      "type": "function",
+      "file": "web/server/ws-bridge.test.ts",
+      "line": 22,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/ws-bridge.test.ts:26:makeBrowserSocket",
+      "name": "makeBrowserSocket",
+      "type": "function",
+      "file": "web/server/ws-bridge.test.ts",
+      "line": 26,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "name": "makeInitMsg",
+      "type": "function",
+      "file": "web/server/ws-bridge.test.ts",
+      "line": 48,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/ws-bridge.ts:71:makeDefaultState",
+      "name": "makeDefaultState",
+      "type": "function",
+      "file": "web/server/ws-bridge.ts",
+      "line": 71,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/ws-bridge.ts:99:WsBridge",
+      "name": "WsBridge",
+      "type": "class",
+      "file": "web/server/ws-bridge.ts",
+      "line": 99,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:149:for",
+      "name": "for",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 149,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:170:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 170,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:175:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 175,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:197:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 197,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:236:removeSession",
+      "name": "removeSession",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 236,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:245:closeSession",
+      "name": "closeSession",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 245,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:250:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 250,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:257:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 257,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:263:for",
+      "name": "for",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 263,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:275:handleCLIOpen",
+      "name": "handleCLIOpen",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 275,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:285:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 285,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:293:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 293,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:295:for",
+      "name": "for",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 295,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:302:handleCLIMessage",
+      "name": "handleCLIMessage",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 302,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:304:sessionId",
+      "name": "sessionId",
+      "type": "function",
+      "file": "web/server/ws-bridge.ts",
+      "line": 304,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/ws-bridge.ts:310:for",
+      "name": "for",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 310,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:322:handleCLIClose",
+      "name": "handleCLIClose",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 322,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:323:sessionId",
+      "name": "sessionId",
+      "type": "function",
+      "file": "web/server/ws-bridge.ts",
+      "line": 323,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/ws-bridge.ts:328:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 328,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:338:for",
+      "name": "for",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 338,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:346:handleBrowserOpen",
+      "name": "handleBrowserOpen",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 346,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:349:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 349,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:361:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 361,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:374:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 374,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:376:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 376,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:382:handleBrowserMessage",
+      "name": "handleBrowserMessage",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 382,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:384:sessionId",
+      "name": "sessionId",
+      "type": "function",
+      "file": "web/server/ws-bridge.ts",
+      "line": 384,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/ws-bridge.ts:399:handleBrowserClose",
+      "name": "handleBrowserClose",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 399,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:400:sessionId",
+      "name": "sessionId",
+      "type": "function",
+      "file": "web/server/ws-bridge.ts",
+      "line": 400,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/server/ws-bridge.ts:414:switch",
+      "name": "switch",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 414,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:461:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 461,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:465:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 465,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:474:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 474,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:477:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 477,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:487:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 487,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:502:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 502,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:551:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 551,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:586:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 586,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:589:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 589,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:594:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 594,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:596:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 596,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:624:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 624,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:630:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 630,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:655:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 655,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:705:switch",
+      "name": "switch",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 705,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:741:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 741,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:743:for",
+      "name": "for",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 743,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:782:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 782,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:787:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 787,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:849:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 849,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:859:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 859,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:882:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 882,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:891:if",
+      "name": "if",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 891,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/server/ws-bridge.ts:914:for",
+      "name": "for",
+      "type": "method",
+      "file": "web/server/ws-bridge.ts",
+      "line": 914,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/api.test.ts:7:mockResponse",
+      "name": "mockResponse",
+      "type": "function",
+      "file": "web/src/api.test.ts",
+      "line": 7,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/App.tsx:14:useHash",
+      "name": "useHash",
+      "type": "function",
+      "file": "web/src/App.tsx",
+      "line": 14,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ChatView.tsx:7:ChatView",
+      "name": "ChatView",
+      "type": "function",
+      "file": "web/src/components/ChatView.tsx",
+      "line": 7,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/Composer.test.tsx:34:useStore",
+      "name": "useStore",
+      "type": "function",
+      "file": "web/src/components/Composer.test.tsx",
+      "line": 34,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.test.tsx:44:makeSession",
+      "name": "makeSession",
+      "type": "function",
+      "file": "web/src/components/Composer.test.tsx",
+      "line": 44,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.test.tsx:71:setupMockStore",
+      "name": "setupMockStore",
+      "type": "function",
+      "file": "web/src/components/Composer.test.tsx",
+      "line": 71,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:17:getDraft",
+      "name": "getDraft",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 17,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:21:setDraft",
+      "name": "setDraft",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 21,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:36:readFileAsBase64",
+      "name": "readFileAsBase64",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 36,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:90:Composer",
+      "name": "Composer",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 90,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/Composer.tsx:227:handleSend",
+      "name": "handleSend",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 227,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:273:handleKeyDown",
+      "name": "handleKeyDown",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 273,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:347:handleInput",
+      "name": "handleInput",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 347,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:351:handleInterrupt",
+      "name": "handleInterrupt",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 351,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:355:handleFileSelect",
+      "name": "handleFileSelect",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 355,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:368:removeImage",
+      "name": "removeImage",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 368,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:372:handlePaste",
+      "name": "handlePaste",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 372,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:389:handleDragEnter",
+      "name": "handleDragEnter",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 389,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:395:handleDragLeave",
+      "name": "handleDragLeave",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 395,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:401:handleDragOver",
+      "name": "handleDragOver",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 401,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:405:handleDrop",
+      "name": "handleDrop",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 405,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:422:cycleMode",
+      "name": "cycleMode",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 422,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:434:isRunning",
+      "name": "isRunning",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 434,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Composer.tsx:436:canSend",
+      "name": "canSend",
+      "type": "function",
+      "file": "web/src/components/Composer.tsx",
+      "line": 436,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/CopyButton.tsx:3:CopyButton",
+      "name": "CopyButton",
+      "type": "function",
+      "file": "web/src/components/CopyButton.tsx",
+      "line": 3,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/CopyButton.tsx:6:handleCopy",
+      "name": "handleCopy",
+      "type": "function",
+      "file": "web/src/components/CopyButton.tsx",
+      "line": 6,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/DiffView.tsx:41:detectLang",
+      "name": "detectLang",
+      "type": "function",
+      "file": "web/src/components/DiffView.tsx",
+      "line": 41,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/DiffView.tsx:50:parseDiff",
+      "name": "parseDiff",
+      "type": "function",
+      "file": "web/src/components/DiffView.tsx",
+      "line": 50,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/DiffView.tsx:103:escHtml",
+      "name": "escHtml",
+      "type": "function",
+      "file": "web/src/components/DiffView.tsx",
+      "line": 103,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/DiffView.tsx:108:splitHighlightedHtml",
+      "name": "splitHighlightedHtml",
+      "type": "function",
+      "file": "web/src/components/DiffView.tsx",
+      "line": 108,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/DiffView.tsx:114:closeCount",
+      "name": "closeCount",
+      "type": "function",
+      "file": "web/src/components/DiffView.tsx",
+      "line": 114,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/DiffView.tsx:121:buildHighlights",
+      "name": "buildHighlights",
+      "type": "function",
+      "file": "web/src/components/DiffView.tsx",
+      "line": 121,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/DiffView.tsx:133:cellBg",
+      "name": "cellBg",
+      "type": "function",
+      "file": "web/src/components/DiffView.tsx",
+      "line": 133,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/DiffView.tsx:140:markerColor",
+      "name": "markerColor",
+      "type": "function",
+      "file": "web/src/components/DiffView.tsx",
+      "line": 140,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/DiffView.tsx:146:marker",
+      "name": "marker",
+      "type": "function",
+      "file": "web/src/components/DiffView.tsx",
+      "line": 146,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/DiffView.tsx:154:DiffView",
+      "name": "DiffView",
+      "type": "function",
+      "file": "web/src/components/DiffView.tsx",
+      "line": 154,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/EditorPanel.test.tsx:59:resetStore",
+      "name": "resetStore",
+      "type": "function",
+      "file": "web/src/components/EditorPanel.test.tsx",
+      "line": 59,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/EditorPanel.tsx:40:getLanguageExtension",
+      "name": "getLanguageExtension",
+      "type": "function",
+      "file": "web/src/components/EditorPanel.tsx",
+      "line": 40,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/EditorPanel.tsx:71:FileIcon",
+      "name": "FileIcon",
+      "type": "function",
+      "file": "web/src/components/EditorPanel.tsx",
+      "line": 71,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/EditorPanel.tsx:92:hasChangedDescendant",
+      "name": "hasChangedDescendant",
+      "type": "function",
+      "file": "web/src/components/EditorPanel.tsx",
+      "line": 92,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/EditorPanel.tsx:100:FileTreeNode",
+      "name": "FileTreeNode",
+      "type": "function",
+      "file": "web/src/components/EditorPanel.tsx",
+      "line": 100,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/EditorPanel.tsx:165:EditorPanel",
+      "name": "EditorPanel",
+      "type": "function",
+      "file": "web/src/components/EditorPanel.tsx",
+      "line": 165,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/EnvManager.tsx:14:EnvManager",
+      "name": "EnvManager",
+      "type": "function",
+      "file": "web/src/components/EnvManager.tsx",
+      "line": 14,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/EnvManager.tsx:27:refresh",
+      "name": "refresh",
+      "type": "function",
+      "file": "web/src/components/EnvManager.tsx",
+      "line": 27,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/EnvManager.tsx:33:startEdit",
+      "name": "startEdit",
+      "type": "function",
+      "file": "web/src/components/EnvManager.tsx",
+      "line": 33,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/EnvManager.tsx:42:cancelEdit",
+      "name": "cancelEdit",
+      "type": "function",
+      "file": "web/src/components/EnvManager.tsx",
+      "line": 42,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/EnvManager.tsx:47:saveEdit",
+      "name": "saveEdit",
+      "type": "function",
+      "file": "web/src/components/EnvManager.tsx",
+      "line": 47,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/EnvManager.tsx:64:handleDelete",
+      "name": "handleDelete",
+      "type": "function",
+      "file": "web/src/components/EnvManager.tsx",
+      "line": 64,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/EnvManager.tsx:74:handleCreate",
+      "name": "handleCreate",
+      "type": "function",
+      "file": "web/src/components/EnvManager.tsx",
+      "line": 74,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/EnvManager.tsx:238:VarEditor",
+      "name": "VarEditor",
+      "type": "function",
+      "file": "web/src/components/EnvManager.tsx",
+      "line": 238,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/EnvManager.tsx:239:updateRow",
+      "name": "updateRow",
+      "type": "function",
+      "file": "web/src/components/EnvManager.tsx",
+      "line": 239,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/EnvManager.tsx:245:removeRow",
+      "name": "removeRow",
+      "type": "function",
+      "file": "web/src/components/EnvManager.tsx",
+      "line": 245,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/EnvManager.tsx:251:addRow",
+      "name": "addRow",
+      "type": "function",
+      "file": "web/src/components/EnvManager.tsx",
+      "line": 251,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/FolderPicker.tsx:12:FolderPicker",
+      "name": "FolderPicker",
+      "type": "function",
+      "file": "web/src/components/FolderPicker.tsx",
+      "line": 12,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/FolderPicker.tsx:39:handleKeyDown",
+      "name": "handleKeyDown",
+      "type": "function",
+      "file": "web/src/components/FolderPicker.tsx",
+      "line": 39,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/FolderPicker.tsx:46:selectDir",
+      "name": "selectDir",
+      "type": "function",
+      "file": "web/src/components/FolderPicker.tsx",
+      "line": 46,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/HomePage.test.tsx:44:useStore",
+      "name": "useStore",
+      "type": "function",
+      "file": "web/src/components/HomePage.test.tsx",
+      "line": 44,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/HomePage.tsx:17:readFileAsBase64",
+      "name": "readFileAsBase64",
+      "type": "function",
+      "file": "web/src/components/HomePage.tsx",
+      "line": 17,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/HomePage.tsx:45:HomePage",
+      "name": "HomePage",
+      "type": "function",
+      "file": "web/src/components/HomePage.tsx",
+      "line": 45,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/HomePage.tsx:101:handleClick",
+      "name": "handleClick",
+      "type": "function",
+      "file": "web/src/components/HomePage.tsx",
+      "line": 101,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/HomePage.tsx:154:cycleMode",
+      "name": "cycleMode",
+      "type": "function",
+      "file": "web/src/components/HomePage.tsx",
+      "line": 154,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/HomePage.tsx:159:cycleModel",
+      "name": "cycleModel",
+      "type": "function",
+      "file": "web/src/components/HomePage.tsx",
+      "line": 159,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/HomePage.tsx:164:handleFileSelect",
+      "name": "handleFileSelect",
+      "type": "function",
+      "file": "web/src/components/HomePage.tsx",
+      "line": 164,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/HomePage.tsx:177:removeImage",
+      "name": "removeImage",
+      "type": "function",
+      "file": "web/src/components/HomePage.tsx",
+      "line": 177,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/HomePage.tsx:181:handlePaste",
+      "name": "handlePaste",
+      "type": "function",
+      "file": "web/src/components/HomePage.tsx",
+      "line": 181,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/HomePage.tsx:206:handleInput",
+      "name": "handleInput",
+      "type": "function",
+      "file": "web/src/components/HomePage.tsx",
+      "line": 206,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/HomePage.tsx:210:handleKeyDown",
+      "name": "handleKeyDown",
+      "type": "function",
+      "file": "web/src/components/HomePage.tsx",
+      "line": 210,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/HomePage.tsx:223:handleSend",
+      "name": "handleSend",
+      "type": "function",
+      "file": "web/src/components/HomePage.tsx",
+      "line": 223,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "name": "makeMessage",
+      "type": "function",
+      "file": "web/src/components/MessageBubble.test.tsx",
+      "line": 16,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageBubble.tsx:10:MessageBubble",
+      "name": "MessageBubble",
+      "type": "function",
+      "file": "web/src/components/MessageBubble.tsx",
+      "line": 10,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/MessageBubble.tsx:73:groupContentBlocks",
+      "name": "groupContentBlocks",
+      "type": "function",
+      "file": "web/src/components/MessageBubble.tsx",
+      "line": 73,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageBubble.tsx:96:getAssistantText",
+      "name": "getAssistantText",
+      "type": "function",
+      "file": "web/src/components/MessageBubble.tsx",
+      "line": 96,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageBubble.tsx:105:AssistantMessage",
+      "name": "AssistantMessage",
+      "type": "function",
+      "file": "web/src/components/MessageBubble.tsx",
+      "line": 105,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageBubble.tsx:150:AssistantAvatar",
+      "name": "AssistantAvatar",
+      "type": "function",
+      "file": "web/src/components/MessageBubble.tsx",
+      "line": 150,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageBubble.tsx:156:CopyableTable",
+      "name": "CopyableTable",
+      "type": "function",
+      "file": "web/src/components/MessageBubble.tsx",
+      "line": 156,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageBubble.tsx:171:MarkdownContent",
+      "name": "MarkdownContent",
+      "type": "function",
+      "file": "web/src/components/MessageBubble.tsx",
+      "line": 171,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageBubble.tsx:292:ContentBlockRenderer",
+      "name": "ContentBlockRenderer",
+      "type": "function",
+      "file": "web/src/components/MessageBubble.tsx",
+      "line": 292,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageBubble.tsx:322:ToolGroupBlock",
+      "name": "ToolGroupBlock",
+      "type": "function",
+      "file": "web/src/components/MessageBubble.tsx",
+      "line": 322,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageBubble.tsx:358:ThinkingBlock",
+      "name": "ThinkingBlock",
+      "type": "function",
+      "file": "web/src/components/MessageBubble.tsx",
+      "line": 358,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.test.tsx:38:makeMessage",
+      "name": "makeMessage",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.test.tsx",
+      "line": 38,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "name": "setStoreMessages",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.test.tsx",
+      "line": 47,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.test.tsx:53:setStoreStreaming",
+      "name": "setStoreStreaming",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.test.tsx",
+      "line": 53,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.test.tsx:59:setStoreStatus",
+      "name": "setStoreStatus",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.test.tsx",
+      "line": 59,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.test.tsx:65:setStoreStreamingStartedAt",
+      "name": "setStoreStreamingStartedAt",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.test.tsx",
+      "line": 65,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.test.tsx:71:setStoreStreamingOutputTokens",
+      "name": "setStoreStreamingOutputTokens",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.test.tsx",
+      "line": 71,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.test.tsx:77:resetStore",
+      "name": "resetStore",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.test.tsx",
+      "line": 77,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.tsx:8:formatElapsed",
+      "name": "formatElapsed",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.tsx",
+      "line": 8,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.tsx:15:formatTokens",
+      "name": "formatTokens",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.tsx",
+      "line": 15,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.tsx:51:getToolOnlyName",
+      "name": "getToolOnlyName",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.tsx",
+      "line": 51,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.tsx:68:extractToolItems",
+      "name": "extractToolItems",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.tsx",
+      "line": 68,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.tsx:76:getTaskIdsFromEntry",
+      "name": "getTaskIdsFromEntry",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.tsx",
+      "line": 76,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.tsx:91:groupToolMessages",
+      "name": "groupToolMessages",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.tsx",
+      "line": 91,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.tsx:118:buildEntries",
+      "name": "buildEntries",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.tsx",
+      "line": 118,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.tsx:150:groupMessages",
+      "name": "groupMessages",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.tsx",
+      "line": 150,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.tsx:191:ToolMessageGroup",
+      "name": "ToolMessageGroup",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.tsx",
+      "line": 191,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.tsx:247:FeedEntries",
+      "name": "FeedEntries",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.tsx",
+      "line": 247,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.tsx:263:SubagentContainer",
+      "name": "SubagentContainer",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.tsx",
+      "line": 263,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.tsx:328:AssistantAvatar",
+      "name": "AssistantAvatar",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.tsx",
+      "line": 328,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/MessageFeed.tsx:336:MessageFeed",
+      "name": "MessageFeed",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.tsx",
+      "line": 336,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/MessageFeed.tsx:370:handleScroll",
+      "name": "handleScroll",
+      "type": "function",
+      "file": "web/src/components/MessageFeed.tsx",
+      "line": 370,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "name": "makePermission",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.test.tsx",
+      "line": 32,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:10:suggestionLabel",
+      "name": "suggestionLabel",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 10,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:25:PermissionBanner",
+      "name": "PermissionBanner",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 25,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:35:handleAllow",
+      "name": "handleAllow",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 35,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:47:handleDeny",
+      "name": "handleDeny",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 47,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:152:ToolInputDisplay",
+      "name": "ToolInputDisplay",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 152,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:187:BashDisplay",
+      "name": "BashDisplay",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 187,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:201:AskUserQuestionDisplay",
+      "name": "AskUserQuestionDisplay",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 201,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:215:handleOptionClick",
+      "name": "handleOptionClick",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 215,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:226:handleCustomSubmit",
+      "name": "handleCustomSubmit",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 226,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:237:handleSubmitAll",
+      "name": "handleSubmitAll",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 237,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:367:EditDisplay",
+      "name": "EditDisplay",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 367,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:395:WriteDisplay",
+      "name": "WriteDisplay",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 395,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:412:ReadDisplay",
+      "name": "ReadDisplay",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 412,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:421:GlobDisplay",
+      "name": "GlobDisplay",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 421,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:432:GrepDisplay",
+      "name": "GrepDisplay",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 432,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:445:ExitPlanModeDisplay",
+      "name": "ExitPlanModeDisplay",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 445,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/PermissionBanner.tsx:481:GenericDisplay",
+      "name": "GenericDisplay",
+      "type": "function",
+      "file": "web/src/components/PermissionBanner.tsx",
+      "line": 481,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Playground.tsx:12:mockPermission",
+      "name": "mockPermission",
+      "type": "function",
+      "file": "web/src/components/Playground.tsx",
+      "line": 12,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Playground.tsx:282:Playground",
+      "name": "Playground",
+      "type": "function",
+      "file": "web/src/components/Playground.tsx",
+      "line": 282,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/Playground.tsx:465:Section",
+      "name": "Section",
+      "type": "function",
+      "file": "web/src/components/Playground.tsx",
+      "line": 465,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Playground.tsx:477:Card",
+      "name": "Card",
+      "type": "function",
+      "file": "web/src/components/Playground.tsx",
+      "line": 477,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Playground.tsx:490:TaskRow",
+      "name": "TaskRow",
+      "type": "function",
+      "file": "web/src/components/Playground.tsx",
+      "line": 490,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ProjectTabBar.tsx:13:useProjectStatus",
+      "name": "useProjectStatus",
+      "type": "function",
+      "file": "web/src/components/ProjectTabBar.tsx",
+      "line": 13,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ProjectTabBar.tsx:26:cwd",
+      "name": "cwd",
+      "type": "function",
+      "file": "web/src/components/ProjectTabBar.tsx",
+      "line": 26,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ProjectTabBar.tsx:33:cwd",
+      "name": "cwd",
+      "type": "function",
+      "file": "web/src/components/ProjectTabBar.tsx",
+      "line": 33,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ProjectTabBar.tsx:50:curCwd",
+      "name": "curCwd",
+      "type": "function",
+      "file": "web/src/components/ProjectTabBar.tsx",
+      "line": 50,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ProjectTabBar.tsx:63:StatusIndicator",
+      "name": "StatusIndicator",
+      "type": "function",
+      "file": "web/src/components/ProjectTabBar.tsx",
+      "line": 63,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ProjectTabBar.tsx:89:ProjectTabItem",
+      "name": "ProjectTabItem",
+      "type": "function",
+      "file": "web/src/components/ProjectTabBar.tsx",
+      "line": 89,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ProjectTabBar.tsx:100:cwd",
+      "name": "cwd",
+      "type": "function",
+      "file": "web/src/components/ProjectTabBar.tsx",
+      "line": 100,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ProjectTabBar.tsx:104:cwd",
+      "name": "cwd",
+      "type": "function",
+      "file": "web/src/components/ProjectTabBar.tsx",
+      "line": 104,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ProjectTabBar.tsx:125:ProjectTabBar",
+      "name": "ProjectTabBar",
+      "type": "function",
+      "file": "web/src/components/ProjectTabBar.tsx",
+      "line": 125,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/ProjectTabBar.tsx:139:fetchProjects",
+      "name": "fetchProjects",
+      "type": "function",
+      "file": "web/src/components/ProjectTabBar.tsx",
+      "line": 139,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ProjectTabBar.tsx:181:scroll",
+      "name": "scroll",
+      "type": "function",
+      "file": "web/src/components/ProjectTabBar.tsx",
+      "line": 181,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ProjectTabBar.tsx:185:selectProject",
+      "name": "selectProject",
+      "type": "function",
+      "file": "web/src/components/ProjectTabBar.tsx",
+      "line": 185,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.test.tsx:67:makeSession",
+      "name": "makeSession",
+      "type": "function",
+      "file": "web/src/components/Sidebar.test.tsx",
+      "line": 67,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.test.tsx:94:makeSdkSession",
+      "name": "makeSdkSession",
+      "type": "function",
+      "file": "web/src/components/Sidebar.test.tsx",
+      "line": 94,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "name": "createMockState",
+      "type": "function",
+      "file": "web/src/components/Sidebar.test.tsx",
+      "line": 107,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.test.tsx:136:useStoreFn",
+      "name": "useStoreFn",
+      "type": "function",
+      "file": "web/src/components/Sidebar.test.tsx",
+      "line": 136,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.tsx:9:Sidebar",
+      "name": "Sidebar",
+      "type": "function",
+      "file": "web/src/components/Sidebar.tsx",
+      "line": 9,
+      "domain": "sidebar-ux",
+      "exported": true
+    },
+    {
+      "id": "web/src/components/Sidebar.tsx:38:poll",
+      "name": "poll",
+      "type": "function",
+      "file": "web/src/components/Sidebar.tsx",
+      "line": 38,
+      "domain": "sidebar-ux",
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.tsx:86:fetchNative",
+      "name": "fetchNative",
+      "type": "function",
+      "file": "web/src/components/Sidebar.tsx",
+      "line": 86,
+      "domain": "sidebar-ux",
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.tsx:102:curCwd",
+      "name": "curCwd",
+      "type": "function",
+      "file": "web/src/components/Sidebar.tsx",
+      "line": 102,
+      "domain": "sidebar-ux",
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.tsx:127:mappedCwd",
+      "name": "mappedCwd",
+      "type": "function",
+      "file": "web/src/components/Sidebar.tsx",
+      "line": 127,
+      "domain": "sidebar-ux",
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.tsx:141:sCwd",
+      "name": "sCwd",
+      "type": "function",
+      "file": "web/src/components/Sidebar.tsx",
+      "line": 141,
+      "domain": "sidebar-ux",
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.tsx:152:sCwd",
+      "name": "sCwd",
+      "type": "function",
+      "file": "web/src/components/Sidebar.tsx",
+      "line": 152,
+      "domain": "sidebar-ux",
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.tsx:184:handleSelectSession",
+      "name": "handleSelectSession",
+      "type": "function",
+      "file": "web/src/components/Sidebar.tsx",
+      "line": 184,
+      "domain": "sidebar-ux",
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.tsx:198:handleNewSession",
+      "name": "handleNewSession",
+      "type": "function",
+      "file": "web/src/components/Sidebar.tsx",
+      "line": 198,
+      "domain": "sidebar-ux",
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.tsx:216:confirmRename",
+      "name": "confirmRename",
+      "type": "function",
+      "file": "web/src/components/Sidebar.tsx",
+      "line": 216,
+      "domain": "sidebar-ux",
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.tsx:225:cancelRename",
+      "name": "cancelRename",
+      "type": "function",
+      "file": "web/src/components/Sidebar.tsx",
+      "line": 225,
+      "domain": "sidebar-ux",
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.tsx:335:cwd",
+      "name": "cwd",
+      "type": "function",
+      "file": "web/src/components/Sidebar.tsx",
+      "line": 335,
+      "domain": "sidebar-ux",
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.tsx:341:formatRelativeTime",
+      "name": "formatRelativeTime",
+      "type": "function",
+      "file": "web/src/components/Sidebar.tsx",
+      "line": 341,
+      "domain": "sidebar-ux",
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.tsx:350:renderNativeSessionItem",
+      "name": "renderNativeSessionItem",
+      "type": "function",
+      "file": "web/src/components/Sidebar.tsx",
+      "line": 350,
+      "domain": "sidebar-ux",
+      "exported": false
+    },
+    {
+      "id": "web/src/components/Sidebar.tsx:383:renderSessionItem",
+      "name": "renderSessionItem",
+      "type": "function",
+      "file": "web/src/components/Sidebar.tsx",
+      "line": 383,
+      "domain": "sidebar-ux",
+      "exported": false
+    },
+    {
+      "id": "web/src/components/SpeechMonitor.tsx:18:SpeechMonitor",
+      "name": "SpeechMonitor",
+      "type": "function",
+      "file": "web/src/components/SpeechMonitor.tsx",
+      "line": 18,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/SpeechMonitor.tsx:41:formatTime",
+      "name": "formatTime",
+      "type": "function",
+      "file": "web/src/components/SpeechMonitor.tsx",
+      "line": 41,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/TaskPanel.tsx:14:basename",
+      "name": "basename",
+      "type": "function",
+      "file": "web/src/components/TaskPanel.tsx",
+      "line": 14,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/TaskPanel.tsx:19:shortModelName",
+      "name": "shortModelName",
+      "type": "function",
+      "file": "web/src/components/TaskPanel.tsx",
+      "line": 19,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/TaskPanel.tsx:30:testLabel",
+      "name": "testLabel",
+      "type": "function",
+      "file": "web/src/components/TaskPanel.tsx",
+      "line": 30,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/TaskPanel.tsx:49:formatTime",
+      "name": "formatTime",
+      "type": "function",
+      "file": "web/src/components/TaskPanel.tsx",
+      "line": 49,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/TaskPanel.tsx:53:TaskPanel",
+      "name": "TaskPanel",
+      "type": "function",
+      "file": "web/src/components/TaskPanel.tsx",
+      "line": 53,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/TaskPanel.tsx:68:toggleAll",
+      "name": "toggleAll",
+      "type": "function",
+      "file": "web/src/components/TaskPanel.tsx",
+      "line": 68,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/TaskPanel.tsx:181:Section",
+      "name": "Section",
+      "type": "function",
+      "file": "web/src/components/TaskPanel.tsx",
+      "line": 181,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/TaskPanel.tsx:218:FileRow",
+      "name": "FileRow",
+      "type": "function",
+      "file": "web/src/components/TaskPanel.tsx",
+      "line": 218,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/TaskPanel.tsx:227:ContextMeter",
+      "name": "ContextMeter",
+      "type": "function",
+      "file": "web/src/components/TaskPanel.tsx",
+      "line": 227,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/TaskPanel.tsx:270:TestRow",
+      "name": "TestRow",
+      "type": "function",
+      "file": "web/src/components/TaskPanel.tsx",
+      "line": 270,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/TaskPanel.tsx:313:TaskRow",
+      "name": "TaskRow",
+      "type": "function",
+      "file": "web/src/components/TaskPanel.tsx",
+      "line": 313,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/TerminalPanel.tsx:26:TerminalPanel",
+      "name": "TerminalPanel",
+      "type": "function",
+      "file": "web/src/components/TerminalPanel.tsx",
+      "line": 26,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/tool-utils.ts:16:getToolIcon",
+      "name": "getToolIcon",
+      "type": "function",
+      "file": "web/src/components/tool-utils.ts",
+      "line": 16,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/tool-utils.ts:20:getToolLabel",
+      "name": "getToolLabel",
+      "type": "function",
+      "file": "web/src/components/tool-utils.ts",
+      "line": 20,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/tool-utils.ts:30:getPreview",
+      "name": "getPreview",
+      "type": "function",
+      "file": "web/src/components/tool-utils.ts",
+      "line": 30,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/ToolBlock.tsx:8:ToolBlock",
+      "name": "ToolBlock",
+      "type": "function",
+      "file": "web/src/components/ToolBlock.tsx",
+      "line": 8,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/ToolBlock.tsx:89:lcs",
+      "name": "lcs",
+      "type": "function",
+      "file": "web/src/components/ToolBlock.tsx",
+      "line": 89,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ToolBlock.tsx:105:buildUnifiedDiff",
+      "name": "buildUnifiedDiff",
+      "type": "function",
+      "file": "web/src/components/ToolBlock.tsx",
+      "line": 105,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ToolBlock.tsx:149:EditToolDetail",
+      "name": "EditToolDetail",
+      "type": "function",
+      "file": "web/src/components/ToolBlock.tsx",
+      "line": 149,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ToolBlock.tsx:170:WriteToolDetail",
+      "name": "WriteToolDetail",
+      "type": "function",
+      "file": "web/src/components/ToolBlock.tsx",
+      "line": 170,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/ToolBlock.tsx:192:ToolIcon",
+      "name": "ToolIcon",
+      "type": "function",
+      "file": "web/src/components/ToolBlock.tsx",
+      "line": 192,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/components/TopBar.tsx:5:createNewSession",
+      "name": "createNewSession",
+      "type": "function",
+      "file": "web/src/components/TopBar.tsx",
+      "line": 5,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/components/TopBar.tsx:21:TopBar",
+      "name": "TopBar",
+      "type": "function",
+      "file": "web/src/components/TopBar.tsx",
+      "line": 21,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/hooks/use-prompt-history.ts:9:usePromptHistory",
+      "name": "usePromptHistory",
+      "type": "function",
+      "file": "web/src/hooks/use-prompt-history.ts",
+      "line": 9,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/hooks/use-voice-input.test.ts:9:MockSTTEngine",
+      "name": "MockSTTEngine",
+      "type": "class",
+      "file": "web/src/hooks/use-voice-input.test.ts",
+      "line": 9,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/hooks/use-voice-input.ts:36:checkWorkerSupport",
+      "name": "checkWorkerSupport",
+      "type": "function",
+      "file": "web/src/hooks/use-voice-input.ts",
+      "line": 36,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/hooks/use-voice-input.ts:40:useVoiceInput",
+      "name": "useVoiceInput",
+      "type": "function",
+      "file": "web/src/hooks/use-voice-input.ts",
+      "line": 40,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/hooks/use-voice-input.ts:180:doStart",
+      "name": "doStart",
+      "type": "function",
+      "file": "web/src/hooks/use-voice-input.ts",
+      "line": 180,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/hooks/use-whisper.ts:19:checkSupport",
+      "name": "checkSupport",
+      "type": "function",
+      "file": "web/src/hooks/use-whisper.ts",
+      "line": 19,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/hooks/use-whisper.ts:23:useWhisper",
+      "name": "useWhisper",
+      "type": "function",
+      "file": "web/src/hooks/use-whisper.ts",
+      "line": 23,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/hooks/voice-events.ts:35:notifyBufferListeners",
+      "name": "notifyBufferListeners",
+      "type": "function",
+      "file": "web/src/hooks/voice-events.ts",
+      "line": 35,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/hooks/voice-events.ts:39:emitVoiceEvent",
+      "name": "emitVoiceEvent",
+      "type": "function",
+      "file": "web/src/hooks/voice-events.ts",
+      "line": 39,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/hooks/voice-events.ts:58:subscribeVoiceEvents",
+      "name": "subscribeVoiceEvents",
+      "type": "function",
+      "file": "web/src/hooks/voice-events.ts",
+      "line": 58,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/hooks/voice-events.ts:69:getVoiceEvents",
+      "name": "getVoiceEvents",
+      "type": "function",
+      "file": "web/src/hooks/voice-events.ts",
+      "line": 69,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/hooks/voice-events.ts:74:getVoiceEventVersion",
+      "name": "getVoiceEventVersion",
+      "type": "function",
+      "file": "web/src/hooks/voice-events.ts",
+      "line": 74,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/hooks/voice-events.ts:79:clearVoiceEvents",
+      "name": "clearVoiceEvents",
+      "type": "function",
+      "file": "web/src/hooks/voice-events.ts",
+      "line": 79,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/hooks/voice-events.ts:86:subscribeVoiceBuffer",
+      "name": "subscribeVoiceBuffer",
+      "type": "function",
+      "file": "web/src/hooks/voice-events.ts",
+      "line": 86,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/store.test.ts:25:makeSession",
+      "name": "makeSession",
+      "type": "function",
+      "file": "web/src/store.test.ts",
+      "line": 25,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/store.test.ts:51:makeMessage",
+      "name": "makeMessage",
+      "type": "function",
+      "file": "web/src/store.test.ts",
+      "line": 51,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/store.test.ts:61:makePermission",
+      "name": "makePermission",
+      "type": "function",
+      "file": "web/src/store.test.ts",
+      "line": 61,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/store.test.ts:72:makeTask",
+      "name": "makeTask",
+      "type": "function",
+      "file": "web/src/store.test.ts",
+      "line": 72,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/store.ts:163:getInitialSessionNames",
+      "name": "getInitialSessionNames",
+      "type": "function",
+      "file": "web/src/store.ts",
+      "line": 163,
+      "domain": "session-resume",
+      "exported": false
+    },
+    {
+      "id": "web/src/store.ts:172:getInitialSessionId",
+      "name": "getInitialSessionId",
+      "type": "function",
+      "file": "web/src/store.ts",
+      "line": 172,
+      "domain": "session-resume",
+      "exported": false
+    },
+    {
+      "id": "web/src/store.ts:178:getInitialPromptHistory",
+      "name": "getInitialPromptHistory",
+      "type": "function",
+      "file": "web/src/store.ts",
+      "line": 178,
+      "domain": "session-resume",
+      "exported": false
+    },
+    {
+      "id": "web/src/store.ts:187:getInitialDarkMode",
+      "name": "getInitialDarkMode",
+      "type": "function",
+      "file": "web/src/store.ts",
+      "line": 187,
+      "domain": "session-resume",
+      "exported": false
+    },
+    {
+      "id": "web/src/store.ts:677:curCwd",
+      "name": "curCwd",
+      "type": "function",
+      "file": "web/src/store.ts",
+      "line": 677,
+      "domain": "session-resume",
+      "exported": false
+    },
+    {
+      "id": "web/src/utils/audio-utils.ts:16:startRawCapture",
+      "name": "startRawCapture",
+      "type": "function",
+      "file": "web/src/utils/audio-utils.ts",
+      "line": 16,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/utils/audio-utils.ts:49:snapshotAudio",
+      "name": "snapshotAudio",
+      "type": "function",
+      "file": "web/src/utils/audio-utils.ts",
+      "line": 49,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/utils/audio-utils.ts:56:resampleAudio",
+      "name": "resampleAudio",
+      "type": "function",
+      "file": "web/src/utils/audio-utils.ts",
+      "line": 56,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/utils/audio-utils.ts:88:stopRawCapture",
+      "name": "stopRawCapture",
+      "type": "function",
+      "file": "web/src/utils/audio-utils.ts",
+      "line": 88,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/utils/linkify.tsx:6:toHref",
+      "name": "toHref",
+      "type": "function",
+      "file": "web/src/utils/linkify.tsx",
+      "line": 6,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/utils/linkify.tsx:12:linkifyText",
+      "name": "linkifyText",
+      "type": "function",
+      "file": "web/src/utils/linkify.tsx",
+      "line": 12,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/utils/names.ts:15:generateSessionName",
+      "name": "generateSessionName",
+      "type": "function",
+      "file": "web/src/utils/names.ts",
+      "line": 15,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/utils/names.ts:21:generateUniqueSessionName",
+      "name": "generateUniqueSessionName",
+      "type": "function",
+      "file": "web/src/utils/names.ts",
+      "line": 21,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/utils/notifications.test.ts:62:MockNotification",
+      "name": "MockNotification",
+      "type": "class",
+      "file": "web/src/utils/notifications.test.ts",
+      "line": 62,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/utils/notifications.ts:4:isNotificationSupported",
+      "name": "isNotificationSupported",
+      "type": "function",
+      "file": "web/src/utils/notifications.ts",
+      "line": 4,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/utils/notifications.ts:9:requestNotificationPermission",
+      "name": "requestNotificationPermission",
+      "type": "function",
+      "file": "web/src/utils/notifications.ts",
+      "line": 9,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/utils/notifications.ts:18:sendNotification",
+      "name": "sendNotification",
+      "type": "function",
+      "file": "web/src/utils/notifications.ts",
+      "line": 18,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/utils/project-detector.ts:20:detectProject",
+      "name": "detectProject",
+      "type": "function",
+      "file": "web/src/utils/project-detector.ts",
+      "line": 20,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/utils/recent-dirs.ts:3:getRecentDirs",
+      "name": "getRecentDirs",
+      "type": "function",
+      "file": "web/src/utils/recent-dirs.ts",
+      "line": 3,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/utils/recent-dirs.ts:11:addRecentDir",
+      "name": "addRecentDir",
+      "type": "function",
+      "file": "web/src/utils/recent-dirs.ts",
+      "line": 11,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/utils/stt-component-worker.ts:48:post",
+      "name": "post",
+      "type": "function",
+      "file": "web/src/utils/stt-component-worker.ts",
+      "line": 48,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/utils/stt-component-worker.ts:52:filterArtifacts",
+      "name": "filterArtifacts",
+      "type": "function",
+      "file": "web/src/utils/stt-component-worker.ts",
+      "line": 52,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/utils/stt-component-worker.ts:63:loadModel",
+      "name": "loadModel",
+      "type": "function",
+      "file": "web/src/utils/stt-component-worker.ts",
+      "line": 63,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/utils/stt-component-worker.ts:65:dtype",
+      "name": "dtype",
+      "type": "function",
+      "file": "web/src/utils/stt-component-worker.ts",
+      "line": 65,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/utils/stt-component-worker.ts:108:transcribe",
+      "name": "transcribe",
+      "type": "function",
+      "file": "web/src/utils/stt-component-worker.ts",
+      "line": 108,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/utils/whisper-worker.ts:24:post",
+      "name": "post",
+      "type": "function",
+      "file": "web/src/utils/whisper-worker.ts",
+      "line": 24,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/utils/whisper-worker.ts:28:loadModel",
+      "name": "loadModel",
+      "type": "function",
+      "file": "web/src/utils/whisper-worker.ts",
+      "line": 28,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/utils/whisper-worker.ts:69:transcribe",
+      "name": "transcribe",
+      "type": "function",
+      "file": "web/src/utils/whisper-worker.ts",
+      "line": 69,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/ws.test.ts:18:MockWebSocket",
+      "name": "MockWebSocket",
+      "type": "class",
+      "file": "web/src/ws.test.ts",
+      "line": 18,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/ws.test.ts:68:makeSession",
+      "name": "makeSession",
+      "type": "function",
+      "file": "web/src/ws.test.ts",
+      "line": 68,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/ws.test.ts:94:fireMessage",
+      "name": "fireMessage",
+      "type": "function",
+      "file": "web/src/ws.test.ts",
+      "line": 94,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/ws.ts:33:getProcessedSet",
+      "name": "getProcessedSet",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 33,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/ws.ts:42:extractTasksFromBlocks",
+      "name": "extractTasksFromBlocks",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 42,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/ws.ts:75:count",
+      "name": "count",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 75,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/ws.ts:103:extractChangedFilesFromBlocks",
+      "name": "extractChangedFilesFromBlocks",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 103,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/ws.ts:116:extractActivityFromBlocks",
+      "name": "extractActivityFromBlocks",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 116,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/ws.ts:149:nextId",
+      "name": "nextId",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 149,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/ws.ts:153:getWsUrl",
+      "name": "getWsUrl",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 153,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/ws.ts:158:extractTextFromBlocks",
+      "name": "extractTextFromBlocks",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 158,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/ws.ts:169:handleMessage",
+      "name": "handleMessage",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 169,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/ws.ts:263:usage",
+      "name": "usage",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 263,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/ws.ts:489:connectSession",
+      "name": "connectSession",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 489,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/ws.ts:536:scheduleReconnect",
+      "name": "scheduleReconnect",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 536,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/src/ws.ts:554:disconnectSession",
+      "name": "disconnectSession",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 554,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/ws.ts:571:disconnectAll",
+      "name": "disconnectAll",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 571,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/ws.ts:577:waitForConnection",
+      "name": "waitForConnection",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 577,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/src/ws.ts:594:sendToSession",
+      "name": "sendToSession",
+      "type": "function",
+      "file": "web/src/ws.ts",
+      "line": 594,
+      "domain": null,
+      "exported": true
+    },
+    {
+      "id": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "name": "waitForApp",
+      "type": "function",
+      "file": "web/tests/e2e/app.spec.ts",
+      "line": 28,
+      "domain": null,
+      "exported": false
+    },
+    {
+      "id": "web/tests/global-teardown.ts:12:killPort",
+      "name": "killPort",
+      "type": "function",
+      "file": "web/tests/global-teardown.ts",
+      "line": 12,
+      "domain": null,
+      "exported": false
+    }
+  ]
+}

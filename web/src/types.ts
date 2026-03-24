@@ -46,6 +46,7 @@ export interface SdkSessionInfo {
   branch?: string;
   actualBranch?: string;
   name?: string;
+  initReceived?: boolean;
 }
 
 export interface AgentSpawn {
@@ -57,6 +58,7 @@ export interface AgentSpawn {
 export interface TestRun {
   cmd: string;
   source: "agent" | "direct";
+  timestamp: number;
 }
 
 export interface ClaudeSession {

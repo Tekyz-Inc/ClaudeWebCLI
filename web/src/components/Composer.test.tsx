@@ -97,10 +97,15 @@ function setupMockStore(overrides: {
     sessionStatus: sessionStatusMap,
     previousPermissionMode: previousPermissionModeMap,
     promptHistory: new Map<string, string[]>(),
+    streaming: new Map<string, string>(),
+    queuedMessages: new Map<string, unknown>(),
     appendMessage: mockAppendMessage,
     updateSession: mockUpdateSession,
     setPreviousPermissionMode: mockSetPreviousPermissionMode,
     addPromptToHistory: mockAddPromptToHistory,
+    setSessionStatus: vi.fn(),
+    setQueuedMessage: vi.fn(),
+    markClearOnNextResult: vi.fn(),
   };
 }
 

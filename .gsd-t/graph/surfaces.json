@@ -1,0 +1,2470 @@
+{
+  "mappings": [
+    {
+      "entity": "web/dev.ts:20:prefix",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/dev.ts:61:cleanup",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/auto-namer.test.ts:20:makeStdout",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/auto-namer.test.ts:123:spawnArgs",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/auto-namer.test.ts:137:spawnArgs",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/auto-namer.test.ts:176:spawnArgs",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/auto-namer.ts:5:resolveClaudeBinary",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/auto-namer.ts:28:generateSessionTitle",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/auto-namer.ts:67:raw",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/claude-sessions.test.ts:31:makeTempDir",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/claude-sessions.test.ts:42:makeUserLine",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/claude-sessions.ts:14:encodeProjectSlug",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/claude-sessions.ts:36:extractFirstMessage",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/claude-sessions.ts:60:readClaudeSessionsFromDir",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/claude-sessions.ts:113:readClaudeSessions",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/claude-sessions.ts:140:readClaudeSessionActivity",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/claude-sessions.ts:171:readClaudeSessionMessages",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.test.ts:27:actual",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.test.ts:66:createMockProc",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:60:CliLauncher",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:92:for",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:96:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:113:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:137:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:145:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:165:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:198:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:210:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:231:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:234:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:237:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:238:for",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:244:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:256:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:289:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:314:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:388:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:422:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:428:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:464:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:473:removeSession",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:484:for",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:485:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:512:while",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:530:while",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:536:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:555:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/cli-launcher.ts:558:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/env-manager.test.ts:40:envsDir",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/env-manager.ts:27:ensureDir",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/env-manager.ts:31:filePath",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/env-manager.ts:37:slugify",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/env-manager.ts:48:listEnvs",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/env-manager.ts:68:getEnv",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/env-manager.ts:78:createEnv",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/env-manager.ts:103:updateEnv",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/env-manager.ts:137:deleteEnv",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.test.ts:23:mockGitCommand",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.test.ts:32:mockGitCommands",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:46:sanitizeBranch",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:50:worktreeDir",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:56:git",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:65:gitSafe",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:75:getRepoInfo",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:95:resolveDefaultBranch",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:109:listBranches",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:167:listWorktrees",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:207:ensureWorktree",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:281:generateUniqueWorktreeBranch",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:293:removeWorktree",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:330:isWorktreeDirty",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:336:gitFetch",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:345:gitPull",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:357:checkoutBranch",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/git-utils.ts:361:getBranchStatus",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/index.ts:59:count",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/routes.test.ts:42:createMockLauncher",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/routes.test.ts:59:createMockBridge",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/routes.test.ts:65:createMockStore",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/routes.test.ts:71:createMockTracker",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/routes.ts:15:createRoutes",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/routes.ts:143:parseArgumentHint",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/routes.ts:153:readCommandDir",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/routes.ts:157:files",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/routes.ts:306:buildTree",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/routes.ts:441:path",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/routes.ts:529:cleanupWorktree",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/session-names.ts:20:ensureLoaded",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/session-names.ts:33:persist",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/session-names.ts:40:getName",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/session-names.ts:45:setName",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/session-names.ts:51:getAllNames",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/session-names.ts:56:removeName",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/session-names.ts:63:_resetForTest",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/session-store.test.ts:9:makeSession",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/session-store.ts:21:SessionStore",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/session-store.ts:70:for",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/session-store.ts:96:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/terminal-ws.ts:9:handleTerminalOpen",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/terminal-ws.ts:38:handleTerminalMessage",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/terminal-ws.ts:56:handleTerminalClose",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/worktree-tracker.test.ts:45:makeMapping",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/worktree-tracker.test.ts:56:trackerFilePath",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/worktree-tracker.test.ts:60:readTrackerFile",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/worktree-tracker.ts:28:WorktreeTracker",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.test.ts:13:createMockSocket",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.test.ts:22:makeCliSocket",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.test.ts:26:makeBrowserSocket",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.test.ts:48:makeInitMsg",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:71:makeDefaultState",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:99:WsBridge",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:149:for",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:170:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:175:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:197:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:236:removeSession",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:245:closeSession",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:250:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:257:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:263:for",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:275:handleCLIOpen",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:285:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:293:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:295:for",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:302:handleCLIMessage",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:304:sessionId",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:310:for",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:322:handleCLIClose",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:323:sessionId",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:328:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:338:for",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:346:handleBrowserOpen",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:349:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:361:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:374:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:376:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:382:handleBrowserMessage",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:384:sessionId",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:399:handleBrowserClose",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:400:sessionId",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:414:switch",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:461:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:465:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:474:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:477:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:487:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:502:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:551:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:586:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:589:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:594:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:596:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:624:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:630:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:655:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:705:switch",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:741:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:743:for",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:782:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:787:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:849:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:859:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:882:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:891:if",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/server/ws-bridge.ts:914:for",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/api.test.ts:7:mockResponse",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/App.tsx:14:useHash",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ChatView.tsx:7:ChatView",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.test.tsx:34:useStore",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.test.tsx:44:makeSession",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.test.tsx:71:setupMockStore",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:17:getDraft",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:21:setDraft",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:36:readFileAsBase64",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:90:Composer",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:227:handleSend",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:273:handleKeyDown",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:347:handleInput",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:351:handleInterrupt",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:355:handleFileSelect",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:368:removeImage",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:372:handlePaste",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:389:handleDragEnter",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:395:handleDragLeave",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:401:handleDragOver",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:405:handleDrop",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:422:cycleMode",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:434:isRunning",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Composer.tsx:436:canSend",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/CopyButton.tsx:3:CopyButton",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/CopyButton.tsx:6:handleCopy",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/DiffView.tsx:41:detectLang",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/DiffView.tsx:50:parseDiff",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/DiffView.tsx:103:escHtml",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/DiffView.tsx:108:splitHighlightedHtml",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/DiffView.tsx:114:closeCount",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/DiffView.tsx:121:buildHighlights",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/DiffView.tsx:133:cellBg",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/DiffView.tsx:140:markerColor",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/DiffView.tsx:146:marker",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/DiffView.tsx:154:DiffView",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EditorPanel.test.tsx:59:resetStore",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EditorPanel.tsx:40:getLanguageExtension",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EditorPanel.tsx:71:FileIcon",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EditorPanel.tsx:92:hasChangedDescendant",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EditorPanel.tsx:100:FileTreeNode",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EditorPanel.tsx:165:EditorPanel",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EnvManager.tsx:14:EnvManager",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EnvManager.tsx:27:refresh",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EnvManager.tsx:33:startEdit",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EnvManager.tsx:42:cancelEdit",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EnvManager.tsx:47:saveEdit",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EnvManager.tsx:64:handleDelete",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EnvManager.tsx:74:handleCreate",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EnvManager.tsx:238:VarEditor",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EnvManager.tsx:239:updateRow",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EnvManager.tsx:245:removeRow",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/EnvManager.tsx:251:addRow",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/FolderPicker.tsx:12:FolderPicker",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/FolderPicker.tsx:39:handleKeyDown",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/FolderPicker.tsx:46:selectDir",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/HomePage.test.tsx:44:useStore",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:17:readFileAsBase64",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:45:HomePage",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:101:handleClick",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:154:cycleMode",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:159:cycleModel",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:164:handleFileSelect",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:177:removeImage",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:181:handlePaste",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:206:handleInput",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:210:handleKeyDown",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/HomePage.tsx:223:handleSend",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageBubble.test.tsx:16:makeMessage",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageBubble.tsx:10:MessageBubble",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageBubble.tsx:73:groupContentBlocks",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageBubble.tsx:96:getAssistantText",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageBubble.tsx:105:AssistantMessage",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageBubble.tsx:150:AssistantAvatar",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageBubble.tsx:156:CopyableTable",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageBubble.tsx:171:MarkdownContent",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageBubble.tsx:292:ContentBlockRenderer",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageBubble.tsx:322:ToolGroupBlock",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageBubble.tsx:358:ThinkingBlock",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.test.tsx:38:makeMessage",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.test.tsx:47:setStoreMessages",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.test.tsx:53:setStoreStreaming",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.test.tsx:59:setStoreStatus",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.test.tsx:65:setStoreStreamingStartedAt",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.test.tsx:71:setStoreStreamingOutputTokens",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.test.tsx:77:resetStore",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.tsx:8:formatElapsed",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.tsx:15:formatTokens",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.tsx:51:getToolOnlyName",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.tsx:68:extractToolItems",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.tsx:76:getTaskIdsFromEntry",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.tsx:91:groupToolMessages",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.tsx:118:buildEntries",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.tsx:150:groupMessages",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.tsx:191:ToolMessageGroup",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.tsx:247:FeedEntries",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.tsx:263:SubagentContainer",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.tsx:328:AssistantAvatar",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.tsx:336:MessageFeed",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/MessageFeed.tsx:370:handleScroll",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.test.tsx:32:makePermission",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:10:suggestionLabel",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:25:PermissionBanner",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:35:handleAllow",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:47:handleDeny",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:152:ToolInputDisplay",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:187:BashDisplay",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:201:AskUserQuestionDisplay",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:215:handleOptionClick",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:226:handleCustomSubmit",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:237:handleSubmitAll",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:367:EditDisplay",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:395:WriteDisplay",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:412:ReadDisplay",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:421:GlobDisplay",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:432:GrepDisplay",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:445:ExitPlanModeDisplay",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/PermissionBanner.tsx:481:GenericDisplay",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Playground.tsx:12:mockPermission",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Playground.tsx:282:Playground",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Playground.tsx:465:Section",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Playground.tsx:477:Card",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Playground.tsx:490:TaskRow",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:13:useProjectStatus",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:26:cwd",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:33:cwd",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:50:curCwd",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:63:StatusIndicator",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:89:ProjectTabItem",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:100:cwd",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:104:cwd",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:125:ProjectTabBar",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:139:fetchProjects",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:181:scroll",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ProjectTabBar.tsx:185:selectProject",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.test.tsx:67:makeSession",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.test.tsx:94:makeSdkSession",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.test.tsx:107:createMockState",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.test.tsx:136:useStoreFn",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:9:Sidebar",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:38:poll",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:86:fetchNative",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:102:curCwd",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:127:mappedCwd",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:141:sCwd",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:152:sCwd",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:184:handleSelectSession",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:198:handleNewSession",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:216:confirmRename",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:225:cancelRename",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:335:cwd",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:341:formatRelativeTime",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:350:renderNativeSessionItem",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/Sidebar.tsx:383:renderSessionItem",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/SpeechMonitor.tsx:18:SpeechMonitor",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/SpeechMonitor.tsx:41:formatTime",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/TaskPanel.tsx:14:basename",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/TaskPanel.tsx:19:shortModelName",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/TaskPanel.tsx:30:testLabel",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/TaskPanel.tsx:49:formatTime",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/TaskPanel.tsx:53:TaskPanel",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/TaskPanel.tsx:68:toggleAll",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/TaskPanel.tsx:181:Section",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/TaskPanel.tsx:218:FileRow",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/TaskPanel.tsx:227:ContextMeter",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/TaskPanel.tsx:270:TestRow",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/TaskPanel.tsx:313:TaskRow",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/TerminalPanel.tsx:26:TerminalPanel",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/tool-utils.ts:16:getToolIcon",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/tool-utils.ts:20:getToolLabel",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/tool-utils.ts:30:getPreview",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ToolBlock.tsx:8:ToolBlock",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ToolBlock.tsx:89:lcs",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ToolBlock.tsx:105:buildUnifiedDiff",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ToolBlock.tsx:149:EditToolDetail",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ToolBlock.tsx:170:WriteToolDetail",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/ToolBlock.tsx:192:ToolIcon",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/TopBar.tsx:5:createNewSession",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/components/TopBar.tsx:21:TopBar",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/hooks/use-prompt-history.ts:9:usePromptHistory",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/hooks/use-voice-input.test.ts:9:MockSTTEngine",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/hooks/use-voice-input.ts:36:checkWorkerSupport",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/hooks/use-voice-input.ts:40:useVoiceInput",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/hooks/use-voice-input.ts:180:doStart",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/hooks/use-whisper.ts:19:checkSupport",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/hooks/use-whisper.ts:23:useWhisper",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/hooks/voice-events.ts:35:notifyBufferListeners",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/hooks/voice-events.ts:39:emitVoiceEvent",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/hooks/voice-events.ts:58:subscribeVoiceEvents",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/hooks/voice-events.ts:69:getVoiceEvents",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/hooks/voice-events.ts:74:getVoiceEventVersion",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/hooks/voice-events.ts:79:clearVoiceEvents",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/hooks/voice-events.ts:86:subscribeVoiceBuffer",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/store.test.ts:25:makeSession",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/store.test.ts:51:makeMessage",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/store.test.ts:61:makePermission",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/store.test.ts:72:makeTask",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/store.ts:163:getInitialSessionNames",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/store.ts:172:getInitialSessionId",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/store.ts:178:getInitialPromptHistory",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/store.ts:187:getInitialDarkMode",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/store.ts:677:curCwd",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/audio-utils.ts:16:startRawCapture",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/audio-utils.ts:49:snapshotAudio",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/audio-utils.ts:56:resampleAudio",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/audio-utils.ts:88:stopRawCapture",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/linkify.tsx:6:toHref",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/linkify.tsx:12:linkifyText",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/names.ts:15:generateSessionName",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/names.ts:21:generateUniqueSessionName",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/notifications.test.ts:62:MockNotification",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/notifications.ts:4:isNotificationSupported",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/notifications.ts:9:requestNotificationPermission",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/notifications.ts:18:sendNotification",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/project-detector.ts:20:detectProject",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/recent-dirs.ts:3:getRecentDirs",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/recent-dirs.ts:11:addRecentDir",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/stt-component-worker.ts:48:post",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/stt-component-worker.ts:52:filterArtifacts",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/stt-component-worker.ts:63:loadModel",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/stt-component-worker.ts:65:dtype",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/stt-component-worker.ts:108:transcribe",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/whisper-worker.ts:24:post",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/whisper-worker.ts:28:loadModel",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/utils/whisper-worker.ts:69:transcribe",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.test.ts:18:MockWebSocket",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.test.ts:68:makeSession",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.test.ts:94:fireMessage",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:33:getProcessedSet",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:42:extractTasksFromBlocks",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:75:count",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:103:extractChangedFilesFromBlocks",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:116:extractActivityFromBlocks",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:149:nextId",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:153:getWsUrl",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:158:extractTextFromBlocks",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:169:handleMessage",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:263:usage",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:489:connectSession",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:536:scheduleReconnect",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:554:disconnectSession",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:571:disconnectAll",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:577:waitForConnection",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/src/ws.ts:594:sendToSession",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/tests/e2e/app.spec.ts:28:waitForApp",
+      "surfaces": [
+        "web"
+      ]
+    },
+    {
+      "entity": "web/tests/global-teardown.ts:12:killPort",
+      "surfaces": [
+        "web"
+      ]
+    }
+  ]
+}

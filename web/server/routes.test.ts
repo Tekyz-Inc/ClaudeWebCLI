@@ -2,11 +2,11 @@ import { vi, describe, it, expect, beforeEach } from "vitest";
 
 // Mock env-manager and git-utils modules before any imports
 vi.mock("./env-manager.js", () => ({
-  listEnvs: vi.fn(() => []),
-  getEnv: vi.fn(() => null),
-  createEnv: vi.fn(),
-  updateEnv: vi.fn(),
-  deleteEnv: vi.fn(),
+  listEnvs: vi.fn(async () => []),
+  getEnv: vi.fn(async () => null),
+  createEnv: vi.fn(async () => null),
+  updateEnv: vi.fn(async () => null),
+  deleteEnv: vi.fn(async () => false),
 }));
 
 const mockExecFile = vi.hoisted(() => vi.fn());
@@ -14,12 +14,12 @@ vi.mock("node:child_process", () => ({ execFile: vi.fn() }));
 vi.mock("node:util", () => ({ promisify: (_fn: unknown) => mockExecFile }));
 
 vi.mock("./git-utils.js", () => ({
-  getRepoInfo: vi.fn(() => null),
-  listBranches: vi.fn(() => []),
-  listWorktrees: vi.fn(() => []),
-  ensureWorktree: vi.fn(),
-  removeWorktree: vi.fn(),
-  isWorktreeDirty: vi.fn(() => false),
+  getRepoInfo: vi.fn(async () => null),
+  listBranches: vi.fn(async () => []),
+  listWorktrees: vi.fn(async () => []),
+  ensureWorktree: vi.fn(async () => null),
+  removeWorktree: vi.fn(async () => ({ removed: false })),
+  isWorktreeDirty: vi.fn(async () => false),
 }));
 
 vi.mock("./session-names.js", () => ({
@@ -116,7 +116,7 @@ describe("POST /api/sessions/create", () => {
   });
 
   it("injects environment variables when envSlug is provided", async () => {
-    vi.mocked(envManager.getEnv).mockReturnValue({
+    vi.mocked(envManager.getEnv).mockResolvedValue({
       name: "Production",
       slug: "production",
       variables: { API_KEY: "secret123", DB_HOST: "db.example.com" },
@@ -140,14 +140,14 @@ describe("POST /api/sessions/create", () => {
   });
 
   it("sets up a worktree when branch is specified", async () => {
-    vi.mocked(gitUtils.getRepoInfo).mockReturnValue({
+    vi.mocked(gitUtils.getRepoInfo).mockResolvedValue({
       repoRoot: "/repo",
       repoName: "my-repo",
       currentBranch: "main",
       defaultBranch: "main",
       isWorktree: false,
     });
-    vi.mocked(gitUtils.ensureWorktree).mockReturnValue({
+    vi.mocked(gitUtils.ensureWorktree).mockResolvedValue({
       worktreePath: "/home/.companion/worktrees/my-repo/feat-branch",
       branch: "feat-branch",
       actualBranch: "feat-branch",
@@ -295,8 +295,8 @@ describe("DELETE /api/sessions/:id", () => {
       createdAt: 1000,
     });
     tracker.isWorktreeInUse.mockReturnValue(false);
-    vi.mocked(gitUtils.isWorktreeDirty).mockReturnValue(false);
-    vi.mocked(gitUtils.removeWorktree).mockReturnValue({ removed: true });
+        vi.mocked(gitUtils.isWorktreeDirty).mockResolvedValue(false);
+    vi.mocked(gitUtils.removeWorktree).mockResolvedValue({ removed: true });
 
     const res = await app.request("/api/sessions/s1", { method: "DELETE" });
 
@@ -325,8 +325,8 @@ describe("DELETE /api/sessions/:id", () => {
       createdAt: 1000,
     });
     tracker.isWorktreeInUse.mockReturnValue(false);
-    vi.mocked(gitUtils.isWorktreeDirty).mockReturnValue(false);
-    vi.mocked(gitUtils.removeWorktree).mockReturnValue({ removed: true });
+        vi.mocked(gitUtils.isWorktreeDirty).mockResolvedValue(false);
+    vi.mocked(gitUtils.removeWorktree).mockResolvedValue({ removed: true });
 
     const res = await app.request("/api/sessions/s1", { method: "DELETE" });
 
@@ -375,7 +375,7 @@ describe("GET /api/envs", () => {
     const envs = [
       { name: "Dev", slug: "dev", variables: { A: "1" }, createdAt: 1, updatedAt: 1 },
     ];
-    vi.mocked(envManager.listEnvs).mockReturnValue(envs);
+    vi.mocked(envManager.listEnvs).mockResolvedValue(envs);
 
     const res = await app.request("/api/envs", { method: "GET" });
 
@@ -394,7 +394,7 @@ describe("POST /api/envs", () => {
       createdAt: 1000,
       updatedAt: 1000,
     };
-    vi.mocked(envManager.createEnv).mockReturnValue(created);
+    vi.mocked(envManager.createEnv).mockResolvedValue(created);
 
     const res = await app.request("/api/envs", {
       method: "POST",
@@ -409,9 +409,7 @@ describe("POST /api/envs", () => {
   });
 
   it("returns 400 when createEnv throws", async () => {
-    vi.mocked(envManager.createEnv).mockImplementation(() => {
-      throw new Error("Environment name is required");
-    });
+    vi.mocked(envManager.createEnv).mockRejectedValue(new Error("Environment name is required"));
 
     const res = await app.request("/api/envs", {
       method: "POST",
@@ -434,7 +432,7 @@ describe("PUT /api/envs/:slug", () => {
       createdAt: 1000,
       updatedAt: 2000,
     };
-    vi.mocked(envManager.updateEnv).mockReturnValue(updated);
+    vi.mocked(envManager.updateEnv).mockResolvedValue(updated);
 
     const res = await app.request("/api/envs/production", {
       method: "PUT",
@@ -454,7 +452,7 @@ describe("PUT /api/envs/:slug", () => {
 
 describe("DELETE /api/envs/:slug", () => {
   it("deletes an existing environment", async () => {
-    vi.mocked(envManager.deleteEnv).mockReturnValue(true);
+    vi.mocked(envManager.deleteEnv).mockResolvedValue(true);
 
     const res = await app.request("/api/envs/staging", { method: "DELETE" });
 
@@ -465,7 +463,7 @@ describe("DELETE /api/envs/:slug", () => {
   });
 
   it("returns 404 when environment not found", async () => {
-    vi.mocked(envManager.deleteEnv).mockReturnValue(false);
+    vi.mocked(envManager.deleteEnv).mockResolvedValue(false);
 
     const res = await app.request("/api/envs/nonexistent", { method: "DELETE" });
 
@@ -486,7 +484,7 @@ describe("GET /api/git/repo-info", () => {
       defaultBranch: "main",
       isWorktree: false,
     };
-    vi.mocked(gitUtils.getRepoInfo).mockReturnValue(info);
+    vi.mocked(gitUtils.getRepoInfo).mockResolvedValue(info);
 
     const res = await app.request("/api/git/repo-info?path=/repo", { method: "GET" });
 
@@ -511,7 +509,7 @@ describe("GET /api/git/branches", () => {
       { name: "main", isCurrent: true, isRemote: false, worktreePath: null, ahead: 0, behind: 0 },
       { name: "dev", isCurrent: false, isRemote: false, worktreePath: null, ahead: 2, behind: 0 },
     ];
-    vi.mocked(gitUtils.listBranches).mockReturnValue(branches);
+    vi.mocked(gitUtils.listBranches).mockResolvedValue(branches);
 
     const res = await app.request("/api/git/branches?repoRoot=/repo", { method: "GET" });
 
@@ -530,7 +528,7 @@ describe("POST /api/git/worktree", () => {
       actualBranch: "feat",
       isNew: true,
     };
-    vi.mocked(gitUtils.ensureWorktree).mockReturnValue(result);
+    vi.mocked(gitUtils.ensureWorktree).mockResolvedValue(result);
 
     const res = await app.request("/api/git/worktree", {
       method: "POST",
@@ -550,7 +548,7 @@ describe("POST /api/git/worktree", () => {
 
 describe("DELETE /api/git/worktree", () => {
   it("removes a worktree", async () => {
-    vi.mocked(gitUtils.removeWorktree).mockReturnValue({ removed: true });
+    vi.mocked(gitUtils.removeWorktree).mockResolvedValue({ removed: true });
 
     const res = await app.request("/api/git/worktree", {
       method: "DELETE",

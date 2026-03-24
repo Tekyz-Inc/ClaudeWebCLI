@@ -124,8 +124,9 @@ describe("MessageBubble - assistant messages", () => {
 
     // ToolBlock renders with the label "Terminal" for Bash
     expect(screen.getByText("Terminal")).toBeTruthy();
-    // And the preview should show the command
-    expect(screen.getByText("pwd")).toBeTruthy();
+    // And the preview should show the command (ToolBlock is expanded by default — may appear in multiple places)
+    const pwdMatches = screen.getAllByText("pwd");
+    expect(pwdMatches.length).toBeGreaterThan(0);
   });
 
   it("renders thinking blocks with 'Thinking' label and char count", () => {

@@ -213,7 +213,7 @@ export const api = {
     get<ClaudeSession[]>(`/claude-sessions?cwd=${encodeURIComponent(cwd)}`),
 
   getClaudeSessionMessages: (cwd: string, sessionId: string) =>
-    get<{ role: "user" | "assistant"; content: string; timestamp: string }[]>(
+    get<{ role: "user" | "assistant"; content: string; contentBlocks?: { type: string; text?: string; id?: string; name?: string; input?: Record<string, unknown> }[]; timestamp: string }[]>(
       `/claude-sessions/${encodeURIComponent(sessionId)}/messages?cwd=${encodeURIComponent(cwd)}`
     ),
 
@@ -223,7 +223,7 @@ export const api = {
     ),
 
   getSlashCommands: (cwd?: string) =>
-    get<{ commands: string[]; skills: string[] }>(
+    get<{ commands: string[]; skills: string[]; argumentHints?: Record<string, string> }>(
       `/slash-commands${cwd ? `?cwd=${encodeURIComponent(cwd)}` : ""}`
     ),
 

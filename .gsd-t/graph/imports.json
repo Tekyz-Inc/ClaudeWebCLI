@@ -1,0 +1,2205 @@
+{
+  "edges": [
+    {
+      "source": "tmp-check.js",
+      "target": "fs",
+      "names": [
+        "fs"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/bin/cli.ts",
+      "target": "node:path",
+      "names": [
+        "dirname",
+        "resolve"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/bin/cli.ts",
+      "target": "node:url",
+      "names": [
+        "fileURLToPath"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/dev.ts",
+      "target": "bun",
+      "names": [
+        "spawn",
+        "type Subprocess"
+      ],
+      "line": 6
+    },
+    {
+      "source": "web/dev.ts",
+      "target": "node:path",
+      "names": [
+        "dirname",
+        "resolve"
+      ],
+      "line": 7
+    },
+    {
+      "source": "web/dev.ts",
+      "target": "node:url",
+      "names": [
+        "fileURLToPath"
+      ],
+      "line": 8
+    },
+    {
+      "source": "web/playwright.config.ts",
+      "target": "@playwright/test",
+      "names": [
+        "defineConfig"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/auto-namer.test.ts",
+      "target": "vitest",
+      "names": [
+        "vi",
+        "describe",
+        "it",
+        "expect",
+        "beforeEach"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/auto-namer.test.ts",
+      "target": "./auto-namer.js",
+      "names": [
+        "generateSessionTitle"
+      ],
+      "line": 18
+    },
+    {
+      "source": "web/server/auto-namer.ts",
+      "target": "node:child_process",
+      "names": [
+        "execSync"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/claude-sessions.test.ts",
+      "target": "vitest",
+      "names": [
+        "describe",
+        "it",
+        "expect",
+        "afterEach"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/claude-sessions.test.ts",
+      "target": "node:fs/promises",
+      "names": [
+        "mkdir",
+        "mkdtemp",
+        "writeFile",
+        "rm"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/server/claude-sessions.test.ts",
+      "target": "node:path",
+      "names": [
+        "join"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/server/claude-sessions.test.ts",
+      "target": "node:os",
+      "names": [
+        "tmpdir"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/server/claude-sessions.test.ts",
+      "target": "./claude-sessions.js",
+      "names": [
+        "encodeProjectSlug",
+        "readClaudeSessionsFromDir"
+      ],
+      "line": 5
+    },
+    {
+      "source": "web/server/claude-sessions.ts",
+      "target": "node:fs/promises",
+      "names": [
+        "readdir",
+        "readFile",
+        "stat"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/claude-sessions.ts",
+      "target": "node:path",
+      "names": [
+        "join"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/server/claude-sessions.ts",
+      "target": "node:os",
+      "names": [
+        "homedir"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/server/cli-launcher.test.ts",
+      "target": "vitest",
+      "names": [
+        "vi"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/cli-launcher.test.ts",
+      "target": "node:fs",
+      "names": [
+        "mkdtempSync",
+        "rmSync"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/server/cli-launcher.test.ts",
+      "target": "node:path",
+      "names": [
+        "join"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/server/cli-launcher.test.ts",
+      "target": "node:os",
+      "names": [
+        "tmpdir"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/server/cli-launcher.test.ts",
+      "target": "./session-store.js",
+      "names": [
+        "SessionStore"
+      ],
+      "line": 59
+    },
+    {
+      "source": "web/server/cli-launcher.test.ts",
+      "target": "./cli-launcher.js",
+      "names": [
+        "CliLauncher"
+      ],
+      "line": 60
+    },
+    {
+      "source": "web/server/cli-launcher.ts",
+      "target": "node:crypto",
+      "names": [
+        "randomUUID"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/cli-launcher.ts",
+      "target": "node:child_process",
+      "names": [
+        "execSync"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/server/cli-launcher.ts",
+      "target": "node:fs",
+      "names": [
+        "mkdirSync",
+        "existsSync",
+        "readFileSync",
+        "writeFileSync",
+        "appendFileSync",
+        "readdirSync",
+        "statSync",
+        "unlinkSync"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/server/cli-launcher.ts",
+      "target": "node:path",
+      "names": [
+        "join",
+        "resolve"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/server/env-manager.test.ts",
+      "target": "node:fs",
+      "names": [
+        "mkdtempSync",
+        "rmSync",
+        "readFileSync",
+        "writeFileSync",
+        "mkdirSync"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/env-manager.test.ts",
+      "target": "node:path",
+      "names": [
+        "join"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/server/env-manager.test.ts",
+      "target": "node:os",
+      "names": [
+        "tmpdir"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/server/env-manager.ts",
+      "target": "node:path",
+      "names": [
+        "join"
+      ],
+      "line": 9
+    },
+    {
+      "source": "web/server/env-manager.ts",
+      "target": "node:os",
+      "names": [
+        "homedir"
+      ],
+      "line": 10
+    },
+    {
+      "source": "web/server/git-utils.test.ts",
+      "target": "vitest",
+      "names": [
+        "vi",
+        "describe",
+        "it",
+        "expect",
+        "beforeEach"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/git-utils.ts",
+      "target": "node:child_process",
+      "names": [
+        "execSync"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/git-utils.ts",
+      "target": "node:fs",
+      "names": [
+        "existsSync",
+        "mkdirSync"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/server/git-utils.ts",
+      "target": "node:path",
+      "names": [
+        "join",
+        "basename"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/server/git-utils.ts",
+      "target": "node:os",
+      "names": [
+        "homedir"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/server/index.ts",
+      "target": "node:path",
+      "names": [
+        "dirname",
+        "resolve"
+      ],
+      "line": 11
+    },
+    {
+      "source": "web/server/index.ts",
+      "target": "node:url",
+      "names": [
+        "fileURLToPath"
+      ],
+      "line": 12
+    },
+    {
+      "source": "web/server/index.ts",
+      "target": "hono",
+      "names": [
+        "Hono"
+      ],
+      "line": 13
+    },
+    {
+      "source": "web/server/index.ts",
+      "target": "hono/cors",
+      "names": [
+        "cors"
+      ],
+      "line": 14
+    },
+    {
+      "source": "web/server/index.ts",
+      "target": "hono/bun",
+      "names": [
+        "serveStatic"
+      ],
+      "line": 15
+    },
+    {
+      "source": "web/server/index.ts",
+      "target": "./routes.js",
+      "names": [
+        "createRoutes"
+      ],
+      "line": 16
+    },
+    {
+      "source": "web/server/index.ts",
+      "target": "./cli-launcher.js",
+      "names": [
+        "CliLauncher"
+      ],
+      "line": 17
+    },
+    {
+      "source": "web/server/index.ts",
+      "target": "./ws-bridge.js",
+      "names": [
+        "WsBridge"
+      ],
+      "line": 18
+    },
+    {
+      "source": "web/server/index.ts",
+      "target": "./session-store.js",
+      "names": [
+        "SessionStore"
+      ],
+      "line": 19
+    },
+    {
+      "source": "web/server/index.ts",
+      "target": "./worktree-tracker.js",
+      "names": [
+        "WorktreeTracker"
+      ],
+      "line": 20
+    },
+    {
+      "source": "web/server/index.ts",
+      "target": "./auto-namer.js",
+      "names": [
+        "generateSessionTitle"
+      ],
+      "line": 21
+    },
+    {
+      "source": "web/server/index.ts",
+      "target": "./session-names.js",
+      "names": [
+        "sessionNames"
+      ],
+      "line": 22
+    },
+    {
+      "source": "web/server/index.ts",
+      "target": "./terminal-ws.js",
+      "names": [
+        "handleTerminalOpen",
+        "handleTerminalMessage",
+        "handleTerminalClose"
+      ],
+      "line": 24
+    },
+    {
+      "source": "web/server/routes.test.ts",
+      "target": "vitest",
+      "names": [
+        "vi",
+        "describe",
+        "it",
+        "expect",
+        "beforeEach"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/routes.test.ts",
+      "target": "hono",
+      "names": [
+        "Hono"
+      ],
+      "line": 33
+    },
+    {
+      "source": "web/server/routes.test.ts",
+      "target": "node:child_process",
+      "names": [
+        "execSync"
+      ],
+      "line": 34
+    },
+    {
+      "source": "web/server/routes.test.ts",
+      "target": "./routes.js",
+      "names": [
+        "createRoutes"
+      ],
+      "line": 35
+    },
+    {
+      "source": "web/server/routes.test.ts",
+      "target": "./env-manager.js",
+      "names": [
+        "envManager"
+      ],
+      "line": 36
+    },
+    {
+      "source": "web/server/routes.test.ts",
+      "target": "./git-utils.js",
+      "names": [
+        "gitUtils"
+      ],
+      "line": 37
+    },
+    {
+      "source": "web/server/routes.test.ts",
+      "target": "./session-names.js",
+      "names": [
+        "sessionNames"
+      ],
+      "line": 38
+    },
+    {
+      "source": "web/server/routes.ts",
+      "target": "hono",
+      "names": [
+        "Hono"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/routes.ts",
+      "target": "node:child_process",
+      "names": [
+        "execSync"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/server/routes.ts",
+      "target": "node:fs/promises",
+      "names": [
+        "readdir",
+        "readFile",
+        "writeFile",
+        "stat"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/server/routes.ts",
+      "target": "node:path",
+      "names": [
+        "resolve",
+        "join",
+        "dirname"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/server/routes.ts",
+      "target": "node:os",
+      "names": [
+        "homedir"
+      ],
+      "line": 5
+    },
+    {
+      "source": "web/server/routes.ts",
+      "target": "./env-manager.js",
+      "names": [
+        "envManager"
+      ],
+      "line": 10
+    },
+    {
+      "source": "web/server/routes.ts",
+      "target": "./git-utils.js",
+      "names": [
+        "gitUtils"
+      ],
+      "line": 11
+    },
+    {
+      "source": "web/server/routes.ts",
+      "target": "./session-names.js",
+      "names": [
+        "sessionNames"
+      ],
+      "line": 12
+    },
+    {
+      "source": "web/server/routes.ts",
+      "target": "./claude-sessions.js",
+      "names": [
+        "readClaudeSessions",
+        "readClaudeSessionMessages",
+        "readClaudeSessionActivity"
+      ],
+      "line": 13
+    },
+    {
+      "source": "web/server/session-names.test.ts",
+      "target": "node:path",
+      "names": [
+        "join"
+      ],
+      "line": 8
+    },
+    {
+      "source": "web/server/session-names.test.ts",
+      "target": "node:os",
+      "names": [
+        "tmpdir"
+      ],
+      "line": 9
+    },
+    {
+      "source": "web/server/session-names.test.ts",
+      "target": "vitest",
+      "names": [
+        "describe",
+        "it",
+        "expect",
+        "beforeEach",
+        "afterEach"
+      ],
+      "line": 10
+    },
+    {
+      "source": "web/server/session-names.ts",
+      "target": "node:path",
+      "names": [
+        "join",
+        "dirname"
+      ],
+      "line": 7
+    },
+    {
+      "source": "web/server/session-names.ts",
+      "target": "node:os",
+      "names": [
+        "homedir"
+      ],
+      "line": 8
+    },
+    {
+      "source": "web/server/session-store.test.ts",
+      "target": "node:fs",
+      "names": [
+        "mkdtempSync",
+        "rmSync",
+        "existsSync",
+        "readFileSync",
+        "writeFileSync"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/session-store.test.ts",
+      "target": "node:path",
+      "names": [
+        "join"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/server/session-store.test.ts",
+      "target": "node:os",
+      "names": [
+        "tmpdir"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/server/session-store.test.ts",
+      "target": "./session-store.js",
+      "names": [
+        "SessionStore",
+        "type PersistedSession"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/server/session-store.ts",
+      "target": "node:fs",
+      "names": [
+        "mkdirSync",
+        "readdirSync",
+        "readFileSync",
+        "writeFileSync",
+        "unlinkSync"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/session-store.ts",
+      "target": "node:path",
+      "names": [
+        "join"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/server/session-store.ts",
+      "target": "node:os",
+      "names": [
+        "tmpdir"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/server/terminal-ws.ts",
+      "target": "node-pty",
+      "names": [
+        "pty"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/worktree-tracker.test.ts",
+      "target": "node:path",
+      "names": [
+        "join"
+      ],
+      "line": 8
+    },
+    {
+      "source": "web/server/worktree-tracker.test.ts",
+      "target": "node:os",
+      "names": [
+        "tmpdir"
+      ],
+      "line": 9
+    },
+    {
+      "source": "web/server/worktree-tracker.ts",
+      "target": "node:path",
+      "names": [
+        "join",
+        "dirname"
+      ],
+      "line": 7
+    },
+    {
+      "source": "web/server/worktree-tracker.ts",
+      "target": "node:os",
+      "names": [
+        "homedir"
+      ],
+      "line": 8
+    },
+    {
+      "source": "web/server/ws-bridge.test.ts",
+      "target": "vitest",
+      "names": [
+        "vi"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/server/ws-bridge.test.ts",
+      "target": "./ws-bridge.js",
+      "names": [
+        "WsBridge",
+        "type SocketData"
+      ],
+      "line": 7
+    },
+    {
+      "source": "web/server/ws-bridge.test.ts",
+      "target": "./session-store.js",
+      "names": [
+        "SessionStore"
+      ],
+      "line": 8
+    },
+    {
+      "source": "web/server/ws-bridge.test.ts",
+      "target": "node:fs",
+      "names": [
+        "mkdtempSync",
+        "rmSync"
+      ],
+      "line": 9
+    },
+    {
+      "source": "web/server/ws-bridge.test.ts",
+      "target": "node:path",
+      "names": [
+        "join"
+      ],
+      "line": 10
+    },
+    {
+      "source": "web/server/ws-bridge.test.ts",
+      "target": "node:os",
+      "names": [
+        "tmpdir"
+      ],
+      "line": 11
+    },
+    {
+      "source": "web/server/ws-bridge.ts",
+      "target": "node:crypto",
+      "names": [
+        "randomUUID"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/server/ws-bridge.ts",
+      "target": "node:child_process",
+      "names": [
+        "execSync"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/api.test.ts",
+      "target": "./api.js",
+      "names": [
+        "api"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/App.tsx",
+      "target": "react",
+      "names": [
+        "useEffect",
+        "useRef",
+        "useSyncExternalStore"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/App.tsx",
+      "target": "./store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/App.tsx",
+      "target": "./ws.js",
+      "names": [
+        "connectSession"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/App.tsx",
+      "target": "./components/Sidebar.js",
+      "names": [
+        "Sidebar"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/src/App.tsx",
+      "target": "./components/ChatView.js",
+      "names": [
+        "ChatView"
+      ],
+      "line": 5
+    },
+    {
+      "source": "web/src/App.tsx",
+      "target": "./components/TopBar.js",
+      "names": [
+        "TopBar"
+      ],
+      "line": 6
+    },
+    {
+      "source": "web/src/App.tsx",
+      "target": "./components/HomePage.js",
+      "names": [
+        "HomePage"
+      ],
+      "line": 7
+    },
+    {
+      "source": "web/src/App.tsx",
+      "target": "./components/TaskPanel.js",
+      "names": [
+        "TaskPanel"
+      ],
+      "line": 8
+    },
+    {
+      "source": "web/src/App.tsx",
+      "target": "./components/EditorPanel.js",
+      "names": [
+        "EditorPanel"
+      ],
+      "line": 9
+    },
+    {
+      "source": "web/src/App.tsx",
+      "target": "./components/Playground.js",
+      "names": [
+        "Playground"
+      ],
+      "line": 10
+    },
+    {
+      "source": "web/src/App.tsx",
+      "target": "./components/ProjectTabBar.js",
+      "names": [
+        "ProjectTabBar"
+      ],
+      "line": 11
+    },
+    {
+      "source": "web/src/App.tsx",
+      "target": "./components/TerminalPanel.js",
+      "names": [
+        "TerminalPanel"
+      ],
+      "line": 12
+    },
+    {
+      "source": "web/src/components/ChatView.tsx",
+      "target": "react",
+      "names": [
+        "useMemo"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/ChatView.tsx",
+      "target": "../store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/ChatView.tsx",
+      "target": "./MessageFeed.js",
+      "names": [
+        "MessageFeed"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/ChatView.tsx",
+      "target": "./Composer.js",
+      "names": [
+        "Composer"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/src/components/ChatView.tsx",
+      "target": "./PermissionBanner.js",
+      "names": [
+        "PermissionBanner"
+      ],
+      "line": 5
+    },
+    {
+      "source": "web/src/components/Composer.test.tsx",
+      "target": "vitest",
+      "names": [
+        "describe",
+        "it",
+        "expect",
+        "vi",
+        "beforeEach"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/Composer.test.tsx",
+      "target": "@testing-library/react",
+      "names": [
+        "render",
+        "screen",
+        "fireEvent"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/Composer.test.tsx",
+      "target": "@testing-library/user-event",
+      "names": [
+        "userEvent"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/src/components/Composer.test.tsx",
+      "target": "./Composer.js",
+      "names": [
+        "Composer"
+      ],
+      "line": 42
+    },
+    {
+      "source": "web/src/components/Composer.tsx",
+      "target": "react",
+      "names": [
+        "useState",
+        "useRef",
+        "useEffect",
+        "useCallback",
+        "useMemo"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/Composer.tsx",
+      "target": "../store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/Composer.tsx",
+      "target": "../ws.js",
+      "names": [
+        "sendToSession"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/Composer.tsx",
+      "target": "../api.js",
+      "names": [
+        "api"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/src/components/Composer.tsx",
+      "target": "../hooks/use-prompt-history.js",
+      "names": [
+        "usePromptHistory"
+      ],
+      "line": 5
+    },
+    {
+      "source": "web/src/components/Composer.tsx",
+      "target": "../utils/notifications.js",
+      "names": [
+        "requestNotificationPermission"
+      ],
+      "line": 6
+    },
+    {
+      "source": "web/src/components/CopyButton.tsx",
+      "target": "react",
+      "names": [
+        "useState"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/DiffView.test.ts",
+      "target": "vitest",
+      "names": [
+        "describe",
+        "it",
+        "expect"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/DiffView.test.ts",
+      "target": "./DiffView.js",
+      "names": [
+        "parseDiff"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/DiffView.tsx",
+      "target": "react",
+      "names": [
+        "useMemo"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/DiffView.tsx",
+      "target": "highlight.js/lib/common",
+      "names": [
+        "hljs"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/EditorPanel.test.tsx",
+      "target": "@testing-library/react",
+      "names": [
+        "render",
+        "screen",
+        "fireEvent",
+        "waitFor"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/EditorPanel.test.tsx",
+      "target": "./EditorPanel.js",
+      "names": [
+        "EditorPanel"
+      ],
+      "line": 75
+    },
+    {
+      "source": "web/src/components/EditorPanel.tsx",
+      "target": "react",
+      "names": [
+        "useEffect",
+        "useState",
+        "useCallback",
+        "useRef",
+        "useMemo"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/EditorPanel.tsx",
+      "target": "@uiw/react-codemirror",
+      "names": [
+        "CodeMirror"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/EditorPanel.tsx",
+      "target": "./DiffView.js",
+      "names": [
+        "DiffView"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/EditorPanel.tsx",
+      "target": "@codemirror/view",
+      "names": [
+        "EditorView"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/src/components/EditorPanel.tsx",
+      "target": "@codemirror/theme-one-dark",
+      "names": [
+        "oneDark"
+      ],
+      "line": 5
+    },
+    {
+      "source": "web/src/components/EditorPanel.tsx",
+      "target": "@codemirror/lang-javascript",
+      "names": [
+        "javascript"
+      ],
+      "line": 6
+    },
+    {
+      "source": "web/src/components/EditorPanel.tsx",
+      "target": "@codemirror/lang-python",
+      "names": [
+        "python"
+      ],
+      "line": 7
+    },
+    {
+      "source": "web/src/components/EditorPanel.tsx",
+      "target": "@codemirror/lang-json",
+      "names": [
+        "json"
+      ],
+      "line": 8
+    },
+    {
+      "source": "web/src/components/EditorPanel.tsx",
+      "target": "@codemirror/lang-html",
+      "names": [
+        "html"
+      ],
+      "line": 9
+    },
+    {
+      "source": "web/src/components/EditorPanel.tsx",
+      "target": "@codemirror/lang-css",
+      "names": [
+        "css"
+      ],
+      "line": 10
+    },
+    {
+      "source": "web/src/components/EditorPanel.tsx",
+      "target": "@codemirror/lang-markdown",
+      "names": [
+        "markdown"
+      ],
+      "line": 11
+    },
+    {
+      "source": "web/src/components/EditorPanel.tsx",
+      "target": "../store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 12
+    },
+    {
+      "source": "web/src/components/EditorPanel.tsx",
+      "target": "../api.js",
+      "names": [
+        "api",
+        "type TreeNode"
+      ],
+      "line": 13
+    },
+    {
+      "source": "web/src/components/EnvManager.tsx",
+      "target": "react",
+      "names": [
+        "useState",
+        "useEffect"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/EnvManager.tsx",
+      "target": "react-dom",
+      "names": [
+        "createPortal"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/EnvManager.tsx",
+      "target": "../api.js",
+      "names": [
+        "api",
+        "type CompanionEnv"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/FolderPicker.tsx",
+      "target": "react",
+      "names": [
+        "useState",
+        "useEffect",
+        "useCallback"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/FolderPicker.tsx",
+      "target": "react-dom",
+      "names": [
+        "createPortal"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/FolderPicker.tsx",
+      "target": "../api.js",
+      "names": [
+        "api",
+        "type DirEntry"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/FolderPicker.tsx",
+      "target": "../utils/recent-dirs.js",
+      "names": [
+        "getRecentDirs",
+        "addRecentDir"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/src/components/HomePage.test.tsx",
+      "target": "vitest",
+      "names": [
+        "describe",
+        "it",
+        "expect",
+        "vi",
+        "beforeEach"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/HomePage.test.tsx",
+      "target": "@testing-library/react",
+      "names": [
+        "render",
+        "screen",
+        "fireEvent"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/HomePage.test.tsx",
+      "target": "./HomePage.js",
+      "names": [
+        "HomePage"
+      ],
+      "line": 51
+    },
+    {
+      "source": "web/src/components/HomePage.tsx",
+      "target": "react",
+      "names": [
+        "useState",
+        "useRef",
+        "useEffect"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/HomePage.tsx",
+      "target": "../store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/HomePage.tsx",
+      "target": "../api.js",
+      "names": [
+        "api",
+        "type CompanionEnv",
+        "type GitRepoInfo",
+        "type GitBranchInfo"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/HomePage.tsx",
+      "target": "../ws.js",
+      "names": [
+        "connectSession",
+        "waitForConnection",
+        "sendToSession"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/src/components/HomePage.tsx",
+      "target": "../ws.js",
+      "names": [
+        "disconnectSession"
+      ],
+      "line": 5
+    },
+    {
+      "source": "web/src/components/HomePage.tsx",
+      "target": "../utils/recent-dirs.js",
+      "names": [
+        "getRecentDirs",
+        "addRecentDir"
+      ],
+      "line": 6
+    },
+    {
+      "source": "web/src/components/HomePage.tsx",
+      "target": "./EnvManager.js",
+      "names": [
+        "EnvManager"
+      ],
+      "line": 7
+    },
+    {
+      "source": "web/src/components/HomePage.tsx",
+      "target": "./FolderPicker.js",
+      "names": [
+        "FolderPicker"
+      ],
+      "line": 8
+    },
+    {
+      "source": "web/src/components/HomePage.tsx",
+      "target": "../utils/project-detector.js",
+      "names": [
+        "detectProject",
+        "type ProjectInfo"
+      ],
+      "line": 9
+    },
+    {
+      "source": "web/src/components/MessageBubble.test.tsx",
+      "target": "@testing-library/react",
+      "names": [
+        "render",
+        "screen",
+        "fireEvent"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/MessageBubble.test.tsx",
+      "target": "./MessageBubble.js",
+      "names": [
+        "MessageBubble"
+      ],
+      "line": 14
+    },
+    {
+      "source": "web/src/components/MessageBubble.tsx",
+      "target": "react",
+      "names": [
+        "useState",
+        "useMemo",
+        "useRef",
+        "type ComponentProps"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/MessageBubble.tsx",
+      "target": "react-markdown",
+      "names": [
+        "Markdown"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/MessageBubble.tsx",
+      "target": "remark-gfm",
+      "names": [
+        "remarkGfm"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/MessageBubble.tsx",
+      "target": "./ToolBlock.js",
+      "names": [
+        "ToolBlock",
+        "ToolIcon"
+      ],
+      "line": 5
+    },
+    {
+      "source": "web/src/components/MessageBubble.tsx",
+      "target": "./tool-utils.js",
+      "names": [
+        "getToolIcon",
+        "getToolLabel"
+      ],
+      "line": 6
+    },
+    {
+      "source": "web/src/components/MessageBubble.tsx",
+      "target": "./CopyButton.js",
+      "names": [
+        "CopyButton"
+      ],
+      "line": 7
+    },
+    {
+      "source": "web/src/components/MessageBubble.tsx",
+      "target": "../utils/linkify.js",
+      "names": [
+        "linkifyText"
+      ],
+      "line": 8
+    },
+    {
+      "source": "web/src/components/MessageFeed.test.tsx",
+      "target": "@testing-library/react",
+      "names": [
+        "render",
+        "screen"
+      ],
+      "line": 8
+    },
+    {
+      "source": "web/src/components/MessageFeed.test.tsx",
+      "target": "./MessageFeed.js",
+      "names": [
+        "MessageFeed"
+      ],
+      "line": 36
+    },
+    {
+      "source": "web/src/components/MessageFeed.tsx",
+      "target": "react",
+      "names": [
+        "useEffect",
+        "useRef",
+        "useMemo",
+        "useState"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/MessageFeed.tsx",
+      "target": "../store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/MessageFeed.tsx",
+      "target": "./MessageBubble.js",
+      "names": [
+        "MessageBubble"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/MessageFeed.tsx",
+      "target": "./ToolBlock.js",
+      "names": [
+        "ToolBlock",
+        "ToolIcon"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/src/components/MessageFeed.tsx",
+      "target": "./tool-utils.js",
+      "names": [
+        "getToolIcon",
+        "getToolLabel",
+        "getPreview"
+      ],
+      "line": 5
+    },
+    {
+      "source": "web/src/components/PermissionBanner.test.tsx",
+      "target": "vitest",
+      "names": [
+        "describe",
+        "it",
+        "expect",
+        "vi",
+        "beforeEach"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/PermissionBanner.test.tsx",
+      "target": "@testing-library/react",
+      "names": [
+        "render",
+        "screen",
+        "fireEvent"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/PermissionBanner.test.tsx",
+      "target": "./PermissionBanner.js",
+      "names": [
+        "PermissionBanner"
+      ],
+      "line": 30
+    },
+    {
+      "source": "web/src/components/PermissionBanner.tsx",
+      "target": "react",
+      "names": [
+        "useState"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/PermissionBanner.tsx",
+      "target": "react-markdown",
+      "names": [
+        "Markdown"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/PermissionBanner.tsx",
+      "target": "remark-gfm",
+      "names": [
+        "remarkGfm"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/PermissionBanner.tsx",
+      "target": "../store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/src/components/PermissionBanner.tsx",
+      "target": "../ws.js",
+      "names": [
+        "sendToSession"
+      ],
+      "line": 5
+    },
+    {
+      "source": "web/src/components/Playground.tsx",
+      "target": "react",
+      "names": [
+        "useState",
+        "useEffect"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/Playground.tsx",
+      "target": "./PermissionBanner.js",
+      "names": [
+        "PermissionBanner"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/Playground.tsx",
+      "target": "./MessageBubble.js",
+      "names": [
+        "MessageBubble"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/Playground.tsx",
+      "target": "./ToolBlock.js",
+      "names": [
+        "ToolBlock"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/src/components/ProjectTabBar.tsx",
+      "target": "react",
+      "names": [
+        "useEffect",
+        "useRef",
+        "useState"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/ProjectTabBar.tsx",
+      "target": "react-dom",
+      "names": [
+        "createPortal"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/ProjectTabBar.tsx",
+      "target": "../store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/ProjectTabBar.tsx",
+      "target": "../api.js",
+      "names": [
+        "api"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/src/components/Sidebar.test.tsx",
+      "target": "@testing-library/react",
+      "names": [
+        "render",
+        "screen",
+        "fireEvent",
+        "act"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/Sidebar.test.tsx",
+      "target": "./Sidebar.js",
+      "names": [
+        "Sidebar"
+      ],
+      "line": 147
+    },
+    {
+      "source": "web/src/components/Sidebar.tsx",
+      "target": "react",
+      "names": [
+        "useState",
+        "useEffect",
+        "useCallback",
+        "useRef"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/Sidebar.tsx",
+      "target": "react-dom",
+      "names": [
+        "createPortal"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/Sidebar.tsx",
+      "target": "../store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/Sidebar.tsx",
+      "target": "../api.js",
+      "names": [
+        "api"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/src/components/Sidebar.tsx",
+      "target": "../ws.js",
+      "names": [
+        "connectSession",
+        "disconnectSession"
+      ],
+      "line": 5
+    },
+    {
+      "source": "web/src/components/Sidebar.tsx",
+      "target": "./EnvManager.js",
+      "names": [
+        "EnvManager"
+      ],
+      "line": 6
+    },
+    {
+      "source": "web/src/components/SpeechMonitor.tsx",
+      "target": "react",
+      "names": [
+        "useState",
+        "useEffect",
+        "useRef",
+        "useCallback",
+        "useSyncExternalStore"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/TaskPanel.tsx",
+      "target": "react",
+      "names": [
+        "useState",
+        "useEffect",
+        "type ReactNode"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/TaskPanel.tsx",
+      "target": "react-dom",
+      "names": [
+        "createPortal"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/TaskPanel.tsx",
+      "target": "../store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/TerminalPanel.tsx",
+      "target": "react",
+      "names": [
+        "useEffect",
+        "useRef",
+        "useState"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/TerminalPanel.tsx",
+      "target": "@xterm/xterm",
+      "names": [
+        "Terminal"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/TerminalPanel.tsx",
+      "target": "@xterm/addon-fit",
+      "names": [
+        "FitAddon"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/ToolBlock.test.tsx",
+      "target": "@testing-library/react",
+      "names": [
+        "render",
+        "screen",
+        "fireEvent"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/ToolBlock.test.tsx",
+      "target": "./ToolBlock.js",
+      "names": [
+        "ToolBlock",
+        "ToolIcon"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/ToolBlock.test.tsx",
+      "target": "./tool-utils.js",
+      "names": [
+        "getToolIcon",
+        "getToolLabel",
+        "getPreview"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/src/components/ToolBlock.tsx",
+      "target": "react",
+      "names": [
+        "useState",
+        "useEffect"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/ToolBlock.tsx",
+      "target": "../store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/ToolBlock.tsx",
+      "target": "./DiffView.js",
+      "names": [
+        "DiffView"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/components/ToolBlock.tsx",
+      "target": "./tool-utils.js",
+      "names": [
+        "getToolIcon",
+        "getToolLabel",
+        "getPreview"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/src/components/ToolBlock.tsx",
+      "target": "./CopyButton.js",
+      "names": [
+        "CopyButton"
+      ],
+      "line": 5
+    },
+    {
+      "source": "web/src/components/ToolBlock.tsx",
+      "target": "../utils/linkify.js",
+      "names": [
+        "linkifyText"
+      ],
+      "line": 6
+    },
+    {
+      "source": "web/src/components/TopBar.tsx",
+      "target": "../store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/components/TopBar.tsx",
+      "target": "../api.js",
+      "names": [
+        "api"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/components/TopBar.tsx",
+      "target": "../ws.js",
+      "names": [
+        "connectSession",
+        "disconnectSession"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/hooks/use-prompt-history.test.ts",
+      "target": "vitest",
+      "names": [
+        "describe",
+        "it",
+        "expect",
+        "vi",
+        "beforeEach"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/hooks/use-prompt-history.test.ts",
+      "target": "@testing-library/react",
+      "names": [
+        "renderHook",
+        "act"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/hooks/use-prompt-history.test.ts",
+      "target": "./use-prompt-history.js",
+      "names": [
+        "usePromptHistory"
+      ],
+      "line": 18
+    },
+    {
+      "source": "web/src/hooks/use-prompt-history.ts",
+      "target": "react",
+      "names": [
+        "useRef",
+        "useCallback"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/hooks/use-prompt-history.ts",
+      "target": "../store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/hooks/use-voice-input.test.ts",
+      "target": "vitest",
+      "names": [
+        "describe",
+        "it",
+        "expect",
+        "vi",
+        "beforeEach",
+        "afterEach"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/hooks/use-voice-input.test.ts",
+      "target": "@testing-library/react",
+      "names": [
+        "renderHook",
+        "act"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/hooks/use-voice-input.test.ts",
+      "target": "./use-voice-input.js",
+      "names": [
+        "useVoiceInput"
+      ],
+      "line": 58
+    },
+    {
+      "source": "web/src/hooks/use-voice-input.ts",
+      "target": "react",
+      "names": [
+        "useState",
+        "useRef",
+        "useCallback",
+        "useEffect"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/hooks/use-voice-input.ts",
+      "target": "@tekyzinc/stt-component",
+      "names": [
+        "STTEngine"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/hooks/use-voice-input.ts",
+      "target": "./voice-events.js",
+      "names": [
+        "emitVoiceEvent"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/src/hooks/use-whisper.ts",
+      "target": "react",
+      "names": [
+        "useState",
+        "useRef",
+        "useCallback"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/main.tsx",
+      "target": "react",
+      "names": [
+        "StrictMode"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/main.tsx",
+      "target": "react-dom/client",
+      "names": [
+        "createRoot"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/main.tsx",
+      "target": "./App.js",
+      "names": [
+        "App"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/store.test.ts",
+      "target": "./store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 22
+    },
+    {
+      "source": "web/src/store.ts",
+      "target": "zustand",
+      "names": [
+        "create"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/store.ts",
+      "target": "./api.js",
+      "names": [
+        "api"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/utils/names.test.ts",
+      "target": "./names.js",
+      "names": [
+        "generateSessionName",
+        "generateUniqueSessionName"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/utils/notifications.test.ts",
+      "target": "vitest",
+      "names": [
+        "describe",
+        "it",
+        "expect",
+        "vi",
+        "beforeEach",
+        "afterEach"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/utils/notifications.ts",
+      "target": "../store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/utils/project-detector.test.ts",
+      "target": "vitest",
+      "names": [
+        "describe",
+        "it",
+        "expect"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/utils/project-detector.test.ts",
+      "target": "./project-detector.js",
+      "names": [
+        "detectProject"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/src/utils/stt-component-worker.ts",
+      "target": "@huggingface/transformers",
+      "names": [
+        "pipeline",
+        "env"
+      ],
+      "line": 11
+    },
+    {
+      "source": "web/src/utils/whisper-worker.ts",
+      "target": "@huggingface/transformers",
+      "names": [
+        "pipeline",
+        "env"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/ws.ts",
+      "target": "./store.js",
+      "names": [
+        "useStore"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/src/ws.ts",
+      "target": "./utils/names.js",
+      "names": [
+        "generateUniqueSessionName"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/src/ws.ts",
+      "target": "./utils/notifications.js",
+      "names": [
+        "sendNotification"
+      ],
+      "line": 4
+    },
+    {
+      "source": "web/tests/e2e/app.spec.ts",
+      "target": "@playwright/test",
+      "names": [
+        "test",
+        "expect",
+        "type Page"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/tests/global-teardown.ts",
+      "target": "node:child_process",
+      "names": [
+        "execSync"
+      ],
+      "line": 8
+    },
+    {
+      "source": "web/vite.config.ts",
+      "target": "vite",
+      "names": [
+        "defineConfig"
+      ],
+      "line": 1
+    },
+    {
+      "source": "web/vite.config.ts",
+      "target": "@vitejs/plugin-react",
+      "names": [
+        "react"
+      ],
+      "line": 2
+    },
+    {
+      "source": "web/vite.config.ts",
+      "target": "@tailwindcss/vite",
+      "names": [
+        "tailwindcss"
+      ],
+      "line": 3
+    },
+    {
+      "source": "web/vitest.config.ts",
+      "target": "vitest/config",
+      "names": [
+        "defineConfig"
+      ],
+      "line": 1
+    }
+  ]
+}

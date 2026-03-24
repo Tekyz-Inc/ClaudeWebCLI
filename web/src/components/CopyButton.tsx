@@ -1,11 +1,12 @@
 import { useState } from "react";
 
-export function CopyButton({ text, className }: { text: string; className?: string }) {
+export function CopyButton({ text, className }: { text: string | (() => string); className?: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(text).catch(() => {});
+    const value = typeof text === "function" ? text() : text;
+    navigator.clipboard.writeText(value).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };

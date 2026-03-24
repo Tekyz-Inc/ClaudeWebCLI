@@ -14,3 +14,4 @@ nul
 .gsd-t/heartbeat-*.jsonl
 .claude/worktrees/
 web/test-results/
+.webcli-logs/

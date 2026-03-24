@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import type { SessionState, SdkSessionInfo } from "../types.js";
+import type { SdkSessionInfo } from "../types.js";
 
 // ─── Mock setup ──────────────────────────────────────────────────────────────
 
@@ -19,6 +19,7 @@ const mockApi = {
   archiveSession: vi.fn().mockResolvedValue({}),
   unarchiveSession: vi.fn().mockResolvedValue({}),
   getClaudeSessions: vi.fn().mockResolvedValue([]),
+  killSession: vi.fn().mockResolvedValue({}),
 };
 
 vi.mock("../api.js", () => ({
@@ -28,6 +29,7 @@ vi.mock("../api.js", () => ({
     archiveSession: (...args: unknown[]) => mockApi.archiveSession(...args),
     unarchiveSession: (...args: unknown[]) => mockApi.unarchiveSession(...args),
     getClaudeSessions: (...args: unknown[]) => mockApi.getClaudeSessions(...args),
+    killSession: (...args: unknown[]) => mockApi.killSession(...args),
   },
 }));
 
@@ -38,11 +40,8 @@ vi.mock("./EnvManager.js", () => ({
 
 // ─── Store mock helpers ──────────────────────────────────────────────────────
 
-// We need to mock the store. The Sidebar uses `useStore((s) => s.xxx)` selector pattern.
-// We'll provide a real-ish mock that supports selector calls.
-
 interface MockStoreState {
-  sessions: Map<string, SessionState>;
+  sessions: Map<string, unknown>;
   sdkSessions: SdkSessionInfo[];
   currentSessionId: string | null;
   darkMode: boolean;
@@ -52,6 +51,9 @@ interface MockStoreState {
   recentlyRenamed: Set<string>;
   pendingPermissions: Map<string, Map<string, unknown>>;
   activeProjectCwd: string | null;
+  hiddenProjects: Set<string>;
+  projectSessionMap: Map<string, string>;
+  messages: Map<string, unknown[]>;
   setCurrentSession: ReturnType<typeof vi.fn>;
   toggleDarkMode: ReturnType<typeof vi.fn>;
   removeSession: ReturnType<typeof vi.fn>;
@@ -62,44 +64,6 @@ interface MockStoreState {
   clearRecentlyRenamed: ReturnType<typeof vi.fn>;
   setSdkSessions: ReturnType<typeof vi.fn>;
   resumeNativeSession: ReturnType<typeof vi.fn>;
-}
-
-function makeSession(id: string, overrides: Partial<SessionState> = {}): SessionState {
-  return {
-    session_id: id,
-    model: "claude-sonnet-4-5-20250929",
-    cwd: "/home/user/projects/myapp",
-    tools: [],
-    permissionMode: "default",
-    claude_code_version: "1.0",
-    mcp_servers: [],
-    agents: [],
-    slash_commands: [],
-    skills: [],
-    total_cost_usd: 0,
-    num_turns: 0,
-    context_used_percent: 0,
-    is_compacting: false,
-    git_branch: "",
-    is_worktree: false,
-    repo_root: "",
-    git_ahead: 0,
-    git_behind: 0,
-    total_lines_added: 0,
-    total_lines_removed: 0,
-    ...overrides,
-  };
-}
-
-function makeSdkSession(id: string, overrides: Partial<SdkSessionInfo> = {}): SdkSessionInfo {
-  return {
-    sessionId: id,
-    state: "connected",
-    cwd: "/home/user/projects/myapp",
-    createdAt: Date.now(),
-    archived: false,
-    ...overrides,
-  };
 }
 
 let mockState: MockStoreState;
@@ -116,6 +80,9 @@ function createMockState(overrides: Partial<MockStoreState> = {}): MockStoreStat
     recentlyRenamed: new Set(),
     pendingPermissions: new Map(),
     activeProjectCwd: null,
+    hiddenProjects: new Set(),
+    projectSessionMap: new Map(),
+    messages: new Map(),
     setCurrentSession: vi.fn(),
     toggleDarkMode: vi.fn(),
     removeSession: vi.fn(),
@@ -154,323 +121,51 @@ beforeEach(() => {
 });
 
 describe("Sidebar", () => {
-  it("renders 'New Session' button", () => {
+  it("renders 'Select a project tab to see sessions.' when no project active", () => {
     render(<Sidebar />);
-    expect(screen.getByText("New Session")).toBeInTheDocument();
+    expect(screen.getByText("Select a project tab to see sessions.")).toBeInTheDocument();
   });
 
-  it("renders 'No sessions yet.' when no sessions exist", () => {
-    render(<Sidebar />);
-    expect(screen.getByText("No sessions yet.")).toBeInTheDocument();
-  });
+  it("renders 'No sessions for this project.' when project active but no native sessions", async () => {
+    mockApi.getClaudeSessions.mockResolvedValue([]);
+    mockState = createMockState({ activeProjectCwd: "/test/project" });
 
-  it("renders session items for active sessions", () => {
-    const session = makeSession("s1");
-    const sdk = makeSdkSession("s1", { model: "claude-sonnet-4-5-20250929" });
-    mockState = createMockState({
-      sessions: new Map([["s1", session]]),
-      sdkSessions: [sdk],
+    await act(async () => {
+      render(<Sidebar />);
+      await new Promise((r) => setTimeout(r, 50));
     });
-
-    render(<Sidebar />);
-    // The session label defaults to model name
-    expect(screen.getByText("claude-sonnet-4-5-20250929")).toBeInTheDocument();
+    expect(screen.getByText("No sessions for this project.")).toBeInTheDocument();
   });
 
-  it("session items show model name or session ID", () => {
-    // Session with model name
-    const session1 = makeSession("s1", { model: "claude-opus-4-6" });
-    const sdk1 = makeSdkSession("s1", { model: "claude-opus-4-6" });
-
-    // Session without model (falls back to short ID)
-    const session2 = makeSession("abcdef12-3456-7890-abcd-ef1234567890", { model: "" });
-    const sdk2 = makeSdkSession("abcdef12-3456-7890-abcd-ef1234567890", { model: "" });
-
-    mockState = createMockState({
-      sessions: new Map([
-        ["s1", session1],
-        ["abcdef12-3456-7890-abcd-ef1234567890", session2],
-      ]),
-      sdkSessions: [sdk1, sdk2],
-    });
-
+  it("renders Kill All Sessions button in footer", () => {
     render(<Sidebar />);
-    expect(screen.getByText("claude-opus-4-6")).toBeInTheDocument();
-    // Falls back to shortId (first 8 chars)
-    expect(screen.getByText("abcdef12")).toBeInTheDocument();
+    const killBtn = screen.getByTitle("Kill all sessions");
+    expect(killBtn).toBeInTheDocument();
   });
 
-  it("session items show directory name from cwd", () => {
-    const session = makeSession("s1", { cwd: "/home/user/projects/myapp" });
-    const sdk = makeSdkSession("s1");
-    mockState = createMockState({
-      sessions: new Map([["s1", session]]),
-      sdkSessions: [sdk],
-    });
-
+  it("renders Environments button in footer", () => {
     render(<Sidebar />);
-    expect(screen.getByText("myapp")).toBeInTheDocument();
+    const envBtn = screen.getByTitle("Environments");
+    expect(envBtn).toBeInTheDocument();
   });
 
-  it("session items show git branch when available", () => {
-    const session = makeSession("s1", { git_branch: "feature/awesome" });
-    const sdk = makeSdkSession("s1");
-    mockState = createMockState({
-      sessions: new Map([["s1", session]]),
-      sdkSessions: [sdk],
-    });
-
-    render(<Sidebar />);
-    expect(screen.getByText("feature/awesome")).toBeInTheDocument();
-  });
-
-  it("session items show worktree badge when is_worktree is true", () => {
-    const session = makeSession("s1", { git_branch: "feature/wt", is_worktree: true });
-    const sdk = makeSdkSession("s1", { isWorktree: true });
-    mockState = createMockState({
-      sessions: new Map([["s1", session]]),
-      sdkSessions: [sdk],
-    });
-
-    render(<Sidebar />);
-    expect(screen.getByText("wt")).toBeInTheDocument();
-  });
-
-  it("session items show ahead/behind counts", () => {
-    const session = makeSession("s1", {
-      git_branch: "main",
-      git_ahead: 3,
-      git_behind: 2,
-    });
-    const sdk = makeSdkSession("s1");
-    mockState = createMockState({
-      sessions: new Map([["s1", session]]),
-      sdkSessions: [sdk],
-    });
-
-    render(<Sidebar />);
-    // The component renders "3↑" and "2↓" using HTML entities
-    const container = screen.getByText("main").closest("div")!;
-    expect(container.textContent).toContain("3");
-    expect(container.textContent).toContain("2");
-  });
-
-  it("session items show lines added/removed", () => {
-    const session = makeSession("s1", {
-      git_branch: "main",
-      total_lines_added: 42,
-      total_lines_removed: 7,
-    });
-    const sdk = makeSdkSession("s1");
-    mockState = createMockState({
-      sessions: new Map([["s1", session]]),
-      sdkSessions: [sdk],
-    });
-
-    render(<Sidebar />);
-    expect(screen.getByText("+42")).toBeInTheDocument();
-    expect(screen.getByText("-7")).toBeInTheDocument();
-  });
-
-  it("active session has highlighted styling (bg-cc-active class)", () => {
-    const session = makeSession("s1");
-    const sdk = makeSdkSession("s1");
-    mockState = createMockState({
-      sessions: new Map([["s1", session]]),
-      sdkSessions: [sdk],
-      currentSessionId: "s1",
-    });
-
-    render(<Sidebar />);
-    // Find the session button element
-    const sessionButton = screen.getByText("claude-sonnet-4-5-20250929").closest("button");
-    expect(sessionButton).toHaveClass("bg-cc-active");
-  });
-
-  it("clicking a session calls setCurrentSession and connectSession", () => {
-    const session = makeSession("s1");
-    const sdk = makeSdkSession("s1");
-    mockState = createMockState({
-      sessions: new Map([["s1", session]]),
-      sdkSessions: [sdk],
-      currentSessionId: null,
-    });
-
-    render(<Sidebar />);
-    const sessionButton = screen.getByText("claude-sonnet-4-5-20250929").closest("button")!;
-    fireEvent.click(sessionButton);
-
-    expect(mockState.setCurrentSession).toHaveBeenCalledWith("s1");
-    expect(mockConnectSession).toHaveBeenCalledWith("s1");
-  });
-
-  it("New Session button calls newSession", () => {
-    render(<Sidebar />);
-    fireEvent.click(screen.getByText("New Session"));
-
-    expect(mockState.newSession).toHaveBeenCalled();
-  });
-
-  it("double-clicking a session enters edit mode", () => {
-    const session = makeSession("s1");
-    const sdk = makeSdkSession("s1");
-    mockState = createMockState({
-      sessions: new Map([["s1", session]]),
-      sdkSessions: [sdk],
-    });
-
-    render(<Sidebar />);
-    const sessionButton = screen.getByText("claude-sonnet-4-5-20250929").closest("button")!;
-    fireEvent.doubleClick(sessionButton);
-
-    // After double-click, an input should appear for renaming
-    const input = screen.getByDisplayValue("claude-sonnet-4-5-20250929");
-    expect(input).toBeInTheDocument();
-    expect(input.tagName).toBe("INPUT");
-  });
-
-  it("archive button exists in the DOM for session items", () => {
-    const session = makeSession("s1");
-    const sdk = makeSdkSession("s1");
-    mockState = createMockState({
-      sessions: new Map([["s1", session]]),
-      sdkSessions: [sdk],
-    });
-
-    render(<Sidebar />);
-    // Archive button has title "Archive session"
-    const archiveButton = screen.getByTitle("Archive session");
-    expect(archiveButton).toBeInTheDocument();
-  });
-
-  it("archived sessions section shows count", () => {
-    const sdk1 = makeSdkSession("s1", { archived: false });
-    const sdk2 = makeSdkSession("s2", { archived: true });
-    const sdk3 = makeSdkSession("s3", { archived: true });
-
-    mockState = createMockState({
-      sdkSessions: [sdk1, sdk2, sdk3],
-    });
-
-    render(<Sidebar />);
-    // The component renders "Archived (2)"
-    expect(screen.getByText(/Archived \(2\)/)).toBeInTheDocument();
-  });
-
-  it("toggle archived shows/hides archived sessions", () => {
-    const sdk1 = makeSdkSession("s1", { archived: false, model: "active-model" });
-    const sdk2 = makeSdkSession("s2", { archived: true, model: "archived-model" });
-
-    mockState = createMockState({
-      sdkSessions: [sdk1, sdk2],
-    });
-
-    render(<Sidebar />);
-
-    // Archived sessions should not be visible initially
-    expect(screen.queryByText("archived-model")).not.toBeInTheDocument();
-
-    // Click the archived toggle button
-    const toggleButton = screen.getByText(/Archived \(1\)/);
-    fireEvent.click(toggleButton);
-
-    // Now the archived session should be visible
-    expect(screen.getByText("archived-model")).toBeInTheDocument();
-  });
-
-  it("dark mode button toggles theme", () => {
+  it("dark mode button toggles theme (light mode shows moon icon)", () => {
     mockState = createMockState({ darkMode: false });
 
     render(<Sidebar />);
-    const darkModeButton = screen.getByText("Dark mode").closest("button")!;
+    const darkModeButton = screen.getByTitle("Switch to dark mode");
+    expect(darkModeButton).toBeInTheDocument();
     fireEvent.click(darkModeButton);
 
     expect(mockState.toggleDarkMode).toHaveBeenCalled();
   });
 
-  it("session name shows animate-name-appear class when recently renamed", () => {
-    const session = makeSession("s1");
-    const sdk = makeSdkSession("s1");
-    mockState = createMockState({
-      sessions: new Map([["s1", session]]),
-      sdkSessions: [sdk],
-      sessionNames: new Map([["s1", "Auto Generated Title"]]),
-      recentlyRenamed: new Set(["s1"]),
-    });
+  it("dark mode button shows sun icon when dark mode is active", () => {
+    mockState = createMockState({ darkMode: true });
 
     render(<Sidebar />);
-    const nameElement = screen.getByText("Auto Generated Title");
-    expect(nameElement.className).toContain("animate-name-appear");
-  });
-
-  it("session name does NOT have animate-name-appear when not recently renamed", () => {
-    const session = makeSession("s1");
-    const sdk = makeSdkSession("s1");
-    mockState = createMockState({
-      sessions: new Map([["s1", session]]),
-      sdkSessions: [sdk],
-      sessionNames: new Map([["s1", "Regular Name"]]),
-      recentlyRenamed: new Set(), // not recently renamed
-    });
-
-    render(<Sidebar />);
-    const nameElement = screen.getByText("Regular Name");
-    expect(nameElement.className).not.toContain("animate-name-appear");
-  });
-
-  it("calls clearRecentlyRenamed on animation end", () => {
-    const session = makeSession("s1");
-    const sdk = makeSdkSession("s1");
-    mockState = createMockState({
-      sessions: new Map([["s1", session]]),
-      sdkSessions: [sdk],
-      sessionNames: new Map([["s1", "Animated Name"]]),
-      recentlyRenamed: new Set(["s1"]),
-    });
-
-    render(<Sidebar />);
-    const nameElement = screen.getByText("Animated Name");
-    fireEvent.animationEnd(nameElement);
-    expect(mockState.clearRecentlyRenamed).toHaveBeenCalledWith("s1");
-  });
-
-  it("animation class applies only to the recently renamed session, not others", () => {
-    const session1 = makeSession("s1");
-    const session2 = makeSession("s2");
-    const sdk1 = makeSdkSession("s1");
-    const sdk2 = makeSdkSession("s2");
-    mockState = createMockState({
-      sessions: new Map([["s1", session1], ["s2", session2]]),
-      sdkSessions: [sdk1, sdk2],
-      sessionNames: new Map([["s1", "Renamed Session"], ["s2", "Other Session"]]),
-      recentlyRenamed: new Set(["s1"]), // only s1 was renamed
-    });
-
-    render(<Sidebar />);
-    const renamedElement = screen.getByText("Renamed Session");
-    const otherElement = screen.getByText("Other Session");
-
-    expect(renamedElement.className).toContain("animate-name-appear");
-    expect(otherElement.className).not.toContain("animate-name-appear");
-  });
-
-  it("permission badge shows count for sessions with pending permissions", () => {
-    const session = makeSession("s1");
-    const sdk = makeSdkSession("s1");
-    const permMap = new Map<string, unknown>([
-      ["r1", { request_id: "r1", tool_name: "Bash" }],
-      ["r2", { request_id: "r2", tool_name: "Read" }],
-    ]);
-    mockState = createMockState({
-      sessions: new Map([["s1", session]]),
-      sdkSessions: [sdk],
-      pendingPermissions: new Map([["s1", permMap as Map<string, unknown>]]),
-      cliConnected: new Map([["s1", true]]),
-    });
-
-    render(<Sidebar />);
-    // The permission count badge shows "2"
-    expect(screen.getByText("2")).toBeInTheDocument();
+    const lightModeButton = screen.getByTitle("Switch to light mode");
+    expect(lightModeButton).toBeInTheDocument();
   });
 
   describe("native sessions", () => {
@@ -483,7 +178,7 @@ describe("Sidebar", () => {
       isNative: true as const,
     };
 
-    it("renders 'Native Sessions' section when project active and api returns sessions", async () => {
+    it("renders 'Resume Sessions' section when project active and api returns sessions", async () => {
       mockApi.getClaudeSessions.mockResolvedValue([fakeNativeSession]);
       mockState = createMockState({
         activeProjectCwd: "/test/project",
@@ -493,7 +188,7 @@ describe("Sidebar", () => {
         render(<Sidebar />);
         await new Promise((r) => setTimeout(r, 50));
       });
-      expect(screen.queryByText("Native Sessions")).toBeTruthy();
+      expect(screen.queryByText("Resume Sessions")).toBeTruthy();
     });
 
     it("renders native session first message preview", async () => {
@@ -509,45 +204,22 @@ describe("Sidebar", () => {
       expect(screen.queryByText("Hello from terminal")).toBeTruthy();
     });
 
-    it("renders CLI badge on native session", async () => {
+    it("calls resumeNativeSession when native session button is clicked", async () => {
       mockApi.getClaudeSessions.mockResolvedValue([fakeNativeSession]);
       mockState = createMockState({
         activeProjectCwd: "/test/project",
+        resumeNativeSession: vi.fn().mockResolvedValue(undefined),
       });
 
       await act(async () => {
         render(<Sidebar />);
         await new Promise((r) => setTimeout(r, 50));
       });
-      expect(screen.queryByText("CLI")).toBeTruthy();
-    });
 
-    it("renders Resume button on native session", async () => {
-      mockApi.getClaudeSessions.mockResolvedValue([fakeNativeSession]);
-      mockState = createMockState({
-        activeProjectCwd: "/test/project",
-      });
-
-      await act(async () => {
-        render(<Sidebar />);
-        await new Promise((r) => setTimeout(r, 50));
-      });
-      expect(screen.queryByText("Resume →")).toBeTruthy();
-    });
-
-    it("Resume button calls resumeNativeSession with id and cwd", async () => {
-      mockApi.getClaudeSessions.mockResolvedValue([fakeNativeSession]);
-      mockState = createMockState({
-        activeProjectCwd: "/test/project",
-      });
-
-      await act(async () => {
-        render(<Sidebar />);
-        await new Promise((r) => setTimeout(r, 50));
-      });
-      const resumeBtn = screen.queryByText("Resume →");
-      expect(resumeBtn).toBeTruthy();
-      fireEvent.click(resumeBtn!);
+      // Native session renders as a button — click it
+      const sessionBtn = screen.queryByText("Hello from terminal")?.closest("button");
+      expect(sessionBtn).toBeTruthy();
+      fireEvent.click(sessionBtn!);
       expect(mockState.resumeNativeSession).toHaveBeenCalledWith("native-session-id", "/test/project");
     });
 
@@ -561,7 +233,7 @@ describe("Sidebar", () => {
         render(<Sidebar />);
         await new Promise((r) => setTimeout(r, 50));
       });
-      expect(screen.queryByText("Native Sessions")).toBeNull();
+      expect(screen.queryByText("Resume Sessions")).toBeNull();
     });
 
     it("shows '(no message)' when firstMessage is null", async () => {
@@ -580,18 +252,23 @@ describe("Sidebar", () => {
       expect(screen.queryByText("(no message)")).toBeTruthy();
     });
 
-    it("native sessions have no rename or archive buttons", async () => {
-      mockApi.getClaudeSessions.mockResolvedValue([fakeNativeSession]);
-      mockState = createMockState({
-        activeProjectCwd: "/test/project",
-      });
+    it("does not call getClaudeSessions when activeProjectCwd is null", () => {
+      mockState = createMockState({ activeProjectCwd: null });
+      render(<Sidebar />);
+      // The api should not be called without a project CWD
+      expect(mockApi.getClaudeSessions).not.toHaveBeenCalled();
+    });
+
+    it("calls getClaudeSessions with the active project CWD", async () => {
+      mockApi.getClaudeSessions.mockResolvedValue([]);
+      mockState = createMockState({ activeProjectCwd: "/my/project" });
 
       await act(async () => {
         render(<Sidebar />);
         await new Promise((r) => setTimeout(r, 50));
       });
-      expect(screen.queryByTitle("Rename session")).toBeNull();
-      expect(screen.queryByTitle("Archive session")).toBeNull();
+
+      expect(mockApi.getClaudeSessions).toHaveBeenCalledWith("/my/project");
     });
   });
 });

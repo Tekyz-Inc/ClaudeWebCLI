@@ -18,10 +18,10 @@ vi.mock("node:util", () => ({
 }));
 
 // Mock fs operations for worktree guardrails (CLAUDE.md in .claude dirs)
-const mockMkdirAsync = vi.hoisted(() => vi.fn(() => Promise.resolve()));
+const mockMkdirAsync = vi.hoisted(() => vi.fn((..._args: any[]) => Promise.resolve()));
 const mockExistsSync = vi.hoisted(() => vi.fn((..._args: any[]) => false));
 const mockReadFileAsync = vi.hoisted(() => vi.fn((..._args: any[]) => Promise.reject(Object.assign(new Error("ENOENT"), { code: "ENOENT" }))));
-const mockWriteFileAsync = vi.hoisted(() => vi.fn(() => Promise.resolve()));
+const mockWriteFileAsync = vi.hoisted(() => vi.fn((..._args: any[]) => Promise.resolve()));
 const isMockedPath = vi.hoisted(() => (path: string): boolean => {
   return path.includes(".claude") || path.startsWith("/tmp/worktrees/") || path.startsWith("/tmp/main-repo");
 });

@@ -8,27 +8,46 @@ const EMPTY_SET = new Set<string>();
 const EMPTY_CMDS: string[] = [];
 const EMPTY_AGENTS: AgentSpawn[] = [];
 const EMPTY_TESTS: TestRun[] = [];
+const EMPTY_MODELS = new Map<string, { inputTokens: number; outputTokens: number; costUSD: number }>();
 const COMPACT_THRESHOLD = 95;
 
 function basename(p: string): string {
   return p.split(/[/\\]/).pop() || p;
 }
 
-function shortTestName(cmd: string, idx: number): string {
-  const fileMatch = cmd.match(/([\w-]+\.(?:test|spec)\.[jt]sx?)/);
-  if (fileMatch) return `#${idx + 1} · ${fileMatch[1]}`;
-  const toolMatch = cmd.match(/\b(vitest|playwright|jest|npm\s+test|bun\s+test|npx\s+playwright)\b/i);
-  if (toolMatch) return `#${idx + 1} · ${toolMatch[0].trim()}`;
-  return `#${idx + 1}`;
+/** Shorten model IDs like "claude-sonnet-4-6-20250514" → "Sonnet 4.6" */
+function shortModelName(id: string): string {
+  const m = id.match(/claude-(\w+)-(\d+)-(\d+)/);
+  if (!m) return id;
+  const family = m[1].charAt(0).toUpperCase() + m[1].slice(1);
+  return `${family} ${m[2]}.${m[3]}`;
 }
 
-function testDescription(cmd: string): string {
-  const fileMatch = cmd.match(/([\w-]+\.(?:test|spec)\.[jt]sx?)/);
-  const toolMatch = cmd.match(/\b(vitest|playwright|jest|npm test|bun test|npx playwright)\b/i);
-  if (fileMatch && toolMatch) return `${toolMatch[0].trim()} → ${fileMatch[1]}`;
-  if (fileMatch) return `Test file: ${fileMatch[1]}`;
-  if (toolMatch) return `Run: ${toolMatch[0].trim()}`;
-  return cmd.length > 80 ? cmd.slice(0, 80) + "…" : cmd;
+const TOOL_RE = /\b(vitest|playwright|jest|npm\s+(?:run\s+)?test|bun\s+(?:run\s+)?test|npx\s+playwright)\b/i;
+const FILE_RE = /([\w/-]+\.(?:test|spec)\.[jt]sx?)/;
+
+/** Primary label for the row — short enough to fit in the panel */
+function testLabel(cmd: string, idx: number): string {
+  const fileMatch = cmd.match(FILE_RE);
+  if (fileMatch) {
+    // Show last two path segments so "components/Foo.test.tsx" is readable
+    const parts = fileMatch[1].split("/");
+    const short = parts.slice(-2).join("/");
+    return `#${idx + 1} · ${short}`;
+  }
+  const toolMatch = cmd.match(TOOL_RE);
+  const base = toolMatch ? toolMatch[0].trim() : "test";
+  // If there are extra args after the base command, show them
+  const afterBase = cmd.slice(cmd.search(TOOL_RE) + base.length).trim().replace(/^--\s*/, "").trim();
+  if (afterBase) {
+    const trimmed = afterBase.length > 30 ? afterBase.slice(0, 30) + "…" : afterBase;
+    return `#${idx + 1} · ${base} ${trimmed}`;
+  }
+  return `#${idx + 1} · ${base}`;
+}
+
+function formatTime(ts: number): string {
+  return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 export function TaskPanel({ sessionId }: { sessionId: string }) {
@@ -41,6 +60,7 @@ export function TaskPanel({ sessionId }: { sessionId: string }) {
   const commands = useStore((s) => s.commandsExecuted.get(sessionId) || EMPTY_CMDS);
   const agents = useStore((s) => s.agentsSpawned.get(sessionId) || EMPTY_AGENTS);
   const tests = useStore((s) => s.testsExecuted.get(sessionId) || EMPTY_TESTS);
+  const models = useStore((s) => s.modelsInvoked.get(sessionId) || EMPTY_MODELS);
 
   const [allExpanded, setAllExpanded] = useState(false);
   const [expandTick, setExpandTick] = useState(0);
@@ -96,6 +116,16 @@ export function TaskPanel({ sessionId }: { sessionId: string }) {
             <ContextMeter contextPct={contextPct} contextRemaining={contextRemaining} hasData={hasData} isCompacting={isCompacting} />
           </div>
         )}
+
+        {/* Models Invoked */}
+        <Section label="Models" count={models.size} {...sp}>
+          {Array.from(models.entries()).map(([name, usage]) => (
+            <div key={name} className="px-4 py-0.5 flex items-center gap-1.5" title={`${name}\nIn: ${usage.inputTokens.toLocaleString()} · Out: ${usage.outputTokens.toLocaleString()}`}>
+              <span className="text-[8px] leading-none text-cc-primary shrink-0">●</span>
+              <span className="text-[10px] text-cc-muted truncate flex-1">{shortModelName(name)}</span>
+            </div>
+          ))}
+        </Section>
 
         {/* Files Read */}
         <Section label="Files Read" count={filesReadArr.length} {...sp}>
@@ -239,10 +269,8 @@ function ContextMeter({ contextPct, contextRemaining, hasData, isCompacting }: {
 
 function TestRow({ t, i }: { t: TestRun; i: number }) {
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
-  const fileMatch = t.cmd.match(/([\w-]+\.(?:test|spec)\.[jt]sx?)/);
-  const toolMatch = t.cmd.match(/\b(vitest|playwright|jest|npm\s+test|bun\s+test|npx\s+playwright)\b/i);
-  const label = fileMatch?.[1] || toolMatch?.[0]?.trim() || `Test ${i + 1}`;
-  const description = testDescription(t.cmd);
+  const label = testLabel(t.cmd, i);
+  const isAgent = t.source === "agent";
 
   return (
     <>
@@ -254,18 +282,27 @@ function TestRow({ t, i }: { t: TestRun; i: number }) {
         }}
         onMouseLeave={() => setTooltipPos(null)}
       >
-        <span className={`text-[8px] leading-none shrink-0 ${t.source === "agent" ? "text-cc-warning" : "text-green-500"}`}>●</span>
+        <span className={`text-[8px] leading-none shrink-0 ${isAgent ? "text-cc-warning" : "text-green-500"}`}>●</span>
         <span className="text-[10px] text-cc-muted flex-1 truncate">{label}</span>
-        <span className={`text-[9px] font-medium shrink-0 ${t.source === "agent" ? "text-cc-warning/80" : "text-green-500/80"}`}>
-          {t.source === "agent" ? "QA Agent" : "Direct"}
+        <span className={`text-[9px] font-medium shrink-0 ${isAgent ? "text-cc-warning/80" : "text-green-500/80"}`}>
+          {isAgent ? "QA Agent" : "Direct"}
         </span>
       </div>
       {tooltipPos && createPortal(
         <div
-          className="fixed z-[9999] bg-cc-card border border-cc-border rounded-lg shadow-lg px-3 py-2 text-[11px] text-cc-fg max-w-[280px] pointer-events-none leading-relaxed"
+          className="fixed z-[9999] bg-cc-card border border-cc-border rounded-lg shadow-lg px-3 py-2 text-[11px] text-cc-fg max-w-[320px] pointer-events-none space-y-1.5"
           style={{ left: tooltipPos.x, top: tooltipPos.y }}
         >
-          {description}
+          <div className="font-medium text-cc-fg">Run #{i + 1}</div>
+          <div className="font-mono-code text-[10px] text-cc-muted bg-cc-code-bg rounded px-2 py-1 break-all leading-relaxed">
+            {t.cmd}
+          </div>
+          <div className="flex items-center justify-between text-[10px] text-cc-muted">
+            <span className={isAgent ? "text-cc-warning/80" : "text-green-500/80"}>
+              {isAgent ? "QA Agent (subagent)" : "Direct"}
+            </span>
+            {t.timestamp > 0 && <span>{formatTime(t.timestamp)}</span>}
+          </div>
         </div>,
         document.body
       )}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useStore } from "../store.js";
 import { api } from "../api.js";
 
@@ -37,12 +38,20 @@ function useProjectStatus(projectPath: string): TabStatus {
   // Direct fallback: if this tab is active and currentSessionId isn't in ids yet
   // (fresh session before CLI sends session_init or before next poll), include it
   // so the running indicator fires immediately on submit.
+  // Guard: only include if the session doesn't already have a CWD pointing to
+  // a different project — otherwise switching tabs briefly shows "running" on
+  // the wrong tab until auto-resume completes.
   if (
     currentSessionId &&
     !ids.includes(currentSessionId) &&
     (activeProjectCwd || "").replace(/\\/g, "/") === p
   ) {
-    ids.push(currentSessionId);
+    const curState = bridgeSessions.get(currentSessionId);
+    const curCwd = (curState?.cwd || "").replace(/\\/g, "/");
+    // Only include if session has no CWD yet (pending init) or CWD matches this project
+    if (!curCwd || curCwd === p || curCwd.startsWith(p + "/")) {
+      ids.push(currentSessionId);
+    }
   }
 
   if (ids.some((id) => (pendingPermissions.get(id)?.size ?? 0) > 0)) return "waiting";
@@ -117,28 +126,49 @@ export function ProjectTabBar() {
   const [projects, setProjects] = useState<Project[]>([]);
   const activeProjectCwd = useStore((s) => s.activeProjectCwd);
   const setActiveProjectCwd = useStore((s) => s.setActiveProjectCwd);
+  const hiddenProjects = useStore((s) => s.hiddenProjects);
+  const toggleHiddenProject = useStore((s) => s.toggleHiddenProject);
+  const [manageOpen, setManageOpen] = useState(false);
+  const manageButtonRef = useRef<HTMLButtonElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    api.listProjects().then((res) => {
-      const seen = new Set<string>();
-      const unique = res.projects.filter((p) => {
-        const key = p.path.replace(/\\/g, "/").toLowerCase();
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
+    let active = true;
+    let retryTimer: ReturnType<typeof setTimeout>;
+
+    function fetchProjects(attempt = 0) {
+      api.listProjects().then((res) => {
+        if (!active) return;
+        const seen = new Set<string>();
+        const unique = res.projects.filter((p) => {
+          const key = p.path.replace(/\\/g, "/").toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        unique.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+        setProjects(unique);
+        const saved = localStorage.getItem("cc-active-project");
+        if (saved && !activeProjectCwd) {
+          const match = unique.find((p) => p.path === saved);
+          if (match) setActiveProjectCwd(match.path);
+          else if (unique.length > 0) setActiveProjectCwd(unique[0].path);
+        } else if (!activeProjectCwd && unique.length > 0) {
+          setActiveProjectCwd(unique[0].path);
+        }
+      }).catch(() => {
+        // Retry with backoff: 1s, 2s, 4s (max 3 retries)
+        if (active && attempt < 3) {
+          retryTimer = setTimeout(() => fetchProjects(attempt + 1), 1000 * Math.pow(2, attempt));
+        }
       });
-      unique.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
-      setProjects(unique);
-      const saved = localStorage.getItem("cc-active-project");
-      if (saved && !activeProjectCwd) {
-        const match = unique.find((p) => p.path === saved);
-        if (match) setActiveProjectCwd(match.path);
-        else if (unique.length > 0) setActiveProjectCwd(unique[0].path);
-      } else if (!activeProjectCwd && unique.length > 0) {
-        setActiveProjectCwd(unique[0].path);
-      }
-    }).catch(() => {});
+    }
+    fetchProjects();
+
+    return () => {
+      active = false;
+      clearTimeout(retryTimer);
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keep active tab scrolled into view whenever selection or project list changes
@@ -159,6 +189,14 @@ export function ProjectTabBar() {
 
   if (projects.length === 0) return null;
 
+  const visibleProjects = projects.filter((p) => !hiddenProjects.has(p.path));
+
+  // Popup position — anchored below the manage button
+  const btnRect = manageButtonRef.current?.getBoundingClientRect();
+  const popupStyle = btnRect
+    ? { position: "fixed" as const, top: btnRect.bottom + 4, right: window.innerWidth - btnRect.right }
+    : { display: "none" as const };
+
   return (
     <div className="shrink-0 bg-cc-sidebar border-b border-cc-border flex items-center gap-0.5 px-1 py-0.5">
       {/* Left scroll arrow */}
@@ -174,7 +212,7 @@ export function ProjectTabBar() {
 
       {/* Scrollable tab strip */}
       <div ref={scrollRef} className="flex-1 flex items-center gap-px tabs-scroll">
-        {projects.map((project) => (
+        {visibleProjects.map((project) => (
           <ProjectTabItem
             key={project.path}
             project={project}
@@ -194,6 +232,64 @@ export function ProjectTabBar() {
           <path d="M6 3l5 5-5 5" />
         </svg>
       </button>
+
+      {/* Manage projects button */}
+      <button
+        ref={manageButtonRef}
+        onClick={() => setManageOpen((o) => !o)}
+        className={`shrink-0 flex items-center justify-center w-5 h-5 rounded transition-colors cursor-pointer ml-0.5 ${manageOpen ? "bg-cc-hover text-cc-fg" : "text-cc-muted hover:text-cc-fg hover:bg-cc-hover"}`}
+        title="Manage projects"
+      >
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+          <circle cx="8" cy="8" r="1.5" />
+          <circle cx="8" cy="3" r="1.5" />
+          <circle cx="8" cy="13" r="1.5" />
+        </svg>
+      </button>
+
+      {/* Manage projects popup */}
+      {manageOpen && createPortal(
+        <>
+          {/* Click-outside backdrop */}
+          <div className="fixed inset-0 z-[9998]" onClick={() => setManageOpen(false)} />
+          <div
+            className="z-[9999] bg-cc-card border border-cc-border rounded-lg shadow-xl py-2 min-w-[220px] max-h-[400px] overflow-y-auto"
+            style={popupStyle}
+          >
+            <div className="px-3 pb-1.5 mb-1 border-b border-cc-border">
+              <span className="text-[11px] font-semibold text-cc-muted uppercase tracking-wider">Projects</span>
+            </div>
+            {projects.map((project) => {
+              const hidden = hiddenProjects.has(project.path);
+              return (
+                <label
+                  key={project.path}
+                  className="flex items-center gap-2.5 px-3 py-1.5 hover:bg-cc-hover cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={!hidden}
+                    onChange={() => {
+                      toggleHiddenProject(project.path);
+                      // If we just hid the active project, switch to first visible
+                      if (!hidden && activeProjectCwd === project.path) {
+                        const next = projects.find((p) => p.path !== project.path && !hiddenProjects.has(p.path));
+                        if (next) selectProject(next.path);
+                      }
+                    }}
+                    className="accent-cc-primary w-3.5 h-3.5 shrink-0"
+                  />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[12px] text-cc-fg truncate">{project.name}</span>
+                    <span className="text-[10px] text-cc-muted truncate">{project.path}</span>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        </>,
+        document.body
+      )}
     </div>
   );
 }

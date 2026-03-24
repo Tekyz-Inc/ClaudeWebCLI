@@ -217,6 +217,13 @@ Then open http://localhost:5174 (Vite frontend — proxies API to :3456)
 > - Vite HMR: always `:5174`
 > - `global-teardown.ts` kills ports 3458 + 5174 after every Playwright run
 
+> **Clearing a stuck port on Windows:**
+> If `bun run dev` fails with `EADDRINUSE` even though no process is listed:
+> 1. Find the PID: `netstat -aon | findstr :PORT`
+> 2. Kill by PID: `taskkill /F /PID <pid>`
+> 3. Kill all bun: `powershell -Command "Stop-Process -Name bun -Force -ErrorAction SilentlyContinue"`
+> 4. If netstat shows nothing but port is still blocked, the socket is in TIME_WAIT — use a different port number (e.g., `:3460`) and try again.
+
 ### Production build:
 
     cd web
@@ -259,4 +266,9 @@ This project uses contract-driven development.
 - State: .gsd-t/progress.md
 - Contracts: .gsd-t/contracts/
 - Domains: .gsd-t/domains/
+
+**Model assignments:**
+- `model: haiku` — mechanical tasks: run tests, count pass/fail, validate structure, check file existence, report status
+- `model: sonnet` — mid-tier reasoning: routine code changes, standard refactors, test writing, straightforward synthesis
+- `model: opus` — high-stakes reasoning: architecture decisions, security analysis, complex debugging, cross-module refactors, quality judgment on critical paths
 

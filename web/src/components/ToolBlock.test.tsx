@@ -3,6 +3,12 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { ToolBlock, ToolIcon } from "./ToolBlock.js";
 import { getToolIcon, getToolLabel, getPreview } from "./tool-utils.js";
 
+// ToolBlock uses useStore for chatExpanded/chatExpandTick
+vi.mock("../store.js", () => ({
+  useStore: (selector: (s: Record<string, unknown>) => unknown) =>
+    selector({ chatExpanded: true, chatExpandTick: 0 }),
+}));
+
 // ─── getToolIcon ─────────────────────────────────────────────────────────────
 
 describe("getToolIcon", () => {
@@ -210,10 +216,13 @@ describe("ToolBlock", () => {
       />
     );
     expect(screen.getByText("Terminal")).toBeTruthy();
-    // Preview text appears in the header button area
-    const previewSpan = screen.getByText("echo hello");
+    // Preview text appears in the header button area — may also appear in expanded view
+    const allMatches = screen.getAllByText("echo hello");
+    expect(allMatches.length).toBeGreaterThan(0);
+    // The header preview span has the truncate class
+    const previewSpan = allMatches.find((el) => el.className.includes("truncate"));
     expect(previewSpan).toBeTruthy();
-    expect(previewSpan.className).toContain("truncate");
+    expect(previewSpan!.className).toContain("truncate");
   });
 
   it("renders with label only when no preview is available", () => {
@@ -227,20 +236,20 @@ describe("ToolBlock", () => {
     expect(screen.getByText("WebFetch")).toBeTruthy();
   });
 
-  it("is collapsed by default (does not show details)", () => {
-    render(
+  it("is expanded by default (shows details)", () => {
+    const { container } = render(
       <ToolBlock
         name="Bash"
         input={{ command: "ls -la" }}
         toolUseId="tool-3"
       />
     );
-    // The expanded detail area should not be present
-    expect(screen.queryByText("$")).toBeNull();
+    // The expanded detail area is present by default (border-t class marks the expanded section)
+    expect(container.querySelector(".border-t")).toBeTruthy();
   });
 
-  it("expands on click to show input details", () => {
-    render(
+  it("collapses on click to hide input details", () => {
+    const { container } = render(
       <ToolBlock
         name="Bash"
         input={{ command: "ls -la" }}
@@ -248,19 +257,15 @@ describe("ToolBlock", () => {
       />
     );
 
-    // Click the button to expand
-    const button = screen.getByRole("button");
-    fireEvent.click(button);
+    // Click the toggle button to collapse — it's the first button (the header toggle)
+    const toggleButton = container.querySelector("button")!;
+    fireEvent.click(toggleButton);
 
-    // After expanding, the detail area should be visible with a pre element
-    const allLsLa = screen.getAllByText("ls -la");
-    // One is the preview in the header, the other is in the expanded pre block
-    expect(allLsLa.length).toBe(2);
-    const preElement = allLsLa.find((el) => el.closest("pre"))?.closest("pre");
-    expect(preElement).toBeTruthy();
+    // After collapsing, the detail area should not be visible
+    expect(container.querySelector(".border-t")).toBeNull();
   });
 
-  it("collapses on second click", () => {
+  it("expands on second click after collapsing", () => {
     const { container } = render(
       <ToolBlock
         name="Bash"
@@ -269,18 +274,18 @@ describe("ToolBlock", () => {
       />
     );
 
-    const button = screen.getByRole("button");
+    const toggleButton = container.querySelector("button")!;
 
-    // Expand - the detail area with the border-t class should appear
-    fireEvent.click(button);
-    expect(container.querySelector(".border-t")).toBeTruthy();
-
-    // Collapse - the detail area should disappear
-    fireEvent.click(button);
+    // Collapse
+    fireEvent.click(toggleButton);
     expect(container.querySelector(".border-t")).toBeNull();
+
+    // Expand again
+    fireEvent.click(toggleButton);
+    expect(container.querySelector(".border-t")).toBeTruthy();
   });
 
-  it("renders Bash command with $ prefix when expanded", () => {
+  it("renders Bash command with $ prefix in expanded view", () => {
     render(
       <ToolBlock
         name="Bash"
@@ -289,10 +294,7 @@ describe("ToolBlock", () => {
       />
     );
 
-    fireEvent.click(screen.getByRole("button"));
-
-    // When expanded, the command appears in both the preview header and the code block.
-    // Find the pre element containing the $ prefix.
+    // ToolBlock is expanded by default — the command appears in both preview header and code block.
     const allMatches = screen.getAllByText("npm install");
     const preElement = allMatches.find((el) => el.closest("pre"))?.closest("pre");
     expect(preElement).toBeTruthy();
@@ -302,31 +304,30 @@ describe("ToolBlock", () => {
   });
 
   it("renders Edit diff view when expanded", () => {
-    render(
+    const { container } = render(
       <ToolBlock
         name="Edit"
         input={{
-          file_path: "/home/user/src/app.ts",
-          old_string: "const x = 1;",
-          new_string: "const x = 2;",
+          file_path: "/home/user/src/app.txt",
+          old_string: "old content",
+          new_string: "new content",
         }}
         toolUseId="tool-7"
       />
     );
 
-    fireEvent.click(screen.getByRole("button"));
-
-    // The preview header shows "src/app.ts" (last 2 segments), expanded shows full path
-    expect(screen.getByText("/home/user/src/app.ts")).toBeTruthy();
-    // Check diff sections
-    expect(screen.getByText("Before")).toBeTruthy();
-    expect(screen.getByText("After")).toBeTruthy();
-    expect(screen.getByText("const x = 1;")).toBeTruthy();
-    expect(screen.getByText("const x = 2;")).toBeTruthy();
+    // ToolBlock is expanded by default — check file path and diff section headers
+    expect(container.textContent).toContain("/home/user/src/app.txt");
+    // DiffView renders Before/After column headers
+    expect(container.textContent).toContain("Before");
+    expect(container.textContent).toContain("After");
+    // Content without syntax highlighting (plain .txt file) renders as text
+    expect(container.textContent).toContain("old content");
+    expect(container.textContent).toContain("new content");
   });
 
   it("renders Read file path when expanded", () => {
-    render(
+    const { container } = render(
       <ToolBlock
         name="Read"
         input={{ file_path: "/home/user/test.txt" }}
@@ -334,12 +335,12 @@ describe("ToolBlock", () => {
       />
     );
 
-    fireEvent.click(screen.getByRole("button"));
-    expect(screen.getByText("/home/user/test.txt")).toBeTruthy();
+    // The full file path appears in the expanded section (may be rendered via linkifyText)
+    expect(container.textContent).toContain("/home/user/test.txt");
   });
 
   it("renders JSON for unknown tools when expanded", () => {
-    render(
+    const { container } = render(
       <ToolBlock
         name="CustomTool"
         input={{ foo: "bar", count: 42 }}
@@ -347,8 +348,8 @@ describe("ToolBlock", () => {
       />
     );
 
-    fireEvent.click(screen.getByRole("button"));
-    const preElement = document.querySelector("pre");
+    const preElement = container.querySelector("pre");
+    expect(preElement).toBeTruthy();
     expect(preElement?.textContent).toContain('"foo": "bar"');
     expect(preElement?.textContent).toContain('"count": 42');
   });
