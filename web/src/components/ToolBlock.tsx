@@ -72,6 +72,8 @@ export function ToolBlock({
               <div className="text-xs text-cc-muted font-mono-code">
                 {linkifyText(String(input.file_path || input.path || ""))}
               </div>
+            ) : name === "TodoWrite" && Array.isArray(input.todos) ? (
+              <TodoWriteDetail todos={input.todos as Array<{ content: string; status: string; activeForm?: string }>} />
             ) : (
               <pre className="text-[11px] text-cc-muted font-mono-code whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
                 {JSON.stringify(input, null, 2)}
@@ -243,5 +245,28 @@ export function ToolIcon({ type }: { type: string }) {
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className={cls}>
       <path d="M10.5 2.5l3 3-8 8H2.5v-3l8-8z" />
     </svg>
+  );
+}
+
+function TodoWriteDetail({ todos }: { todos: Array<{ content: string; status: string; activeForm?: string }> }) {
+  return (
+    <ul className="space-y-1">
+      {todos.map((todo, i) => (
+        <li key={i} className="flex items-start gap-2 text-[12px]">
+          <span className="shrink-0 mt-0.5">
+            {todo.status === "completed" ? (
+              <span className="text-cc-success">&#10003;</span>
+            ) : todo.status === "in_progress" ? (
+              <span className="text-cc-primary animate-pulse">&#9679;</span>
+            ) : (
+              <span className="text-cc-muted">&#9675;</span>
+            )}
+          </span>
+          <span className={todo.status === "completed" ? "text-cc-muted line-through" : "text-cc-fg"}>
+            {todo.content}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }

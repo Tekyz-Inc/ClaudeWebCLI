@@ -56,18 +56,22 @@ export function TopBar() {
           <div className="flex items-center gap-1.5">
             <span
               className={`w-1.5 h-1.5 rounded-full ${
-                connStatus === "disconnected"
-                  ? "bg-cc-warning animate-pulse"
-                  : isConnected
-                    ? "bg-cc-success"
-                    : "bg-cc-warning"
+                connStatus === "connected" && isConnected
+                  ? "bg-cc-success"
+                  : connStatus === "connecting"
+                    ? "bg-cc-warning animate-pulse"
+                    : connStatus === "connected"
+                      ? "bg-cc-warning"
+                      : "bg-cc-muted"
               }`}
             />
-            {connStatus === "disconnected" ? (
+            {connStatus === "connected" && isConnected ? (
+              <span className="text-[11px] text-cc-muted hidden sm:inline">Connected</span>
+            ) : connStatus === "connecting" ? (
               <span className="text-[11px] text-cc-warning font-medium hidden sm:inline">
-                Reconnecting...
+                Connecting...
               </span>
-            ) : !isConnected ? (
+            ) : connStatus === "connected" && !isConnected ? (
               <button
                 onClick={() => currentSessionId && api.relaunchSession(currentSessionId).catch(console.error)}
                 className="text-[11px] text-cc-warning hover:text-cc-warning/80 font-medium cursor-pointer hidden sm:inline"
@@ -75,7 +79,7 @@ export function TopBar() {
                 Reconnect
               </button>
             ) : (
-              <span className="text-[11px] text-cc-muted hidden sm:inline">Connected</span>
+              <span className="text-[11px] text-cc-muted hidden sm:inline">Idle</span>
             )}
           </div>
         )}

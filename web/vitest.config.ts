@@ -5,6 +5,7 @@ export default defineConfig({
     globals: true,
     environment: "node",
     include: ["server/**/*.test.ts", "src/**/*.test.ts", "src/**/*.test.tsx"],
+    exclude: ["**/node_modules/**", "**/.claude/**", "**/worktrees/**"],
     environmentMatchGlobs: [
       ["src/**/*.test.ts", "jsdom"],
       ["src/**/*.test.tsx", "jsdom"],

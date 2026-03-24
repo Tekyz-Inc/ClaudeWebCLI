@@ -237,11 +237,13 @@ const server = Bun.serve<SocketData>({
 console.log(`Server running on http://localhost:${server.port}`);
 console.log(`  CLI WebSocket:     ws://localhost:${server.port}/ws/cli/:sessionId`);
 console.log(`  Browser WebSocket: ws://localhost:${server.port}/ws/browser/:sessionId`);
-console.log(`\nAccess URL: http://localhost:${server.port}?token=${AUTH_TOKEN}`);
 
-if (process.env.NODE_ENV !== "production") {
-  console.log(`Dev mode: http://localhost:5174?token=${AUTH_TOKEN}`);
-}
+const devPort = 5174;
+const openUrl = process.env.NODE_ENV !== "production"
+  ? `http://localhost:${devPort}?token=${AUTH_TOKEN}`
+  : `http://localhost:${server.port}?token=${AUTH_TOKEN}`;
+
+console.log(`\n  ➜  Open: ${openUrl}\n`);
 
 // ── Reconnection watchdog ────────────────────────────────────────────────────
 // After a server restart, restored CLI processes may not reconnect their
