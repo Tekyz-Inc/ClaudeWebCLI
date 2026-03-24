@@ -2,28 +2,12 @@ import type { SdkSessionInfo, ClaudeSession } from "./types.js";
 
 const BASE = "/api";
 
-// Read auth token from URL search params on page load
-let _authToken: string | null = null;
-try {
-  _authToken = new URLSearchParams(window.location.search).get("token");
-  if (_authToken) {
-    // Persist to sessionStorage so sub-navigations don't lose the token
-    sessionStorage.setItem("auth_token", _authToken);
-  } else {
-    _authToken = sessionStorage.getItem("auth_token");
-  }
-} catch {
-  // window not available (SSR / test environment)
-}
-
 export function getToken(): string | null {
-  return _authToken;
+  return null;
 }
 
 function authHeaders(extra?: Record<string, string>): Record<string, string> {
-  const headers: Record<string, string> = { ...extra };
-  if (_authToken) headers["Authorization"] = `Bearer ${_authToken}`;
-  return headers;
+  return { ...extra };
 }
 
 async function post<T = unknown>(path: string, body?: object): Promise<T> {

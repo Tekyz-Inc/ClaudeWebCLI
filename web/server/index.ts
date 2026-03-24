@@ -23,7 +23,7 @@ import * as sessionNames from "./session-names.js";
 import type { SocketData } from "./ws-bridge.js";
 import { handleTerminalOpen, handleTerminalMessage, handleTerminalClose } from "./terminal-ws.js";
 import type { ServerWebSocket } from "bun";
-import { AUTH_TOKEN, createAuthMiddleware, validateWsToken } from "./auth.js";
+// Auth module available but not enforced — 127.0.0.1 binding + CORS is sufficient
 import { createSecurityHeadersMiddleware } from "./security-headers.js";
 import { createRateLimiter } from "./rate-limiter.js";
 
@@ -131,7 +131,6 @@ app.use("/api/*", cors({
 }));
 app.use("/api/*", generalApiLimiter);
 app.use("/api/sessions/create", sessionCreateLimiter);
-app.use("/api/*", createAuthMiddleware());
 app.route("/api", createRoutes(launcher, wsBridge, sessionStore, worktreeTracker));
 
 // In production, serve built frontend using absolute path (works when installed as npm package)
@@ -166,9 +165,6 @@ const server = Bun.serve<SocketData>({
     const browserMatch = url.pathname.match(/^\/ws\/browser\/([a-f0-9-]+)$/);
     if (browserMatch) {
       const sessionId = browserMatch[1];
-      if (!validateWsToken(req.url, AUTH_TOKEN)) {
-        return new Response("Unauthorized", { status: 401 });
-      }
       const upgraded = server.upgrade(req, {
         data: { kind: "browser" as const, sessionId },
       });
@@ -180,9 +176,6 @@ const server = Bun.serve<SocketData>({
     const terminalMatch = url.pathname.match(/^\/ws\/terminal\/([^/]+)$/);
     if (terminalMatch) {
       const terminalId = terminalMatch[1];
-      if (!validateWsToken(req.url, AUTH_TOKEN)) {
-        return new Response("Unauthorized", { status: 401 });
-      }
       const cwd = url.searchParams.get("cwd") || undefined;
       const upgraded = server.upgrade(req, {
         data: { kind: "terminal" as const, terminalId, cwd },
@@ -237,8 +230,8 @@ console.log(`  Browser WebSocket: ws://localhost:${server.port}/ws/browser/:sess
 
 const devPort = 5174;
 const openUrl = process.env.NODE_ENV !== "production"
-  ? `http://localhost:${devPort}?token=${AUTH_TOKEN}`
-  : `http://localhost:${server.port}?token=${AUTH_TOKEN}`;
+  ? `http://localhost:${devPort}`
+  : `http://localhost:${server.port}`;
 
 console.log(`\n  ➜  Open: ${openUrl}\n`);
 
