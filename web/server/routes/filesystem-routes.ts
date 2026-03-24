@@ -5,6 +5,7 @@ import { readdir, readFile, writeFile, stat } from "node:fs/promises";
 import { resolve, join, dirname } from "node:path";
 import { homedir } from "node:os";
 import { WriteFileBody } from "./schemas.js";
+import { validatePath, PathTraversalError } from "../security-utils.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -43,7 +44,13 @@ async function buildTree(dir: string, depth: number): Promise<TreeNode[]> {
 export function registerFilesystemRoutes(api: Hono): void {
   api.get("/fs/list", async (c) => {
     const rawPath = c.req.query("path") || homedir();
-    const basePath = resolve(rawPath);
+    let basePath: string;
+    try {
+      basePath = validatePath(rawPath, process.cwd());
+    } catch (e) {
+      if (e instanceof PathTraversalError) return c.json({ error: "Access denied" }, 403);
+      return c.json({ error: "Invalid path" }, 400);
+    }
     try {
       const entries = await readdir(basePath, { withFileTypes: true });
       const dirs: { name: string; path: string }[] = [];
@@ -66,7 +73,13 @@ export function registerFilesystemRoutes(api: Hono): void {
   api.get("/fs/tree", async (c) => {
     const rawPath = c.req.query("path");
     if (!rawPath) return c.json({ error: "path required" }, 400);
-    const basePath = resolve(rawPath);
+    let basePath: string;
+    try {
+      basePath = validatePath(rawPath, process.cwd());
+    } catch (e) {
+      if (e instanceof PathTraversalError) return c.json({ error: "Access denied" }, 403);
+      return c.json({ error: "Invalid path" }, 400);
+    }
     const tree = await buildTree(basePath, 0);
     return c.json({ path: basePath, tree });
   });
@@ -74,7 +87,13 @@ export function registerFilesystemRoutes(api: Hono): void {
   api.get("/fs/read", async (c) => {
     const filePath = c.req.query("path");
     if (!filePath) return c.json({ error: "path required" }, 400);
-    const absPath = resolve(filePath);
+    let absPath: string;
+    try {
+      absPath = validatePath(filePath, process.cwd());
+    } catch (e) {
+      if (e instanceof PathTraversalError) return c.json({ error: "Access denied" }, 403);
+      return c.json({ error: "Invalid path" }, 400);
+    }
     try {
       const info = await stat(absPath);
       if (info.size > 2 * 1024 * 1024) {
@@ -93,7 +112,13 @@ export function registerFilesystemRoutes(api: Hono): void {
     if (!parsed.success) {
       return c.json({ error: "path and content required" }, 400);
     }
-    const absPath = resolve(parsed.data.path);
+    let absPath: string;
+    try {
+      absPath = validatePath(parsed.data.path, process.cwd());
+    } catch (e) {
+      if (e instanceof PathTraversalError) return c.json({ error: "Access denied" }, 403);
+      return c.json({ error: "Invalid path" }, 400);
+    }
     try {
       await writeFile(absPath, parsed.data.content, "utf-8");
       return c.json({ ok: true, path: absPath });
@@ -105,7 +130,13 @@ export function registerFilesystemRoutes(api: Hono): void {
   api.get("/fs/diff", async (c) => {
     const filePath = c.req.query("path");
     if (!filePath) return c.json({ error: "path required" }, 400);
-    const absPath = resolve(filePath);
+    let absPath: string;
+    try {
+      absPath = validatePath(filePath, process.cwd());
+    } catch (e) {
+      if (e instanceof PathTraversalError) return c.json({ error: "Access denied" }, 403);
+      return c.json({ error: "Invalid path" }, 400);
+    }
     try {
       const { stdout } = await execFileAsync(
         "git", ["diff", "HEAD", "--", absPath],

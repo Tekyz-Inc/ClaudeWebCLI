@@ -1,4 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
+import { join } from "node:path";
 
 // Mock env-manager and git-utils modules before any imports
 vi.mock("./env-manager.js", () => ({
@@ -668,15 +669,17 @@ describe("GET /api/fs/diff", () => {
  line3`;
     mockExecFile.mockResolvedValueOnce({ stdout: diffOutput, stderr: "" });
 
-    const res = await app.request("/api/fs/diff?path=/repo/file.ts", { method: "GET" });
+    // Use a path within cwd so validatePath allows it
+    const testFilePath = encodeURIComponent(join(process.cwd(), "server", "routes.ts"));
+    const res = await app.request(`/api/fs/diff?path=${testFilePath}`, { method: "GET" });
 
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.diff).toBe(diffOutput);
-    expect(json.path).toContain("file.ts");
+    expect(json.path).toContain("routes.ts");
     expect(mockExecFile).toHaveBeenCalledWith(
       "git",
-      ["diff", "HEAD", "--", expect.stringContaining("file.ts")],
+      ["diff", "HEAD", "--", expect.stringContaining("routes.ts")],
       expect.objectContaining({ encoding: "utf-8", timeout: 5000 }),
     );
   });
@@ -684,11 +687,13 @@ describe("GET /api/fs/diff", () => {
   it("returns empty diff when git command fails", async () => {
     mockExecFile.mockRejectedValueOnce(new Error("not a git repository"));
 
-    const res = await app.request("/api/fs/diff?path=/not-a-repo/file.ts", { method: "GET" });
+    // Use a path within cwd so validatePath allows it
+    const testFilePath = encodeURIComponent(join(process.cwd(), "server", "index.ts"));
+    const res = await app.request(`/api/fs/diff?path=${testFilePath}`, { method: "GET" });
 
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.diff).toBe("");
-    expect(json.path).toContain("file.ts");
+    expect(json.path).toContain("index.ts");
   });
 });

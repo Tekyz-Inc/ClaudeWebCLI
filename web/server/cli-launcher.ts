@@ -3,6 +3,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { mkdirSync, existsSync, appendFileSync, readdirSync, statSync, unlinkSync } from "node:fs";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { validateBinary, filterEnvVars } from "./security-utils.js";
 
 const execFileAsync = promisify(execFile);
 import { join, resolve } from "node:path";
@@ -207,6 +208,12 @@ export class CliLauncher {
     }
 
     let binary = options.claudeBinary || "claude";
+    if (!validateBinary(binary)) {
+      console.error(`[cli-launcher] Invalid claudeBinary rejected: ${binary}`);
+      info.state = "exited";
+      info.exitCode = -1;
+      return;
+    }
     if (!binary.startsWith("/") && !binary.match(/^[A-Z]:\\/i)) {
       try {
         const cmd = process.platform === "win32" ? "where" : "which";
@@ -266,8 +273,13 @@ export class CliLauncher {
     // Strip CLAUDECODE so the child CLI doesn't think it's nested inside another
     // Claude Code session (which would cause it to exit immediately with code 1).
     const { CLAUDECODE: _nc, ...baseEnv } = process.env;
+    // Filter out undefined values before passing to filterEnvVars
+    const baseEnvDefined: Record<string, string> = Object.fromEntries(
+      Object.entries(baseEnv).filter((e): e is [string, string] => e[1] !== undefined),
+    );
+    const filteredBase = filterEnvVars(baseEnvDefined);
     const env: Record<string, string | undefined> = {
-      ...baseEnv,
+      ...filteredBase,
       ...options.env,
     };
 
