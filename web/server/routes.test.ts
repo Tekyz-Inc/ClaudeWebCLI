@@ -372,9 +372,9 @@ describe("POST /api/sessions/:id/unarchive", () => {
 // ─── Environments ────────────────────────────────────────────────────────────
 
 describe("GET /api/envs", () => {
-  it("returns the list of environments", async () => {
+  it("returns the list of environments with masked variable values", async () => {
     const envs = [
-      { name: "Dev", slug: "dev", variables: { A: "1" }, createdAt: 1, updatedAt: 1 },
+      { name: "Dev", slug: "dev", variables: { A: "1", SECRET: "supersecret" }, createdAt: 1, updatedAt: 1 },
     ];
     vi.mocked(envManager.listEnvs).mockResolvedValue(envs);
 
@@ -382,7 +382,9 @@ describe("GET /api/envs", () => {
 
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json).toEqual(envs);
+    // Short values (≤ 4 chars) stay visible; longer values are masked
+    expect(json[0].variables.A).toBe("1");
+    expect(json[0].variables.SECRET).toBe("sup***");
   });
 });
 

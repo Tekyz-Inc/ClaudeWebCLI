@@ -24,6 +24,8 @@ import type { SocketData } from "./ws-bridge.js";
 import { handleTerminalOpen, handleTerminalMessage, handleTerminalClose } from "./terminal-ws.js";
 import type { ServerWebSocket } from "bun";
 import { AUTH_TOKEN, createAuthMiddleware, validateWsToken } from "./auth.js";
+import { createSecurityHeadersMiddleware } from "./security-headers.js";
+import { createRateLimiter } from "./rate-limiter.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageRoot = process.env.__VIBE_PACKAGE_ROOT || resolve(__dirname, "..");
@@ -113,6 +115,13 @@ console.log(`[server] Session persistence: ${sessionStore.directory}`);
 
 const app = new Hono();
 
+// ── Security headers — applied to all responses ──────────────────────────────
+app.use("/*", createSecurityHeadersMiddleware());
+
+// ── Rate limiters ─────────────────────────────────────────────────────────────
+const generalApiLimiter = createRateLimiter(200, 60_000); // 200 req/min per IP
+const sessionCreateLimiter = createRateLimiter(10, 60_000); // 10 sessions/min per IP
+
 app.use("/api/*", cors({
   origin: (origin) => {
     if (!origin) return origin;
@@ -120,6 +129,8 @@ app.use("/api/*", cors({
     return null;
   },
 }));
+app.use("/api/*", generalApiLimiter);
+app.use("/api/sessions/create", sessionCreateLimiter);
 app.use("/api/*", createAuthMiddleware());
 app.route("/api", createRoutes(launcher, wsBridge, sessionStore, worktreeTracker));
 
@@ -188,6 +199,7 @@ const server = Bun.serve<SocketData>({
   },
   websocket: {
     idleTimeout: 0, // Never close idle browser/CLI connections
+    maxPayloadLength: 1048576, // 1 MB — reject oversized messages
     open(ws: ServerWebSocket<SocketData>) {
       const data = ws.data;
       if (data.kind === "cli") {

@@ -1,7 +1,7 @@
-import { mkdirSync } from "node:fs";
-import { readdir, readFile, writeFile, unlink } from "node:fs/promises";
+import { mkdirSync, chmodSync } from "node:fs";
+import { readdir, readFile, writeFile, unlink, rename, access } from "node:fs/promises";
 import { join } from "node:path";
-import { tmpdir } from "node:os";
+import { tmpdir, homedir } from "node:os";
 import type { SessionState, BrowserIncomingMessage, PermissionRequest } from "./session-types.js";
 
 // ─── Serializable session shape ─────────────────────────────────────────────
@@ -17,7 +17,34 @@ export interface PersistedSession {
 
 // ─── Store ──────────────────────────────────────────────────────────────────
 
-const DEFAULT_DIR = join(tmpdir(), "vibe-sessions");
+const LEGACY_DIR = join(tmpdir(), "vibe-sessions");
+const DEFAULT_DIR = join(homedir(), ".companion", "sessions");
+
+async function migrateFromLegacy(legacyDir: string, newDir: string): Promise<void> {
+  try {
+    await access(legacyDir);
+  } catch {
+    return; // Legacy dir does not exist — nothing to migrate
+  }
+  console.log(`[session-store] Migrating sessions from ${legacyDir} → ${newDir}`);
+  try {
+    const files = await readdir(legacyDir);
+    let migrated = 0;
+    await Promise.all(
+      files.map(async (file) => {
+        try {
+          await rename(join(legacyDir, file), join(newDir, file));
+          migrated++;
+        } catch {
+          // Skip files that cannot be moved (e.g., already exist at destination)
+        }
+      }),
+    );
+    console.log(`[session-store] Migrated ${migrated} file(s) from legacy location`);
+  } catch (err) {
+    console.warn("[session-store] Migration encountered an error:", err);
+  }
+}
 
 export class SessionStore {
   private dir: string;
@@ -26,6 +53,15 @@ export class SessionStore {
   constructor(dir?: string) {
     this.dir = dir || DEFAULT_DIR;
     mkdirSync(this.dir, { recursive: true });
+    try {
+      chmodSync(this.dir, 0o700);
+    } catch {
+      // chmod not supported on all platforms (e.g., Windows — ignore)
+    }
+    // Migrate from legacy TMPDIR location on first startup
+    if (!dir) {
+      void migrateFromLegacy(LEGACY_DIR, this.dir);
+    }
   }
 
   private filePath(sessionId: string): string {
