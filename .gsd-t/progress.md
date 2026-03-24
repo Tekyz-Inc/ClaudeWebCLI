@@ -1,11 +1,15 @@
 # GSD-T Progress
 
 ## Project: ClaudeWebCLI
-## Version: 0.13.10
+## Version: 0.14.10
 ## Current Milestone
+None — all milestones complete.
+
+## Completed Milestones (Recent)
 | # | Milestone | Status | Domains |
 |---|-----------|--------|---------|
-| 8 | Codebase Refactor & Stability | COMPLETE    | test-repair, client-decomposition, server-async, route-modularization, terminal-fix |
+| 9 | Security Hardening | COMPLETE | auth-middleware, path-security, network-hardening |
+| 8 | Codebase Refactor & Stability | COMPLETE | test-repair, client-decomposition, server-async, route-modularization, terminal-fix |
 
 **Goal:** Fix all 96 failing tests, decompose monolithic client/server files into focused modules, migrate all sync I/O to async, modularize routes with validation, and fix terminal keyboard input bug. Zero test regressions, all files under 400 lines.
 
@@ -19,6 +23,7 @@
 ## Completed Milestones
 | # | Milestone | Version | Completed | Tag |
 |---|-----------|---------|-----------|-----|
+| 9 | Security Hardening | 0.14.10 | 2026-03-23 | v0.14.10 |
 | 8 | Codebase Refactor & Stability | 0.13.10 | 2026-03-23 | v0.13.10 |
 | 7 | Session Resume List | 0.8.10 | 2026-03-04 | v0.8.10 |
 | 6 | DiffView + ProjectTabBar + TerminalPanel | 0.7.0 | 2026-02-24 | v0.7.0 |
@@ -35,6 +40,7 @@
 | 2.1 | Fix Windows Path Test Failures | MEDIUM   | TD-011 |
 
 ## Decision Log
+- 2026-03-23 22:05: [success] M9 COMPLETE — v0.14.10. Security Hardening: 3 domains (path-security, auth-middleware, network-hardening). Added: bearer token auth on all API/WS, filesystem path traversal protection, claudeBinary validation, env var filtering, security headers (CSP/X-Frame/X-Content-Type/Referrer-Policy), WebSocket 1MB payload limit, rate limiting (10 sessions/min, 200 req/min), secret masking in env responses, session storage moved to ~/.companion/sessions/ with 0700 permissions. Server now binds 127.0.0.1, CORS localhost-only. 625/631 tests pass. Fixes TD-001/002/003/008/009/010/015/017/018.
 - 2026-03-23 18:10: [success] M8 COMPLETE — v0.13.10. All 5 domains delivered: test-repair (1 fix), server-async (sync→async migration), client-decomposition (7 files decomposed into 20+ modules), route-modularization (routes.ts split into 5 modules + Zod), terminal-fix (already resolved). 570/575 tests pass, tsc 0 errors. Minor residual: store.ts 488 lines (down from 776), HomePage.tsx 416 (down from 692) — both near target. session-names.ts and worktree-tracker.ts retain sync I/O (out of scope, can be future debt).
 - 2026-03-23 17:56: [success] M8 Execute phase complete — all 4 waves done. Wave 1: test-repair (1 fix routes.test.ts, d7e722c) + terminal-fix (already resolved). Wave 2: server-async (all sync I/O → async, execFile w/ array args, 58f610a). Wave 3: client-decomposition (6 tasks — store.ts 776→488, ws.ts 615→223, Sidebar 678→252, Composer 653→353, HomePage 692→295). Wave 4: route-modularization (routes.ts 561→28, 5 route modules + Zod schemas, e3bdb94). TS fix commit 737f645. Final: 570/575 tests pass (5 pre-existing TD-011), tsc clean with 0 errors.
 - 2026-03-22 14:40: [milestone] Milestone 8 "Codebase Refactor & Stability" defined. Supersedes previously suggested M8 "Test Suite Repair" — expanded scope to include client decomposition (TD-005/006), server async I/O migration (TD-004/001), route modularization (TD-014), and terminal keyboard bug fix. Baseline: 496/592 tests pass (96 fail), tsc clean. Target version: 0.13.10 (minor bump). Complexity: Complex (5 domains). Auto-partitioning immediately.

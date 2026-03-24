@@ -25,13 +25,13 @@ Items that pose active risk or block progress.
 
 ### TD-001: Command Injection via Shell String Interpolation
 - **Category**: security
-- **Severity**: CRITICAL
+- **Severity**: CRITICAL → **PARTIALLY RESOLVED (M8)**
 - **Location**: `web/server/git-utils.ts:57`, `web/server/cli-launcher.ts:209`, `web/server/routes.ts:374,516`, `web/server/ws-bridge.ts:504-527`, `web/server/auto-namer.ts:9`
-- **Description**: All git operations use `execSync()` with string concatenation, allowing shell metacharacter injection. The `claudeBinary` parameter is passed unsanitized to `where`/`which`. The git diff route interpolates file paths into shell commands. ws-bridge.ts runs 4 execSync calls during session init with unsanitized cwd.
-- **Impact**: Arbitrary command execution on the server via crafted branch names, file paths, or binary names.
-- **Remediation**: Replace all `execSync()` with `execFileSync()` using array-based arguments. Validate `claudeBinary` against an allowlist. Sanitize all user-provided strings used in shell commands.
-- **Effort**: medium
-- **Milestone candidate**: YES — combine with TD-002 as "Security Hardening"
+- **Description**: ~~All git operations use `execSync()` with string concatenation.~~ M8 migrated to `execFile` with array-based args. Remaining: `claudeBinary` parameter still needs allowlist validation.
+- **Impact**: Reduced — array args prevent most injection, but claudeBinary path needs validation.
+- **Remediation**: Validate `claudeBinary` against an allowlist.
+- **Effort**: small
+- **Milestone candidate**: YES — fold into M9
 - **Promoted**: [ ]
 
 ### TD-002: Unrestricted Filesystem Access
@@ -56,9 +56,9 @@ Items that pose active risk or block progress.
 - **Milestone candidate**: YES — combine with TD-001, TD-002
 - **Promoted**: [ ]
 
-### TD-004: Synchronous I/O Blocks Event Loop During Request Handling
+### TD-004: Synchronous I/O Blocks Event Loop During Request Handling — **RESOLVED (M8)**
 - **Category**: performance
-- **Severity**: CRITICAL
+- **Severity**: ~~CRITICAL~~ RESOLVED
 - **Location**: `web/server/git-utils.ts` (all functions), `web/server/ws-bridge.ts:504-527` (4 execSync in session init), `web/server/cli-launcher.ts:209,351-362` (binary resolution + file I/O), `web/server/session-names.ts:24,35`, `web/server/env-manager.ts:55,71,99,133`, `web/server/worktree-tracker.ts:38,49`, `web/server/session-store.ts:49,58,72,110,119`, `web/server/auto-namer.ts:9`
 - **Description**: 8 server files use `execSync`, `readFileSync`, or `writeFileSync` during active request handling. Count: git-utils.ts (every function), ws-bridge.ts (4 calls during init), cli-launcher.ts (2), session-store.ts (5), env-manager.ts (4), session-names.ts (2), worktree-tracker.ts (2), auto-namer.ts (1). Total: ~20+ synchronous I/O calls in the server. This violates the explicit project rule: "NEVER use synchronous I/O in the server."
 - **Impact**: A slow git operation or filesystem access blocks ALL sessions. Single-process architecture means one slow request degrades the entire server.
@@ -72,9 +72,9 @@ Items that pose active risk or block progress.
 ## High Priority
 Items that should be addressed in the next 1-2 milestones.
 
-### TD-005: Monolithic Components Exceed Size Limits
+### TD-005: Monolithic Components Exceed Size Limits — **MOSTLY RESOLVED (M8)**
 - **Category**: quality
-- **Severity**: HIGH
+- **Severity**: ~~HIGH~~ LOW (residual: store.ts 488, HomePage 416)
 - **Location**: 22+ files over 200-line limit (up from 18 at last scan)
 - **Description**: Worst offenders (source files only, lines): `ws-bridge.ts` (930), `store.ts` (776), `HomePage.tsx` (692), `Sidebar.tsx` (678), `Composer.tsx` (653), `ws.ts` (615), `cli-launcher.ts` (562), `routes.ts` (561), `Playground.tsx` (530), `PermissionBanner.tsx` (514), `EditorPanel.tsx` (469), `MessageFeed.tsx` (455), `MessageBubble.tsx` (386), `git-utils.ts` (372), `TaskPanel.tsx` (349), `ProjectTabBar.tsx` (295), `EnvManager.tsx` (292), `use-voice-input.ts` (268), `DiffView.tsx` (250), `ToolBlock.tsx` (247), `session-types.ts` (239), `index.ts` (232), `api.ts` (230), `claude-sessions.ts` (224). Files have grown since last scan (ws-bridge +187, store +266, ws +150).
 - **Impact**: Hard to maintain, test, and reason about. Contributes to test coverage gaps and test breakage.
@@ -83,9 +83,9 @@ Items that should be addressed in the next 1-2 milestones.
 - **Milestone candidate**: YES — "Code Decomposition"
 - **Promoted**: [ ]
 
-### TD-006: Code Duplication Between Composer and HomePage
+### TD-006: Code Duplication Between Composer and HomePage — **RESOLVED (M8)**
 - **Category**: quality
-- **Severity**: HIGH
+- **Severity**: ~~HIGH~~ RESOLVED
 - **Location**: `src/components/Composer.tsx` ↔ `src/components/HomePage.tsx`
 - **Description**: `readFileAsBase64` function duplicated verbatim (both files). Identical image handling, textarea resize, and drag-drop patterns. Total: ~200+ duplicated lines across multiple clusters.
 - **Impact**: Bug fixes must be applied in multiple places. Divergence creates inconsistent behavior.
@@ -94,9 +94,9 @@ Items that should be addressed in the next 1-2 milestones.
 - **Milestone candidate**: NO — fold into TD-005
 - **Promoted**: [ ]
 
-### TD-007: Critical Test Coverage Gaps and Regression
+### TD-007: Critical Test Coverage Gaps and Regression — **RESOLVED (M8)**
 - **Category**: quality
-- **Severity**: HIGH → **ESCALATED**
+- **Severity**: ~~HIGH~~ RESOLVED
 - **Location**: Multiple test files
 - **Description**: Tests have regressed significantly since last scan. Previous: 517 pass / 5 fail. Current: 496 pass / 96 fail across 11 test files. Failing files: `ws.test.ts` (22/31 fail), `Sidebar.test.tsx` (26/30 fail), `Composer.test.tsx` (19/19 fail), `ToolBlock.test.tsx` (8/47 fail), `MessageFeed.test.tsx` (6/17 fail), `git-utils.test.ts` (5/39 fail), `auto-namer.test.ts` (4/12 fail), `EditorPanel.test.tsx` (2/9 fail), `cli-launcher.test.ts` (2/48 fail), `routes.test.ts` (1/34 fail), `MessageBubble.test.tsx` (1/18 fail). Tests are out of sync with source code changes made during ad-hoc polishing (v0.9-v0.12).
 - **Impact**: Test suite is unreliable. 96 failing tests mask real regressions. No confidence in code correctness.
@@ -137,9 +137,9 @@ Items that should be addressed in the next 1-2 milestones.
 - **Milestone candidate**: NO — fold into security milestone
 - **Promoted**: [ ]
 
-### TD-024: Massive Test Suite Regression (96 failures) **[NEW]**
+### TD-024: Massive Test Suite Regression (96 failures) — **RESOLVED (M8)**
 - **Category**: quality
-- **Severity**: HIGH
+- **Severity**: ~~HIGH~~ RESOLVED
 - **Location**: 11 test files across server and client
 - **Description**: Between v0.8.10 and v0.12.10, ad-hoc polishing commits modified source files without updating corresponding tests. Result: 96 test failures (up from 5). Breakdown by root cause: (1) Store shape changes (new fields, renamed actions) broke ws.test.ts, Sidebar.test.tsx, Composer.test.tsx. (2) Component prop/structure changes broke ToolBlock, MessageFeed, MessageBubble, EditorPanel tests. (3) CLI launcher spawn changes broke cli-launcher.test.ts, auto-namer.test.ts. (4) Pre-existing Windows path failures in git-utils.test.ts (5 failures, unchanged).
 - **Impact**: Test suite is unreliable — cannot catch regressions. Blocks CI/CD pipeline. Pre-commit hooks may be skipped.
@@ -186,9 +186,9 @@ Items to plan for but not urgent.
 - **Milestone candidate**: NO — fold into quality milestone
 - **Promoted**: [ ]
 
-### TD-014: Missing Request Validation (No Schema Validation)
+### TD-014: Missing Request Validation (No Schema Validation) — **RESOLVED (M8)**
 - **Category**: quality
-- **Severity**: MEDIUM
+- **Severity**: ~~MEDIUM~~ RESOLVED
 - **Location**: `web/server/routes.ts`
 - **Description**: REST API does not validate request bodies with schema validation (e.g., Zod). Invalid payloads handled via optional chaining and defaults, leading to silent failures. 10+ routes use `.catch(() => ({}))` for JSON body parsing.
 - **Impact**: Invalid requests produce unexpected behavior instead of clear errors.
