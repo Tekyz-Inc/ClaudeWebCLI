@@ -1,7 +1,7 @@
 # GSD-T Progress
 
 ## Project: ClaudeWebCLI
-## Version: 0.14.11
+## Version: 0.14.12
 ## Current Milestone
 None — all milestones complete.
 
@@ -38,6 +38,7 @@ None — all milestones complete.
 No milestones remaining.
 
 ## Decision Log
+- 2026-03-24 15:00: [success] Post-M8 fixes — v0.14.12. Fixed tab switching not loading sessions (useAutoResumeSession ref logic + active bridge sessions in Sidebar). Fixed terminal panel not navigating to correct dir and keystrokes broken (TerminalPanel reconnects on cwd change, ResizeObserver-based focus, PTY spawn error handling). Added 13 functional E2E tests covering real workflows (terminal I/O, tab switching, composer input, dark mode, WebSocket status). Removed token auth requirement (127.0.0.1 + CORS sufficient). Unit: 631/631 pass | E2E: 47/47 pass.
 - 2026-03-23 22:15: [success] M2.1 COMPLETE — v0.14.11. Fixed 6 Windows path test failures (5 in git-utils.test.ts, 1 in cli-launcher.test.ts). Normalized assertions with path.normalize()/path.join(). 631/631 tests pass — ZERO failures for the first time. Fixes TD-011.
 - 2026-03-23 22:05: [success] M9 COMPLETE — v0.14.10. Security Hardening: 3 domains (path-security, auth-middleware, network-hardening). Added: bearer token auth on all API/WS, filesystem path traversal protection, claudeBinary validation, env var filtering, security headers (CSP/X-Frame/X-Content-Type/Referrer-Policy), WebSocket 1MB payload limit, rate limiting (10 sessions/min, 200 req/min), secret masking in env responses, session storage moved to ~/.companion/sessions/ with 0700 permissions. Server now binds 127.0.0.1, CORS localhost-only. 625/631 tests pass. Fixes TD-001/002/003/008/009/010/015/017/018.
 - 2026-03-23 18:10: [success] M8 COMPLETE — v0.13.10. All 5 domains delivered: test-repair (1 fix), server-async (sync→async migration), client-decomposition (7 files decomposed into 20+ modules), route-modularization (routes.ts split into 5 modules + Zod), terminal-fix (already resolved). 570/575 tests pass, tsc 0 errors. Minor residual: store.ts 488 lines (down from 776), HomePage.tsx 416 (down from 692) — both near target. session-names.ts and worktree-tracker.ts retain sync I/O (out of scope, can be future debt).
