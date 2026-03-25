@@ -5,7 +5,12 @@ import type { SocketData } from "./ws-bridge.js";
 
 type TermWS = ServerWebSocket<SocketData>;
 
-const processes = new Map<string, pty.IPty>();
+interface TermEntry {
+  proc: pty.IPty;
+  ws: TermWS;
+}
+
+const processes = new Map<string, TermEntry>();
 
 export function handleTerminalOpen(ws: TermWS): void {
   const data = ws.data;
@@ -14,6 +19,13 @@ export function handleTerminalOpen(ws: TermWS): void {
   // Normalize cwd to OS-native path separators — node-pty on Windows
   // requires backslashes, but the browser sends forward-slash paths.
   const cwd = data.cwd ? path.normalize(data.cwd) : undefined;
+
+  // Kill any existing process for this terminal ID before spawning a new one
+  const existing = processes.get(terminalId);
+  if (existing) {
+    try { existing.proc.kill(); } catch {}
+    processes.delete(terminalId);
+  }
 
   const isWindows = process.platform === "win32";
   const shell = isWindows ? "powershell.exe" : (process.env.SHELL || "bash");
@@ -34,7 +46,7 @@ export function handleTerminalOpen(ws: TermWS): void {
     return;
   }
 
-  processes.set(terminalId, proc);
+  processes.set(terminalId, { proc, ws });
 
   proc.onData((chunk) => {
     try { ws.send(JSON.stringify({ type: "output", data: chunk })); } catch {}
@@ -49,27 +61,30 @@ export function handleTerminalOpen(ws: TermWS): void {
 export function handleTerminalMessage(ws: TermWS, msg: string | Buffer): void {
   const data = ws.data;
   if (data.kind !== "terminal") return;
-  const proc = processes.get(data.terminalId);
-  if (!proc) return;
+  const entry = processes.get(data.terminalId);
+  if (!entry) return;
 
   try {
     const parsed = JSON.parse(String(msg)) as { type: string; data?: string; cols?: number; rows?: number };
     if (parsed.type === "input" && parsed.data) {
-      try { proc.write(parsed.data); } catch {}
+      try { entry.proc.write(parsed.data); } catch {}
     } else if (parsed.type === "resize" && parsed.cols && parsed.rows) {
-      try { proc.resize(parsed.cols, parsed.rows); } catch {}
+      try { entry.proc.resize(parsed.cols, parsed.rows); } catch {}
     }
   } catch {
-    try { proc.write(String(msg)); } catch {}
+    try { entry.proc.write(String(msg)); } catch {}
   }
 }
 
 export function handleTerminalClose(ws: TermWS): void {
   const data = ws.data;
   if (data.kind !== "terminal") return;
-  const proc = processes.get(data.terminalId);
-  if (proc) {
-    proc.kill();
+  const entry = processes.get(data.terminalId);
+  // Only kill the PTY if this is the same WS that spawned it.
+  // React Strict Mode double-invokes effects: WS1 opens, WS2 opens, WS1 closes.
+  // Without this guard, WS1's close kills WS2's PTY.
+  if (entry && entry.ws === ws) {
+    try { entry.proc.kill(); } catch {}
     processes.delete(data.terminalId);
   }
 }
