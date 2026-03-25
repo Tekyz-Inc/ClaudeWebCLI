@@ -36,6 +36,8 @@ export function TerminalPanel({ cwd, isVisible }: Props) {
 
   // Build or rebuild the WebSocket + xterm terminal.
   // Runs on mount and whenever `cwd` changes so the shell always starts in the right directory.
+  // Each run generates a unique terminalId so React Strict Mode double-invoke
+  // can't cause the stale WS close to kill the active PTY.
   useEffect(() => {
     // Tear down any previous terminal before creating a new one
     observerRef.current?.disconnect();
@@ -46,6 +48,11 @@ export function TerminalPanel({ cwd, isVisible }: Props) {
     termRef.current = null;
     fitRef.current = null;
     openedRef.current = false;
+
+    // Fresh ID per effect run — prevents React Strict Mode race where
+    // the cleanup close of WS1 kills the PTY that WS2 just spawned.
+    const termId = Math.random().toString(36).slice(2, 10);
+    idRef.current = termId;
 
     const term = new Terminal({
       cols: 80,
@@ -64,7 +71,7 @@ export function TerminalPanel({ cwd, isVisible }: Props) {
 
     const proto = location.protocol === "https:" ? "wss:" : "ws:";
     const cwdParam = cwd ? `?cwd=${encodeURIComponent(cwd)}` : "";
-    const ws = new WebSocket(`${proto}//${location.host}/ws/terminal/${idRef.current}${cwdParam}`);
+    const ws = new WebSocket(`${proto}//${location.host}/ws/terminal/${termId}${cwdParam}`);
     wsRef.current = ws;
 
     ws.onopen = () => { setConnected(true); };
