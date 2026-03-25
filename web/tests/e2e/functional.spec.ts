@@ -75,38 +75,36 @@ test.describe("Terminal Panel Functionality", () => {
     // null = xterm hasn't attached yet — acceptable in headless CI
   });
 
-  test("terminal accepts keyboard input when focused", async ({ page }) => {
+  test("typing a command produces shell output", async ({ page }) => {
     await waitForApp(page);
     await openTerminalPanel(page);
 
-    // Wait for WebSocket to connect so the terminal is interactive
+    // Wait for WebSocket to connect and shell prompt to appear
     await expect(page.locator("text=Connected")).toBeVisible({ timeout: 15_000 });
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(1500); // wait for PTY to boot and prompt to render
 
-    // xterm inserts a hidden helper textarea that captures keystrokes
     const xtermTA = page.locator(".xterm-helper-textarea");
-    const exists = await xtermTA.count() > 0;
-
-    if (exists) {
-      // Focus the xterm helper textarea and type
-      await page.evaluate(() => {
-        const ta = document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement | null;
-        ta?.focus();
-      });
-      await page.waitForTimeout(100);
-
-      // Type a simple command
-      await page.keyboard.type("echo functional_test");
-
-      // Verify the xterm helper textarea is still active (focus held)
-      const isFocused = await page.evaluate(() => {
-        return document.activeElement?.classList.contains("xterm-helper-textarea") ?? false;
-      });
-      expect(isFocused).toBe(true);
-    } else {
-      // xterm not yet attached (CSS timing in headless) — not a failure
-      console.log("xterm-helper-textarea not present; skipping keystroke assertion");
+    if ((await xtermTA.count()) === 0) {
+      console.log("xterm-helper-textarea not present; skipping");
+      return;
     }
+
+    // Focus xterm and type a command that produces unique, verifiable output
+    await page.evaluate(() => {
+      (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement)?.focus();
+    });
+    await page.waitForTimeout(100);
+    await page.keyboard.type("echo PW_TERM_OK");
+    await page.keyboard.press("Enter");
+
+    // Wait for output to appear in xterm rows
+    await expect(async () => {
+      const text = await page.evaluate(() => {
+        const rows = document.querySelectorAll(".xterm-rows > div");
+        return Array.from(rows).map((r) => r.textContent).join("\n");
+      });
+      expect(text).toContain("PW_TERM_OK");
+    }).toPass({ timeout: 10_000 });
   });
 });
 

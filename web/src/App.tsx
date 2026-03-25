@@ -126,8 +126,7 @@ export default function App() {
             className={`
               fixed lg:relative z-40 lg:z-auto right-0 top-0
               h-full shrink-0 transition-all duration-200
-              ${terminalOpen ? "w-[340px] translate-x-0" : "w-0 translate-x-full lg:w-0 lg:translate-x-full"}
-              overflow-hidden
+              ${terminalOpen ? "w-[340px] translate-x-0 overflow-visible" : "w-0 translate-x-full lg:w-0 lg:translate-x-full overflow-hidden"}
             `}
           >
             {terminalMountedRef.current && <TerminalPanel cwd={termCwd} isVisible={terminalOpen} />}
