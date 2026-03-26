@@ -81,7 +81,7 @@ test.describe("Terminal Panel Functionality", () => {
 
     // Wait for WebSocket to connect and shell prompt to appear
     await expect(page.locator("text=Connected")).toBeVisible({ timeout: 15_000 });
-    await page.waitForTimeout(1500); // wait for PTY to boot and prompt to render
+    await page.waitForTimeout(2000); // wait for PTY to boot and prompt to render
 
     const xtermTA = page.locator(".xterm-helper-textarea");
     if ((await xtermTA.count()) === 0) {

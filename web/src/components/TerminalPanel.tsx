@@ -71,7 +71,12 @@ export function TerminalPanel({ cwd, isVisible }: Props) {
 
     const proto = location.protocol === "https:" ? "wss:" : "ws:";
     const cwdParam = cwd ? `?cwd=${encodeURIComponent(cwd)}` : "";
-    const ws = new WebSocket(`${proto}//${location.host}/ws/terminal/${termId}${cwdParam}`);
+    // In dev mode, connect directly to the backend port — Vite's WS proxy
+    // doesn't reliably forward /ws/terminal/* connections.
+    // In production, the backend serves the frontend so location.host works.
+    const apiPort = typeof __API_PORT__ !== "undefined" ? __API_PORT__ : null;
+    const host = apiPort ? `${location.hostname}:${apiPort}` : location.host;
+    const ws = new WebSocket(`${proto}//${host}/ws/terminal/${termId}${cwdParam}`);
     wsRef.current = ws;
 
     ws.onopen = () => { setConnected(true); };

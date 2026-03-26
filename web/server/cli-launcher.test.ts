@@ -674,7 +674,7 @@ describe("persistence", () => {
       killSpy.mockRestore();
     });
 
-    it("marks dead PIDs as exited", async () => {
+    it("discards dead PIDs on restore", async () => {
       const savedSessions = [
         {
           sessionId: "dead-1",
@@ -699,13 +699,9 @@ describe("persistence", () => {
       newLauncher.setStore(store);
       const recovered = await newLauncher.restoreFromDisk();
 
-      // Dead sessions don't count as recovered
+      // Dead sessions are discarded, not recovered
       expect(recovered).toBe(0);
-
-      const session = newLauncher.getSession("dead-1");
-      expect(session).toBeDefined();
-      expect(session?.state).toBe("exited");
-      expect(session?.exitCode).toBe(-1);
+      expect(newLauncher.getSession("dead-1")).toBeUndefined();
 
       killSpy.mockRestore();
     });
@@ -723,7 +719,7 @@ describe("persistence", () => {
       expect(await newLauncher.restoreFromDisk()).toBe(0);
     });
 
-    it("preserves already-exited sessions from disk", async () => {
+    it("discards already-exited sessions from disk", async () => {
       const savedSessions = [
         {
           sessionId: "already-exited",
@@ -740,11 +736,9 @@ describe("persistence", () => {
       newLauncher.setStore(store);
       const recovered = await newLauncher.restoreFromDisk();
 
-      // Already-exited sessions are loaded but not "recovered"
+      // Exited sessions are discarded on restore
       expect(recovered).toBe(0);
-      const session = newLauncher.getSession("already-exited");
-      expect(session).toBeDefined();
-      expect(session?.state).toBe("exited");
+      expect(newLauncher.getSession("already-exited")).toBeUndefined();
     });
   });
 });

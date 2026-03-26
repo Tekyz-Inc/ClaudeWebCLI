@@ -1,7 +1,7 @@
 # GSD-T Progress
 
 ## Project: ClaudeWebCLI
-## Version: 0.14.12
+## Version: 0.12.11
 ## Current Milestone
 None — all milestones complete.
 
@@ -38,6 +38,8 @@ None — all milestones complete.
 No milestones remaining.
 
 ## Decision Log
+- 2026-03-25 23:20: [fix] Stale session cleanup — v0.12.11. Purged 105 stale SDK session files from ~/.companion/sessions/. Sidebar now filters out exited sessions (state === "exited"). restoreFromDisk() no longer loads dead/exited sessions into the session map — only sessions with a live PID are restored. Updated 2 tests to match new discard behavior. Unit: 631/631 pass.
+- 2026-03-24 23:00: [fix] Terminal keystroke fix — v0.14.13. Root cause: node-pty ConPTY pipes incompatible with Bun's socket implementation. Solution: terminal-node.cjs bridge runs PTY under Node.js subprocess, communicates via stdin/stdout JSON lines. Terminal WS connects directly to backend port (bypasses Vite proxy which also had unreliable forwarding). Added __API_PORT__ Vite define + globals.d.ts type declaration. Fixed TypeScript errors in terminal-ws.ts (Bun spawn type narrowing). Unit: 631/631 pass | E2E: 44/47 pass (3 pre-existing rate-limit flakes).
 - 2026-03-24 15:00: [success] Post-M8 fixes — v0.14.12. Fixed tab switching not loading sessions (useAutoResumeSession ref logic + active bridge sessions in Sidebar). Fixed terminal panel not navigating to correct dir and keystrokes broken (TerminalPanel reconnects on cwd change, ResizeObserver-based focus, PTY spawn error handling). Added 13 functional E2E tests covering real workflows (terminal I/O, tab switching, composer input, dark mode, WebSocket status). Removed token auth requirement (127.0.0.1 + CORS sufficient). Unit: 631/631 pass | E2E: 47/47 pass.
 - 2026-03-23 22:15: [success] M2.1 COMPLETE — v0.14.11. Fixed 6 Windows path test failures (5 in git-utils.test.ts, 1 in cli-launcher.test.ts). Normalized assertions with path.normalize()/path.join(). 631/631 tests pass — ZERO failures for the first time. Fixes TD-011.
 - 2026-03-23 22:05: [success] M9 COMPLETE — v0.14.10. Security Hardening: 3 domains (path-security, auth-middleware, network-hardening). Added: bearer token auth on all API/WS, filesystem path traversal protection, claudeBinary validation, env var filtering, security headers (CSP/X-Frame/X-Content-Type/Referrer-Policy), WebSocket 1MB payload limit, rate limiting (10 sessions/min, 200 req/min), secret masking in env responses, session storage moved to ~/.companion/sessions/ with 0700 permissions. Server now binds 127.0.0.1, CORS localhost-only. 625/631 tests pass. Fixes TD-001/002/003/008/009/010/015/017/018.

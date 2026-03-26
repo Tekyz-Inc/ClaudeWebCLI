@@ -6,6 +6,9 @@ const apiPort = Number(process.env.PORT) || 3456;
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  define: {
+    __API_PORT__: JSON.stringify(apiPort),
+  },
   optimizeDeps: {
     // Pre-bundle at server start so the Web Worker (stt-component-worker.ts)
     // doesn't trigger a Vite dep-discovery full-page reload on first mic click.

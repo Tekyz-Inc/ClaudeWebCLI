@@ -105,15 +105,12 @@ export class CliLauncher {
           this.sessions.set(info.sessionId, info);
           recovered++;
         } catch {
-          // Process is dead
+          // Process is dead — don't restore stale exited sessions
           info.state = "exited";
           info.exitCode = -1;
-          this.sessions.set(info.sessionId, info);
         }
-      } else {
-        // Already exited or no PID
-        this.sessions.set(info.sessionId, info);
       }
+      // Skip already-exited or no-PID sessions — they're stale
     }
     if (recovered > 0) {
       console.log(`[cli-launcher] Recovered ${recovered} live session(s) from disk`);

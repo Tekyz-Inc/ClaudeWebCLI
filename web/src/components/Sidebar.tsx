@@ -197,7 +197,7 @@ export function Sidebar() {
           const pNorm = (activeProjectCwd || "").replace(/\\/g, "/");
           const activeBridgeSessions = pNorm
             ? sdkSessions.filter((s) => {
-                if (s.archived) return false;
+                if (s.archived || s.state === "exited") return false;
                 const sCwd = (s.cwd || "").replace(/\\/g, "/");
                 return sCwd === pNorm || sCwd.startsWith(pNorm + "/");
               })

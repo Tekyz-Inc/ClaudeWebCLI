@@ -20,7 +20,6 @@ const bridgeScript = resolve(
 );
 
 export function handleTerminalOpen(ws: TermWS): void {
-  console.log("[terminal] handleTerminalOpen called");
   const data = ws.data;
   if (data.kind !== "terminal") return;
   const { terminalId, cwd } = data;
@@ -50,10 +49,13 @@ export function handleTerminalOpen(ws: TermWS): void {
 
   processes.set(terminalId, { proc, ws });
 
-  // Read stdout using async iterator and forward to browser
+  const stdout = proc.stdout as ReadableStream<Uint8Array>;
+  const stderr = proc.stderr as ReadableStream<Uint8Array>;
+
+  // Read stdout and forward to browser
   (async () => {
     try {
-      const reader = proc.stdout.getReader();
+      const reader = stdout.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
       while (true) {
@@ -74,10 +76,10 @@ export function handleTerminalOpen(ws: TermWS): void {
     try { ws.send(JSON.stringify({ type: "exit", code: proc.exitCode ?? 1 })); } catch {}
   })();
 
-  // Also log stderr
+  // Log stderr
   (async () => {
     try {
-      const reader = proc.stderr.getReader();
+      const reader = stderr.getReader();
       const decoder = new TextDecoder();
       while (true) {
         const { done, value } = await reader.read();
@@ -98,7 +100,7 @@ export function handleTerminalMessage(ws: TermWS, msg: string | Buffer): void {
   }
 
   try {
-    const writer = entry.proc.stdin;
+    const writer = entry.proc.stdin as import("bun").FileSink;
     writer.write(String(msg) + "\n");
     writer.flush();
   } catch (err) {

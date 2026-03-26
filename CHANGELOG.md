@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.11] - 2026-03-25
+
+### Fixed
+- Stale SDK sessions no longer shown in sidebar — exited sessions filtered out
+- `restoreFromDisk()` discards dead/exited sessions instead of loading them into the session map
+- Terminal WebSocket connects directly to backend port in dev mode (bypasses unreliable Vite proxy)
+- TypeScript type narrowing for Bun.spawn stdout/stderr/stdin streams
+- E2E terminal test timing increased for slower PTY boot
+
+### Changed
+- Purged 105 stale session files from `~/.companion/sessions/`
+
 ## [0.12.10] - 2026-03-09
 
 ### Added
