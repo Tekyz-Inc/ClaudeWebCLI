@@ -1,7 +1,7 @@
 # GSD-T Progress
 
 ## Project: ClaudeWebCLI
-## Version: 0.12.11
+## Version: 0.12.12
 ## Current Milestone
 None — all milestones complete.
 
@@ -38,6 +38,7 @@ None — all milestones complete.
 No milestones remaining.
 
 ## Decision Log
+- 2026-04-01 15:57: [scan] Deep codebase scan #3 completed. 5-dimension analysis: architecture (structure, metrics, changes since M8/M9), business-rules (session lifecycle, WS protocol, stall detection, terminal PTY, security controls), security (7 previous criticals resolved, 3 new HIGH: env filter bypass, WS auth not enforced, terminal cwd unvalidated), quality (16 runtime edge cases: silent message drops, is_compacting stuck, no ErrorBoundary, 40+ empty catches, no flush-on-shutdown, stall detection race), contract-drift (api-contract 5% coverage, store-contract 5% coverage, no WS protocol contract). New techdebt: 20 open items (0 critical, 5 high, 10 medium, 5 low). Previous techdebt archived to techdebt_2026-03-20.md. Tests: 631/631 pass (clean baseline).
 - 2026-03-25 23:20: [fix] Stale session cleanup — v0.12.11. Purged 105 stale SDK session files from ~/.companion/sessions/. Sidebar now filters out exited sessions (state === "exited"). restoreFromDisk() no longer loads dead/exited sessions into the session map — only sessions with a live PID are restored. Updated 2 tests to match new discard behavior. Unit: 631/631 pass.
 - 2026-03-24 23:00: [fix] Terminal keystroke fix — v0.14.13. Root cause: node-pty ConPTY pipes incompatible with Bun's socket implementation. Solution: terminal-node.cjs bridge runs PTY under Node.js subprocess, communicates via stdin/stdout JSON lines. Terminal WS connects directly to backend port (bypasses Vite proxy which also had unreliable forwarding). Added __API_PORT__ Vite define + globals.d.ts type declaration. Fixed TypeScript errors in terminal-ws.ts (Bun spawn type narrowing). Unit: 631/631 pass | E2E: 44/47 pass (3 pre-existing rate-limit flakes).
 - 2026-03-24 15:00: [success] Post-M8 fixes — v0.14.12. Fixed tab switching not loading sessions (useAutoResumeSession ref logic + active bridge sessions in Sidebar). Fixed terminal panel not navigating to correct dir and keystrokes broken (TerminalPanel reconnects on cwd change, ResizeObserver-based focus, PTY spawn error handling). Added 13 functional E2E tests covering real workflows (terminal I/O, tab switching, composer input, dark mode, WebSocket status). Removed token auth requirement (127.0.0.1 + CORS sufficient). Unit: 631/631 pass | E2E: 47/47 pass.

@@ -1,404 +1,262 @@
-# Tech Debt Register — 2026-03-20
+# Tech Debt Register -- 2026-04-01
 
 ## Summary
-- Critical items: 4 (unchanged from last scan)
-- High priority: 7 (+1 new: TD-024)
-- Medium priority: 9 (+1 new: TD-025)
-- Low priority: 5 (unchanged)
-- New items since last scan: 3 (TD-024, TD-025, TD-026)
-- Resolved since last scan: 0
-- Total: 27
-- Total estimated effort: Large (multiple milestones)
+- Critical items: 0 (all resolved by M8/M9/M2.1)
+- High priority: 5 (3 new)
+- Medium priority: 10 (6 new)
+- Low priority: 5 (1 new)
+- Resolved: 16 items from previous register
+- Total open: 20
+- Total estimated effort: Medium (1-2 milestones)
 
-### Delta from Previous Scan (2026-02-10)
+### Delta from Previous Scan (2026-03-20)
 | Change | Items |
 |--------|-------|
-| NEW    | TD-024 (massive test regression), TD-025 (Sidebar native session polling), TD-026 (stt-component worker TODO) |
-| WORSE  | TD-005 (file sizes grew: ws-bridge 743→930, store 510→776, ws 465→615), TD-007 (test failures: 5→96), TD-019 (xterm deps now used — no longer unused) |
-| BETTER | TD-019 partially resolved (@xterm/xterm and @xterm/addon-fit now used by TerminalPanel.tsx) |
-| PROMOTED | TD-011 already promoted to Milestone 2.1 |
-
----
-
-## Critical Priority
-Items that pose active risk or block progress.
-
-### TD-001: Command Injection via Shell String Interpolation
-- **Category**: security
-- **Severity**: CRITICAL → **PARTIALLY RESOLVED (M8)**
-- **Location**: `web/server/git-utils.ts:57`, `web/server/cli-launcher.ts:209`, `web/server/routes.ts:374,516`, `web/server/ws-bridge.ts:504-527`, `web/server/auto-namer.ts:9`
-- **Description**: ~~All git operations use `execSync()` with string concatenation.~~ M8 migrated to `execFile` with array-based args. Remaining: `claudeBinary` parameter still needs allowlist validation.
-- **Impact**: Reduced — array args prevent most injection, but claudeBinary path needs validation.
-- **Remediation**: Validate `claudeBinary` against an allowlist.
-- **Effort**: small
-- **Milestone candidate**: YES — fold into M9
-- **Promoted**: [ ]
-
-### TD-002: Unrestricted Filesystem Access
-- **Category**: security
-- **Severity**: CRITICAL
-- **Location**: `web/server/routes.ts:269-366`
-- **Description**: `/api/fs/list`, `/api/fs/tree`, `/api/fs/read`, `/api/fs/write` accept arbitrary paths with no restriction to session working directories. Any client can read/write any file the server process can access.
-- **Impact**: Full filesystem read/write access from any browser on the network. Can read SSH keys, `.env` files, overwrite `.bashrc`, etc.
-- **Remediation**: Validate all resolved paths are within the session's `cwd` or a configured allowlist. Reject paths outside boundaries.
-- **Effort**: medium
-- **Milestone candidate**: YES — combine with TD-001
-- **Promoted**: [ ]
-
-### TD-003: No Authentication on Any Endpoint
-- **Category**: security
-- **Severity**: CRITICAL
-- **Location**: `web/server/index.ts:115,127`, `web/server/routes.ts`, `web/vite.config.ts:15`
-- **Description**: Zero authentication on HTTP routes and WebSocket upgrades. Wildcard CORS (`cors()` with no origin restriction at index.ts:115). No WebSocket origin validation. Both Vite dev server (vite.config.ts:15) and Bun server (index.ts:127) bind to `0.0.0.0`, exposing everything to the local network.
-- **Impact**: Any device on the local network has full access to create sessions, spawn CLI processes, read/write files, and manage environment secrets.
-- **Remediation**: Add bearer token auth to API/WebSocket. Validate WebSocket Origin header. Restrict CORS to localhost origins. Bind to `127.0.0.1`.
-- **Effort**: large
-- **Milestone candidate**: YES — combine with TD-001, TD-002
-- **Promoted**: [ ]
-
-### TD-004: Synchronous I/O Blocks Event Loop During Request Handling — **RESOLVED (M8)**
-- **Category**: performance
-- **Severity**: ~~CRITICAL~~ RESOLVED
-- **Location**: `web/server/git-utils.ts` (all functions), `web/server/ws-bridge.ts:504-527` (4 execSync in session init), `web/server/cli-launcher.ts:209,351-362` (binary resolution + file I/O), `web/server/session-names.ts:24,35`, `web/server/env-manager.ts:55,71,99,133`, `web/server/worktree-tracker.ts:38,49`, `web/server/session-store.ts:49,58,72,110,119`, `web/server/auto-namer.ts:9`
-- **Description**: 8 server files use `execSync`, `readFileSync`, or `writeFileSync` during active request handling. Count: git-utils.ts (every function), ws-bridge.ts (4 calls during init), cli-launcher.ts (2), session-store.ts (5), env-manager.ts (4), session-names.ts (2), worktree-tracker.ts (2), auto-namer.ts (1). Total: ~20+ synchronous I/O calls in the server. This violates the explicit project rule: "NEVER use synchronous I/O in the server."
-- **Impact**: A slow git operation or filesystem access blocks ALL sessions. Single-process architecture means one slow request degrades the entire server.
-- **Remediation**: Replace `execSync` with `execFile` (async). Replace `readFileSync`/`writeFileSync` with `readFile`/`writeFile`. Prioritize `git-utils.ts` and `ws-bridge.ts` first as they handle active requests.
-- **Effort**: large
-- **Milestone candidate**: YES — standalone "Async I/O Migration"
-- **Promoted**: [ ]
+| RESOLVED | TD-001 (command injection), TD-002 (filesystem access), TD-003 (no auth), TD-004 (sync I/O), TD-005 (monolithic files), TD-006 (code duplication), TD-007 (test regression), TD-008 (secrets exposed), TD-009 (temp dir), TD-010 (env injection), TD-011 (Windows paths), TD-014 (no validation), TD-015 (no CSP), TD-017 (no rate limiting), TD-018 (vite 0.0.0.0), TD-024 (96 test failures) |
+| PARTIALLY RESOLVED | TD-001 -> TD-027 (env filter bypass), TD-003 -> TD-028 (WS auth not enforced) |
+| STILL OPEN | TD-012 (no ErrorBoundary), TD-013 (empty catches), TD-016 (sidebar polling), TD-019 (unused deps), TD-022 (naming conventions), TD-023 (debounced persistence crash), TD-025 (dual polling -> merged into TD-016), TD-026 (STT worker TODO) |
+| NEW | TD-027 through TD-040 |
 
 ---
 
 ## High Priority
-Items that should be addressed in the next 1-2 milestones.
 
-### TD-005: Monolithic Components Exceed Size Limits — **MOSTLY RESOLVED (M8)**
-- **Category**: quality
-- **Severity**: ~~HIGH~~ LOW (residual: store.ts 488, HomePage 416)
-- **Location**: 22+ files over 200-line limit (up from 18 at last scan)
-- **Description**: Worst offenders (source files only, lines): `ws-bridge.ts` (930), `store.ts` (776), `HomePage.tsx` (692), `Sidebar.tsx` (678), `Composer.tsx` (653), `ws.ts` (615), `cli-launcher.ts` (562), `routes.ts` (561), `Playground.tsx` (530), `PermissionBanner.tsx` (514), `EditorPanel.tsx` (469), `MessageFeed.tsx` (455), `MessageBubble.tsx` (386), `git-utils.ts` (372), `TaskPanel.tsx` (349), `ProjectTabBar.tsx` (295), `EnvManager.tsx` (292), `use-voice-input.ts` (268), `DiffView.tsx` (250), `ToolBlock.tsx` (247), `session-types.ts` (239), `index.ts` (232), `api.ts` (230), `claude-sessions.ts` (224). Files have grown since last scan (ws-bridge +187, store +266, ws +150).
-- **Impact**: Hard to maintain, test, and reason about. Contributes to test coverage gaps and test breakage.
-- **Remediation**: Extract handlers, hooks, and sub-components. Key targets: `ws.ts` handleMessage → per-type handlers, `store.ts` → split into slice files, `ws-bridge.ts` → separate handler modules, React components → sub-components + hooks.
-- **Effort**: large
-- **Milestone candidate**: YES — "Code Decomposition"
-- **Promoted**: [ ]
-
-### TD-006: Code Duplication Between Composer and HomePage — **RESOLVED (M8)**
-- **Category**: quality
-- **Severity**: ~~HIGH~~ RESOLVED
-- **Location**: `src/components/Composer.tsx` ↔ `src/components/HomePage.tsx`
-- **Description**: `readFileAsBase64` function duplicated verbatim (both files). Identical image handling, textarea resize, and drag-drop patterns. Total: ~200+ duplicated lines across multiple clusters.
-- **Impact**: Bug fixes must be applied in multiple places. Divergence creates inconsistent behavior.
-- **Remediation**: Extract shared utilities: `readFileAsBase64` to a utils module, `useImageAttachments` hook, shared drag-drop handler.
-- **Effort**: medium
-- **Milestone candidate**: NO — fold into TD-005
-- **Promoted**: [ ]
-
-### TD-007: Critical Test Coverage Gaps and Regression — **RESOLVED (M8)**
-- **Category**: quality
-- **Severity**: ~~HIGH~~ RESOLVED
-- **Location**: Multiple test files
-- **Description**: Tests have regressed significantly since last scan. Previous: 517 pass / 5 fail. Current: 496 pass / 96 fail across 11 test files. Failing files: `ws.test.ts` (22/31 fail), `Sidebar.test.tsx` (26/30 fail), `Composer.test.tsx` (19/19 fail), `ToolBlock.test.tsx` (8/47 fail), `MessageFeed.test.tsx` (6/17 fail), `git-utils.test.ts` (5/39 fail), `auto-namer.test.ts` (4/12 fail), `EditorPanel.test.tsx` (2/9 fail), `cli-launcher.test.ts` (2/48 fail), `routes.test.ts` (1/34 fail), `MessageBubble.test.tsx` (1/18 fail). Tests are out of sync with source code changes made during ad-hoc polishing (v0.9-v0.12).
-- **Impact**: Test suite is unreliable. 96 failing tests mask real regressions. No confidence in code correctness.
-- **Remediation**: Fix all 96 failing tests as a priority. Tests broke because source files were modified without updating corresponding tests. Key: ws.test.ts (store/type changes), Sidebar.test.tsx (native sessions + layout changes), Composer.test.tsx (draft/slash command changes).
-- **Effort**: large
-- **Milestone candidate**: YES — URGENT standalone or combine with TD-005
-- **Promoted**: [ ]
-
-### TD-008: Environment Secrets Exposed in API Responses
+### TD-027: Env Var Filter Bypass via options.env Override
 - **Category**: security
 - **Severity**: HIGH
-- **Location**: `web/server/routes.ts:387-425`, `web/server/env-manager.ts`, `web/src/components/EnvManager.tsx`
-- **Description**: `/api/envs` returns full environment variable values (API keys, passwords) in plaintext. The UI displays them unmasked. Combined with no auth (TD-003), any network client can read all stored secrets.
-- **Remediation**: Mask secret values in API responses. Add reveal toggle in UI. After TD-003, auth will limit access.
+- **Location**: `web/server/cli-launcher.ts:233-237`
+- **Description**: `filterEnvVars()` removes dangerous keys, but the result is spread with `{ ...filteredBase, ...options.env }`. Client can re-inject filtered keys via session creation request.
+- **Impact**: PATH, LD_PRELOAD, NODE_OPTIONS can be overridden by any client.
+- **Remediation**: Apply `filterEnvVars()` AFTER merging options.env.
 - **Effort**: small
-- **Milestone candidate**: NO — fold into security milestone
-- **Promoted**: [ ]
+- **Scan ref**: SEC-01
 
-### TD-009: Session Data in World-Readable Temp Directory
+### TD-028: WebSocket Auth Not Enforced
 - **Category**: security
 - **Severity**: HIGH
-- **Location**: `web/server/session-store.ts`
-- **Description**: Sessions (message history, tool inputs, pending permissions) stored as plain JSON in `$TMPDIR/vibe-sessions/`. Temp directories are world-readable on many systems and subject to OS cleanup.
-- **Impact**: Session data (potentially containing secrets, code, conversation history) accessible to other processes. Data loss on reboot.
-- **Remediation**: Move to `~/.companion/sessions/` with restricted permissions (0700). Consider encryption at rest.
+- **Location**: `web/server/index.ts:87-110`
+- **Description**: `auth.ts` exists with bearer token support, but WebSocket upgrade handlers do not call `validateToken()`. Any connection to WS endpoints is accepted without authentication.
+- **Impact**: Bypasses M9 security hardening for the primary communication channel.
+- **Remediation**: Call `validateToken()` during WebSocket upgrade, reject unauthenticated connections.
 - **Effort**: small
-- **Milestone candidate**: NO — fold into security milestone
-- **Promoted**: [ ]
+- **Scan ref**: SEC-03
 
-### TD-010: Dangerous Environment Variable Injection
+### TD-029: Terminal PTY cwd Not Path-Validated
 - **Category**: security
 - **Severity**: HIGH
-- **Location**: `web/server/cli-launcher.ts`
-- **Description**: Custom environment variables from session creation are spread directly into CLI subprocess environment. A client can override `PATH`, `LD_PRELOAD`, `NODE_OPTIONS`, etc.
-- **Impact**: Potential for privilege escalation or code execution via environment manipulation.
-- **Remediation**: Validate env var keys against a denylist of dangerous variables or use an allowlist.
+- **Location**: `web/server/terminal-ws.ts:~30`
+- **Description**: The `cwd` parameter for terminal PTY creation is NOT validated via `validatePath()`. A client can open a terminal in any directory.
+- **Impact**: Terminal can be spawned in system directories, bypassing filesystem access controls.
+- **Remediation**: Add `validatePath(cwd, cwd)` check before spawning PTY.
 - **Effort**: small
-- **Milestone candidate**: NO — fold into security milestone
-- **Promoted**: [ ]
+- **Scan ref**: SEC-02
 
-### TD-024: Massive Test Suite Regression (96 failures) — **RESOLVED (M8)**
+### TD-012: No React ErrorBoundary
 - **Category**: quality
-- **Severity**: ~~HIGH~~ RESOLVED
-- **Location**: 11 test files across server and client
-- **Description**: Between v0.8.10 and v0.12.10, ad-hoc polishing commits modified source files without updating corresponding tests. Result: 96 test failures (up from 5). Breakdown by root cause: (1) Store shape changes (new fields, renamed actions) broke ws.test.ts, Sidebar.test.tsx, Composer.test.tsx. (2) Component prop/structure changes broke ToolBlock, MessageFeed, MessageBubble, EditorPanel tests. (3) CLI launcher spawn changes broke cli-launcher.test.ts, auto-namer.test.ts. (4) Pre-existing Windows path failures in git-utils.test.ts (5 failures, unchanged).
-- **Impact**: Test suite is unreliable — cannot catch regressions. Blocks CI/CD pipeline. Pre-commit hooks may be skipped.
-- **Remediation**: Systematic test repair pass: update mocks to match current store shape, update component test expectations to match current DOM, fix spawn mocking for new CLI launcher patterns.
-- **Effort**: medium
-- **Milestone candidate**: YES — URGENT, should be first priority
-- **Promoted**: [ ]
+- **Severity**: HIGH (upgraded from MEDIUM)
+- **Location**: `web/src/App.tsx`
+- **Description**: No `ErrorBoundary` component in the React tree. An error in markdown rendering, tool input display, or CodeMirror crashes the entire app with a white screen.
+- **Impact**: Complete application crash from a single component error. No recovery without page refresh.
+- **Remediation**: Add ErrorBoundary at App level with fallback UI and "Reload" button.
+- **Effort**: small
+- **Scan ref**: QE-11
+
+### TD-030: sendToSession() Silently Drops Messages
+- **Category**: quality
+- **Severity**: HIGH
+- **Location**: `web/src/ws.ts:206-208`
+- **Description**: When WebSocket is reconnecting (not OPEN), `sendToSession()` silently discards the message. The Composer clears, user sees no error.
+- **Impact**: Lost user messages with no indication of failure.
+- **Remediation**: Queue messages during reconnection, or show error toast when send fails.
+- **Effort**: small
+- **Scan ref**: QE-01
 
 ---
 
 ## Medium Priority
-Items to plan for but not urgent.
 
-### TD-011: Windows Path Compatibility Issues
+### TD-013: 40+ Empty Catch Blocks Across Codebase
 - **Category**: quality
 - **Severity**: MEDIUM
-- **Location**: `web/server/git-utils.ts:82`, `web/server/cli-launcher.ts`, `web/server/git-utils.test.ts`
-- **Description**: 5 test failures due to Windows path separators. Worktree detection uses hardcoded `/worktrees/` (forward slash). Binary resolution uses `startsWith("/")` for absolute path detection, fails on Windows.
-- **Impact**: Tests fail on Windows. Worktree features may not work correctly on Windows.
-- **Remediation**: Use `path.sep` or `path.join()` consistently. Fix test assertions to normalize paths.
-- **Effort**: small
-- **Milestone candidate**: YES — promoted
-- **Promoted**: [x] — Milestone 2.1: Fix Windows Path Test Failures
-
-### TD-012: No React Error Boundary
-- **Category**: quality
-- **Severity**: MEDIUM
-- **Location**: `web/src/App.tsx`
-- **Description**: No `ErrorBoundary` component in the React tree. An unhandled error in any component crashes the entire application. Confirmed: grep for "ErrorBoundary" in src/ returns zero results.
-- **Impact**: Single component error takes down the whole UI.
-- **Remediation**: Add ErrorBoundary at App level and around key sections (ChatView, Editor, Sidebar).
-- **Effort**: small
-- **Milestone candidate**: NO — quick fix
-- **Promoted**: [ ]
-
-### TD-013: Empty Catch Blocks / Swallowed Errors
-- **Category**: quality
-- **Severity**: MEDIUM
-- **Location**: `web/server/ws-bridge.ts:900`, `web/server/cli-launcher.ts:365`, `web/server/session-store.ts:50,111`, `web/src/utils/whisper-worker.ts:45`
-- **Description**: While no truly empty catch blocks remain (improved from last scan), several catch blocks log but don't propagate errors. `whisper-worker.ts:45` catches WebGPU errors with only a comment. Routes use `.catch(() => ({}))` on JSON parsing which swallows malformed request bodies silently (routes.ts lines 21, 208, 248, 354, 402, 413, 482, 494, 502, 509).
-- **Impact**: Silent failures make debugging difficult. Malformed requests get default empty objects instead of 400 errors.
-- **Remediation**: Add proper error responses for JSON parse failures. Propagate errors where appropriate.
+- **Location**: cli-launcher.ts (10), ws-bridge.ts (8), env-manager.ts (6), claude-sessions.ts (7), ws.ts (1), store/initial-state.ts (3), git-utils.ts (1)
+- **Description**: 40+ catch blocks that silently swallow errors. Most dangerous: ws.ts:62 (malformed WS message dropped), cli-launcher.ts:174,178 (process kill failures), ws-bridge.ts:317 (NDJSON parse failure).
+- **Impact**: Silent failures make debugging impossible. Phantom processes, lost data.
+- **Remediation**: Add logging at minimum. For critical paths, propagate errors or take recovery action.
 - **Effort**: medium
-- **Milestone candidate**: NO — fold into quality milestone
-- **Promoted**: [ ]
+- **Scan ref**: QE-12
 
-### TD-014: Missing Request Validation (No Schema Validation) — **RESOLVED (M8)**
+### TD-031: is_compacting Flag Never Explicitly Reset
 - **Category**: quality
-- **Severity**: ~~MEDIUM~~ RESOLVED
-- **Location**: `web/server/routes.ts`
-- **Description**: REST API does not validate request bodies with schema validation (e.g., Zod). Invalid payloads handled via optional chaining and defaults, leading to silent failures. 10+ routes use `.catch(() => ({}))` for JSON body parsing.
-- **Impact**: Invalid requests produce unexpected behavior instead of clear errors.
-- **Remediation**: Add Zod schemas for all request bodies. Return 400 with validation errors.
-- **Effort**: medium
-- **Milestone candidate**: NO — fold into quality milestone
-- **Promoted**: [ ]
-
-### TD-015: No Content-Security-Policy or Security Headers
-- **Category**: security
 - **Severity**: MEDIUM
-- **Location**: `web/server/index.ts:119` (production static serving)
-- **Description**: No CSP, X-Frame-Options, X-Content-Type-Options, or other security headers set. Static files served without security headers in production.
-- **Impact**: Vulnerable to clickjacking, MIME type sniffing, and XSS from inline scripts.
-- **Remediation**: Add security header middleware.
+- **Location**: `web/server/ws-bridge.ts:515`
+- **Description**: Set to `true` on `status === "compacting"` but never set to `false`. Relies on implicit status change. If CLI crashes during compaction, flag stays true forever.
+- **Impact**: Permanent "Compacting..." UI state requiring manual recovery.
+- **Remediation**: Reset on any non-compacting status, CLI disconnect, and result message.
 - **Effort**: small
-- **Milestone candidate**: NO — fold into security milestone
-- **Promoted**: [ ]
+- **Scan ref**: QE-02
 
-### TD-016: Sidebar Polls Every 5 Seconds
+### TD-023: Debounced Persistence With No Flush-on-Shutdown
+- **Category**: quality
+- **Severity**: MEDIUM
+- **Location**: `web/server/session-store.ts:35-43`
+- **Description**: 150ms debounce means any state change within last 150ms before crash is lost. No `process.on('SIGTERM')` flush handler.
+- **Impact**: Lost session state on server crash or forced restart.
+- **Remediation**: Add `process.on('SIGTERM', () => flushAll())` for immediate write of pending state.
+- **Effort**: small
+- **Scan ref**: QE-06
+
+### TD-032: Context Usage % Uses Wrong Model in Multi-Model Sessions
+- **Category**: quality
+- **Severity**: MEDIUM
+- **Location**: `web/server/ws-bridge.ts:611-618`
+- **Description**: Iterates all models in `modelUsage`, last one with `contextWindow > 0` wins. In multi-model sessions, displayed context % reflects arbitrary model.
+- **Impact**: Incorrect context usage display.
+- **Remediation**: Track active model and use its context window.
+- **Effort**: small
+- **Scan ref**: QE-03
+
+### TD-016: Dual Polling Loops (Sidebar + Auto-Resume)
 - **Category**: performance
 - **Severity**: MEDIUM
-- **Location**: `web/src/components/Sidebar.tsx`
-- **Description**: Fixed 5-second polling interval for session list regardless of activity. Creates unnecessary network traffic. Additionally, native session list polls every 10 seconds (new since last scan).
-- **Impact**: Wasted bandwidth and server load when nothing is changing.
-- **Remediation**: Use WebSocket push notifications for session state changes, or implement long-polling / event-driven updates.
+- **Location**: `web/src/components/Sidebar.tsx` (5s) + `web/src/hooks/useAutoResumeSession.ts` (10s)
+- **Description**: Two independent polling mechanisms create redundant API calls and potential race conditions.
+- **Impact**: Unnecessary network traffic, potential session switching conflicts.
+- **Remediation**: Consolidate into single polling mechanism or use WebSocket push.
 - **Effort**: medium
-- **Milestone candidate**: NO — fold into performance milestone
-- **Promoted**: [ ]
 
-### TD-017: No Rate Limiting on Session Creation or WebSocket Connections
+### TD-033: Stall Detection Resends Without Checking CLI State
+- **Category**: quality
+- **Severity**: MEDIUM
+- **Location**: `web/server/ws-bridge.ts:862-896`
+- **Description**: Activity watchdog resends `lastUserNdjson` without verifying CLI socket is connected and OPEN.
+- **Impact**: Silent failure of stall recovery, or potential crash.
+- **Remediation**: Check `session.cliSocket?.readyState === WebSocket.OPEN` before resending.
+- **Effort**: small
+- **Scan ref**: QE-07
+
+### TD-034: Rate Limiter Uses Spoofable X-Forwarded-For
 - **Category**: security
 - **Severity**: MEDIUM
-- **Location**: `web/server/routes.ts:20-91`, `web/server/index.ts`
-- **Description**: No limits on session creation rate or concurrent WebSocket connections. An attacker can rapidly spawn CLI processes consuming system resources and API credits.
-- **Impact**: Resource exhaustion, API cost explosion.
-- **Remediation**: Add rate limiting (max sessions per minute) and hard cap on concurrent sessions.
+- **Location**: `web/server/rate-limiter.ts`
+- **Description**: IP extraction trusts `X-Forwarded-For`. Since server is localhost-only, all connections share one IP bucket anyway.
+- **Impact**: Rate limiting is effectively useless.
+- **Remediation**: Use connection source IP. Consider per-session rate limiting.
 - **Effort**: small
-- **Milestone candidate**: NO — fold into security milestone
-- **Promoted**: [ ]
+- **Scan ref**: SEC-04
 
-### TD-018: No WebSocket Message Size Limits
+### TD-035: CSP Allows unsafe-inline for Scripts
 - **Category**: security
+- **Severity**: MEDIUM
+- **Location**: `web/server/security-headers.ts`
+- **Description**: `'unsafe-inline'` for scripts reduces XSS protection.
+- **Remediation**: Use nonce-based or hash-based CSP for inline scripts.
+- **Effort**: medium
+- **Scan ref**: SEC-05
+
+### TD-037: No unhandledRejection Handler
+- **Category**: quality
 - **Severity**: MEDIUM
 - **Location**: `web/server/index.ts`
-- **Description**: Bun WebSocket defaults to 16MB per message. No explicit `maxPayloadLength` configured.
-- **Impact**: Memory exhaustion from oversized messages.
-- **Remediation**: Set `maxPayloadLength` to 1MB.
+- **Description**: Only `uncaughtException` is handled. Unhandled promise rejections could crash the server.
+- **Remediation**: Add `process.on('unhandledRejection', handler)`.
 - **Effort**: small
-- **Milestone candidate**: NO — fold into security milestone
-- **Promoted**: [ ]
+- **Scan ref**: SEC-06, QE-13
 
-### TD-025: Native Session Polling Adds Second Polling Loop **[NEW]**
-- **Category**: performance
+### TD-022: Mixed Naming Conventions at Protocol Boundary
+- **Category**: quality
 - **Severity**: MEDIUM
-- **Location**: `web/src/components/Sidebar.tsx`
-- **Description**: Since Milestone 7 (Session Resume List), Sidebar now has TWO independent polling loops: (1) session list every 5s (existing TD-016), (2) native CLI sessions via `GET /api/claude-sessions` every 10s. Both fire regardless of whether the user is actively using the sidebar.
-- **Impact**: Doubles the polling overhead. Two independent intervals can cause race conditions in state updates.
-- **Remediation**: Consolidate both polls into a single interval, or migrate both to WebSocket push.
-- **Effort**: small
-- **Milestone candidate**: NO — fold into TD-016
-- **Promoted**: [ ]
+- **Location**: `web/server/session-types.ts`
+- **Description**: Protocol types mix snake_case (from CLI: `session_id`, `tool_use_id`) and camelCase (internal: `modelUsage`, `inputTokens`). Same data appears in both conventions.
+- **Impact**: Confusing code, potential mapping bugs.
+- **Remediation**: Normalize at protocol boundary with explicit mapping functions.
+- **Effort**: medium
 
 ---
 
 ## Low Priority
-Nice-to-haves and cleanup.
 
-### TD-019: 4 Unused Dependencies (updated from 6)
-- **Category**: dependency
+### TD-014: Sidebar Shows Hardcoded Stale Version "v0.8.10"
+- **Category**: quality
+- **Severity**: LOW
+- **Location**: `web/src/components/Sidebar.tsx:292`
+- **Description**: Version string hardcoded as "v0.8.10", actual version is 0.14.11.
+- **Remediation**: Import from package.json or a version constant.
+- **Effort**: tiny
+- **Scan ref**: QE-14
+
+### TD-019: Unused Dependencies
+- **Category**: quality
 - **Severity**: LOW
 - **Location**: `web/package.json`
-- **Description**: `react-arborist`, `react-resizable-panels`, `autoprefixer`, `postcss` are not imported anywhere. Note: `@xterm/xterm` and `@xterm/addon-fit` are NOW used by `TerminalPanel.tsx` (resolved since last scan).
-- **Impact**: Bloated install size, potential security surface.
-- **Remediation**: Remove 4 unused packages from package.json.
-- **Effort**: small
-- **Milestone candidate**: NO — quick fix
-- **Promoted**: [ ]
+- **Description**: `react-arborist`, `react-resizable-panels`, `autoprefixer`, `postcss` are unused.
+- **Remediation**: Remove unused packages.
+- **Effort**: tiny
 
-### TD-020: Outdated Major Dependencies
-- **Category**: dependency
-- **Severity**: LOW
-- **Location**: `web/package.json`
-- **Description**: `vite` (^6.3.0 installed) and `@vitejs/plugin-react` (^4.4.0 installed) may have newer major versions available. Verify current latest before upgrading.
-- **Impact**: Missing features, potential security fixes.
-- **Remediation**: Test and upgrade to latest major versions.
-- **Effort**: medium
-- **Milestone candidate**: NO — dependency sprint
-- **Promoted**: [ ]
-
-### TD-021: Playground Component in Production Build
-- **Category**: quality
-- **Severity**: LOW
-- **Location**: `web/src/components/Playground.tsx` (530 lines)
-- **Description**: Dev-only component with hardcoded mock data included in production builds. Accessible at `#/playground`. Still 530 lines (no change).
-- **Impact**: Unnecessary bundle size. Development tool exposed to users.
-- **Remediation**: Lazy-load behind dev flag or remove from production builds.
-- **Effort**: small
-- **Milestone candidate**: NO — quick fix
-- **Promoted**: [ ]
-
-### TD-022: Mixed Case Conventions at Protocol Boundary
-- **Category**: quality
-- **Severity**: LOW
-- **Location**: `web/server/session-types.ts` (239 lines), `web/src/types.ts`
-- **Description**: CLI protocol uses snake_case (`session_id`, `tool_use_id`) while internal code uses camelCase. The boundary is not clean — same data appears in both conventions.
-- **Impact**: Confusion about which convention to use. Potential mapping bugs.
-- **Remediation**: Add explicit mapping layer at the protocol boundary.
-- **Effort**: medium
-- **Milestone candidate**: NO
-- **Promoted**: [ ]
-
-### TD-023: Debounced Persistence Can Lose Data on Crash
-- **Category**: quality
-- **Severity**: LOW
-- **Location**: `web/server/session-store.ts`
-- **Description**: 150ms debounce with no flush-on-shutdown. If server crashes within debounce window, state is lost.
-- **Impact**: Potential loss of most recent session state changes.
-- **Remediation**: Add process signal handler to flush pending writes on shutdown.
-- **Effort**: small
-- **Milestone candidate**: NO — quick fix
-- **Promoted**: [ ]
-
-### TD-026: STT Component Worker TODO **[NEW]**
+### TD-026: STT Worker TODO
 - **Category**: quality
 - **Severity**: LOW
 - **Location**: `web/src/utils/stt-component-worker.ts:8`
-- **Description**: Contains a TODO comment: "Remove once @tekyzinc/stt-component ships the worker as a separate file." This is a workaround for a third-party package limitation.
-- **Impact**: Extra maintenance burden. Should be cleaned up when upstream package updates.
-- **Remediation**: Monitor @tekyzinc/stt-component releases and remove workaround when worker is shipped separately.
-- **Effort**: small
-- **Milestone candidate**: NO — monitor
-- **Promoted**: [ ]
+- **Description**: "TODO: Remove once @tekyzinc/stt-component ships the worker as a..."
+- **Remediation**: Remove when upstream package ships built worker.
+- **Effort**: tiny
+
+### TD-036: 7 eslint-disable react-hooks/exhaustive-deps Suppressions
+- **Category**: quality
+- **Severity**: LOW
+- **Location**: FolderPicker.tsx, HomePage.tsx, TerminalPanel.tsx, ProjectTabBar.tsx, useAutoResumeSession.ts, useDraftPersistence.ts, useSlashMenu.ts
+- **Description**: Each suppression is a potential stale closure bug where effects capture outdated values.
+- **Remediation**: Add missing dependencies or restructure effects.
+- **Effort**: medium
+
+### TD-038: ws-bridge.ts at 947 Lines (4.7x limit)
+- **Category**: quality
+- **Severity**: LOW (accepted as core complexity)
+- **Location**: `web/server/ws-bridge.ts`
+- **Description**: Despite M8 decomposition of other files, ws-bridge grew from 744 to 947 lines.
+- **Remediation**: Extract handlers by message direction (CLI handlers, browser handlers, state management).
+- **Effort**: large
 
 ---
 
-## Dependency Updates
-| Package                   | Current  | Status           | Priority |
-|---------------------------|----------|------------------|----------|
-| react-arborist            | ^3.4.3   | unused — remove  | remove   |
-| react-resizable-panels    | ^4.6.2   | unused — remove  | remove   |
-| autoprefixer              | ^10.4.21 | unused — remove  | remove   |
-| postcss                   | ^8.5.3   | unused — remove  | remove   |
-| vite                      | ^6.3.0   | check for major  | low      |
-| @vitejs/plugin-react      | ^4.4.0   | check for major  | low      |
+## Contract Drift
+
+### TD-039: API Contract Massively Outdated
+- **Category**: documentation
+- **Severity**: MEDIUM
+- **Location**: `.gsd-t/contracts/api-contract.md`
+- **Description**: Contract covers 2 of ~37 endpoints (5% coverage).
+- **Remediation**: Rewrite with all endpoints, request/response schemas, and auth requirements.
+- **Effort**: medium
+- **Scan ref**: contract-drift.md
+
+### TD-040: Store Contract Massively Outdated
+- **Category**: documentation
+- **Severity**: MEDIUM
+- **Location**: `.gsd-t/contracts/store-contract.md`
+- **Description**: Contract covers 2 of ~25 store slices (<5% coverage).
+- **Remediation**: Rewrite with all slices, types, persistence, and ownership.
+- **Effort**: medium
+- **Scan ref**: contract-drift.md
 
 ---
 
-## Suggested Tech Debt Milestones
+## Resolved Items (from previous registers)
 
-### Suggested: Test Suite Repair (URGENT)
-Combines: TD-024, TD-007
-Estimated effort: Medium
-Should be prioritized: IMMEDIATELY — before any feature work
-Rationale: 96 failing tests make the test suite useless as a safety net.
-
-### Suggested: Security Hardening (Critical)
-Combines: TD-001, TD-002, TD-003, TD-008, TD-009, TD-010, TD-015, TD-017, TD-018
-Estimated effort: Large
-Should be prioritized: AFTER test repair
-
-### Suggested: Async I/O Migration (Critical)
-Combines: TD-004
-Estimated effort: Large
-Should be prioritized: AFTER security hardening
-
-### Suggested: Code Decomposition & Quality (High)
-Combines: TD-005, TD-006, TD-012, TD-013, TD-014
-Estimated effort: Large
-Can be scheduled: AFTER async I/O migration
-
-### Suggested: Quick Wins (Low effort)
-Combines: TD-019, TD-021, TD-023, TD-025
-Estimated effort: Small
-Can be scheduled: Any time (independent)
-
----
-
-## Contract Compliance
-
-### Contracts Inventory (10 files)
-| Contract | Last Updated | Status |
-|----------|-------------|--------|
-| api-contract.md            | unknown | needs review — routes.ts has new endpoints since M7 |
-| component-contract.md      | unknown | needs review — new components (CopyButton, tool-utils) |
-| store-contract.md          | unknown | needs review — store grew from ~510 to 776 lines, many new fields |
-| whisper-contract.md        | M3      | OK — voice pipeline stable |
-| voice-mode-contract.md     | M5      | STALE — voice modes unified to single STTEngine in v0.6.0 |
-| integration-points.md      | M1      | STALE — predates M2-M7 changes |
-| integration-points-m2.md   | M2      | archived |
-| integration-points-m4.md   | M4      | archived |
-| integration-points-m5.md   | M5      | archived |
-| integration-points-m7.md   | M7      | OK |
-
-### Contract Drift
-- `voice-mode-contract.md` references 3 voice modes (Original, Whisper, Full) — these were unified into a single STTEngine mode in v0.6.0. Contract is stale.
-- `store-contract.md` likely missing new fields: `filesRead`, `commandsExecuted`, `agentSpawned`, `testExecuted`, `modelUsage`, `chatExpanded`, `activeProjectCwd`, `resumeNativeSession`.
-- `api-contract.md` likely missing endpoints added since M7: `/api/claude-sessions/:id/activity`, `/api/slash-commands`.
-
----
-
-## Scan Metadata
-- Scan date: 2026-03-20
-- Previous scan: 2026-02-10
-- Files analyzed: 30 source files + 19 test files (49 total)
-- Approximate lines of code: ~13,200 (source), ~11,000 (tests)
-- Growth since last scan: +3,200 source lines, +6,000 test lines
-- Languages: TypeScript
-- Runtime: Bun
-- Framework: Hono (server), React 19 (client)
-- Tests: 496 pass, 96 fail (REGRESSION from 517/5)
-- Typecheck: PASS (zero errors)
-- Version: 0.12.10 (was 0.14.1-fork at first scan, now 0.12.10)
+| ID | Title | Resolved By |
+|----|-------|-------------|
+| TD-001 | Command injection via shell interpolation | M8 (execFile) + M9 (validateBinary) |
+| TD-002 | Unrestricted filesystem access | M9 (validatePath) |
+| TD-003 | No authentication on any endpoint | M9 (auth.ts, CORS, 127.0.0.1) |
+| TD-004 | Synchronous I/O blocks event loop | M8 (async migration) |
+| TD-005 | Monolithic components exceed size limits | M8 (decomposition) |
+| TD-006 | Code duplication Composer/HomePage | M8 (hook extraction) |
+| TD-007 | Critical test coverage gaps | M8 (test repair) |
+| TD-008 | Environment secrets exposed | M9 (secret masking) |
+| TD-009 | Session data in temp directory | M9 (~/.companion/sessions/) |
+| TD-010 | Dangerous env var injection | M9 (filterEnvVars) |
+| TD-011 | Windows path compatibility | M2.1 (path normalization) |
+| TD-014 | Missing request validation | M8 (Zod schemas) |
+| TD-015 | No CSP or security headers | M9 (security-headers.ts) |
+| TD-017 | No rate limiting | M9 (rate-limiter.ts) |
+| TD-018 | Vite binds to 0.0.0.0 | M9 (127.0.0.1) |
+| TD-024 | Massive test regression (96 failures) | M8 (test repair) |

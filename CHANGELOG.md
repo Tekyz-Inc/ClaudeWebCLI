@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.12.12] - 2026-04-01
+
+### Changed
+- Refreshed deep codebase scan: architecture, business-rules, quality, security, and new contract-drift analysis
+- Updated tech debt register (20 open items); archived previous register to `techdebt_2026-03-20.md`
+
+### Fixed
+- Added `.tmp.driveupload/` and `latest` to `.gitignore` (were being tracked unintentionally)
+- Removed stale `.claude/settings.local.json` and old temp upload files
+
 ## [0.12.11] - 2026-03-25
 
 ### Fixed

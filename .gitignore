@@ -15,3 +15,6 @@ nul
 .claude/worktrees/
 web/test-results/
 .webcli-logs/
+.tmp.driveupload/
+latest
+test-results/

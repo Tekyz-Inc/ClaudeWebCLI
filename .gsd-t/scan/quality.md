@@ -1,361 +1,221 @@
-# Code Quality Scan
+# Code Quality & Runtime Edge Cases -- 2026-04-01
 
-> Scanned: `web/` (server + client)
-> Date: 2026-02-10
-> Typecheck: PASS (zero errors)
-> Tests: 517 pass / 5 fail (1 file: git-utils.test.ts -- Windows path separator issues)
-
----
-
-## 1. File Size Violations (>200 lines)
-
-| File | Lines | Severity |
-|------|-------|----------|
-| `server/ws-bridge.ts` | 743 | HIGH |
-| `src/components/HomePage.tsx` | 696 | HIGH |
-| `src/components/Playground.tsx` | 531 | HIGH |
-| `src/components/PermissionBanner.tsx` | 515 | HIGH |
-| `src/components/EditorPanel.tsx` | 491 | HIGH |
-| `server/cli-launcher.ts` | 491 | HIGH |
-| `src/components/Sidebar.tsx` | 488 | HIGH |
-| `src/store.ts` | 485 | HIGH |
-| `src/components/MessageFeed.tsx` | 475 | HIGH |
-| `src/components/Composer.tsx` | 460 | HIGH |
-| `src/ws.ts` | 461 | HIGH |
-| `server/routes.ts` | 444 | HIGH |
-| `server/git-utils.ts` | 373 | MEDIUM |
-| `src/components/MessageBubble.tsx` | 335 | MEDIUM |
-| `src/components/EnvManager.tsx` | 293 | MEDIUM |
-| `server/session-types.ts` | 239 | LOW |
-| `src/components/ToolBlock.tsx` | 211 | LOW |
-| `src/api.ts` | 203 | LOW |
-| `src/components/FolderPicker.tsx` | 190 | OK (under 200, close) |
-
-**Count: 18 files over 200 lines** (project standard). The worst offender is `ws-bridge.ts` at 743 lines (3.7x over limit).
+Scan focused on runtime problems that tests don't catch.
+Version: 0.14.11
+Tests: 631/631 pass (clean baseline)
 
 ---
 
-## 2. Function Size Violations (>30 lines)
+## 1. Runtime Edge Cases (WebSocket Lifecycle)
 
-### Server
+### QE-01: `sendToSession()` Silently Drops Messages When WS Not OPEN
+**Location:** `web/src/ws.ts:206-208`
+**Scenario:** User sends a message while the WebSocket is reconnecting (state = CONNECTING or CLOSED). The message is silently discarded with no feedback. The user sees no error, the Composer clears, and it appears the message was sent.
+**Impact:** Lost user messages with no indication of failure.
+**Fix:** Queue messages during reconnection, or show an error toast when send fails.
 
-| File | Function/Block | ~Lines | Severity |
-|------|----------------|--------|----------|
-| `server/ws-bridge.ts` | `handleSystemMessage()` | ~80 | HIGH |
-| `server/ws-bridge.ts` | `handleResultMessage()` | ~48 | MEDIUM |
-| `server/ws-bridge.ts` | `handleUserMessage()` | ~32 | LOW |
-| `server/ws-bridge.ts` | `handlePermissionResponse()` | ~38 | MEDIUM |
-| `server/ws-bridge.ts` | `handleCLIMessage()` | ~42 | MEDIUM |
-| `server/cli-launcher.ts` | `spawnCLI()` | ~90 | HIGH |
-| `server/cli-launcher.ts` | `injectWorktreeGuardrails()` | ~56 | MEDIUM |
-| `server/routes.ts` | `POST /sessions/create` handler | ~70 | HIGH |
-| `server/routes.ts` | `cleanupWorktree()` | ~30 | LOW |
-| `server/git-utils.ts` | `ensureWorktree()` | ~80 | HIGH |
-| `server/git-utils.ts` | `removeWorktree()` | ~35 | LOW |
+### QE-02: `is_compacting` Flag Never Explicitly Reset
+**Location:** `web/server/ws-bridge.ts:515`
+**Scenario:** The `is_compacting` flag is set to `true` when CLI reports `status === "compacting"`, but there is no code that sets it back to `false`. It relies on the next system status message having a different status value. If the CLI crashes during compaction or sends no follow-up status, the session is stuck showing "Compacting..." forever.
+**Impact:** Permanent UI stuck state. User must manually reconnect or create new session.
+**Fix:** Reset `is_compacting = false` on any non-compacting status, on CLI disconnect, and on result message.
 
-### Client
+### QE-03: Context Usage % Uses Last Model in Iteration
+**Location:** `web/server/ws-bridge.ts:611-618`
+**Scenario:** When `modelUsage` contains multiple models (multi-model sessions), the code iterates all entries and the last one with `contextWindow > 0` wins. The displayed context percentage reflects whichever model happens to be last in the Map iteration order, not the primary model.
+**Impact:** Incorrect context usage display in multi-model sessions.
+**Fix:** Track which model is the "active" model and use its context window, or show per-model context.
 
-| File | Function/Component | ~Lines | Severity |
-|------|-------------------|--------|----------|
-| `src/ws.ts` | `handleMessage()` switch | ~250 | CRITICAL |
-| `src/ws.ts` | `extractTasksFromBlocks()` | ~57 | MEDIUM |
-| `src/store.ts` | `removeSession()` | ~38 | MEDIUM |
-| `src/components/Composer.tsx` | `Composer` component body | ~430 | CRITICAL |
-| `src/components/Sidebar.tsx` | `Sidebar` component body | ~480 | CRITICAL |
-| `src/components/HomePage.tsx` | `HomePage` component body | ~430 | CRITICAL |
-| `src/components/HomePage.tsx` | `handleSend()` | ~60 | MEDIUM |
-| `src/components/PermissionBanner.tsx` | `AskUserQuestionDisplay()` | ~110 | HIGH |
-| `src/components/PermissionBanner.tsx` | `PermissionBanner` body | ~90 | HIGH |
-| `src/components/MessageFeed.tsx` | `groupMessages()` | ~38 | MEDIUM |
-| `src/components/MessageFeed.tsx` | `ToolMessageGroup()` | ~80 | HIGH |
-| `src/components/MessageFeed.tsx` | `MessageFeed` body | ~70 | HIGH |
-| `src/components/MessageBubble.tsx` | `MarkdownContent()` | ~100 | HIGH |
-| `src/components/MessageBubble.tsx` | `AssistantMessage()` | ~36 | LOW |
-| `src/components/EditorPanel.tsx` | `EditorPanel` body | ~180 | CRITICAL |
-| `src/components/EnvManager.tsx` | `EnvManager` body | ~135 | HIGH |
+### QE-04: Browser Reconnection Creates Race With Message History
+**Location:** `web/src/ws.ts` reconnection + `web/server/ws-bridge.ts:276-280`
+**Scenario:** When browser reconnects, server sends `message_history` with all stored messages. But if the CLI is actively streaming, new messages may arrive between the history send and the browser processing it. The browser could receive messages out of order or miss messages that arrived during the history replay window.
+**Impact:** Duplicate or out-of-order messages after reconnection.
+**Fix:** Add a sequence number to messages and use it to deduplicate on the client.
 
-**Count: 27 oversized functions/components.** The worst are `handleMessage()` at ~250 lines (a single switch statement) and several React components that are monolithic (Sidebar, Composer, HomePage, EditorPanel all >180 lines of component logic).
+### QE-05: `handleCliDisconnected` Sets Session Status to null
+**Location:** `web/src/ws-handlers/session-handler.ts:79`
+**Scenario:** When CLI disconnects, `sessionStatus` is set to `null`. If the UI checks `sessionStatus === "running"` vs `sessionStatus === null` vs `sessionStatus === "idle"`, different UI states will render. Setting to `null` instead of `"exited"` or `"idle"` can cause UI flicker or undefined behavior in components that expect a string value.
+**Impact:** Brief UI flicker between CLI disconnect and subsequent state update.
+**Fix:** Set to a defined state like `"disconnected"` instead of `null`.
 
 ---
 
-## 3. Code Duplication
+## 2. Runtime Edge Cases (Session Management)
 
-### HIGH severity (exact or near-exact duplication)
+### QE-06: Debounced Persistence With No Flush-on-Shutdown
+**Location:** `web/server/session-store.ts:35-43`
+**Scenario:** The 150ms debounce means any state change within the last 150ms before a server crash is lost. During streaming (which generates rapid state updates), the most recent messages and token counts are at risk.
+**Impact:** Lost session state on server crash or forced restart.
+**Fix:** Add `process.on('SIGTERM', () => flushAll())` that immediately writes all pending debounced state.
 
-| What | File A | File B | ~Duplicated Lines |
-|------|--------|--------|-------------------|
-| `readFileAsBase64()` helper | `src/components/Composer.tsx:6-13` | `src/components/HomePage.tsx:14-21` | 8 lines |
-| `ImageAttachment` interface | `src/components/Composer.tsx:15-18` | `src/components/HomePage.tsx:23-26` | 4 lines |
-| Image handling: `handleFileSelect`, `removeImage`, `handlePaste` | `src/components/Composer.tsx:40-75` | `src/components/HomePage.tsx:80-130` | ~50 lines |
-| `handleInput` (textarea auto-resize) | `src/components/Composer.tsx:85-91` | `src/components/HomePage.tsx:150-156` | 7 lines |
-| `AssistantAvatar` SVG component | `src/components/MessageBubble.tsx:9-22` | `src/components/MessageFeed.tsx:22-36` | ~14 lines |
-| Edit/Write tool display (diff rendering) | `src/components/ToolBlock.tsx:25-85` | `src/components/PermissionBanner.tsx:80-145` | ~60 lines |
-| Context usage % computation | `server/ws-bridge.ts:478-486` | `src/ws.ts:215-223` | 8 lines |
+### QE-07: Stall Detection Resends Without Checking CLI State
+**Location:** `web/server/ws-bridge.ts:862-896`
+**Scenario:** The activity watchdog resends `lastUserNdjson` when no activity for 60s. But it doesn't verify the CLI is still connected or that the CLI socket is in OPEN state. If the CLI has disconnected but the watchdog hasn't been cleared yet, the resend will fail silently (or throw if socket is null).
+**Impact:** Silent failure of stall recovery, or potential crash.
+**Fix:** Check `session.cliSocket?.readyState === WebSocket.OPEN` before resending.
 
-### MEDIUM severity (structural/pattern duplication)
-
-| What | Locations | ~Lines |
-|------|-----------|--------|
-| `idCounter + nextId()` pattern | `src/ws.ts:92-95`, `src/components/Composer.tsx`, `src/components/HomePage.tsx` | 4 lines x3 |
-| Image thumbnails + remove button JSX | `src/components/Composer.tsx:300-330`, `src/components/HomePage.tsx:450-480` | ~30 lines |
-| Slash command autocomplete logic | `src/components/Composer.tsx:95-155`, `src/components/HomePage.tsx:160-220` | ~60 lines |
-| `TaskRow` component | `src/components/TaskPanel.tsx:10-50`, `src/components/Playground.tsx:430-470` | ~40 lines |
-
-**Estimated total duplicated code: ~285 lines across 7 major duplication clusters.**
-
-**Recommended extractions:**
-- `src/utils/image-helpers.ts` -- `readFileAsBase64`, `ImageAttachment`, `handleFileSelect`, `removeImage`, `handlePaste`
-- `src/components/AssistantAvatar.tsx` -- shared SVG avatar
-- `src/components/ToolDiffDisplay.tsx` -- shared Edit/Write diff rendering
-- `src/components/TaskRow.tsx` -- shared task row component
-- `src/utils/id-generator.ts` -- shared ID counter
+### QE-08: Session Name Collision Grows With Session Count
+**Location:** `web/src/utils/names.ts`
+**Scenario:** 40 adjectives x 40 nouns = 1,600 unique names. Up to 100 retry attempts on collision. With >40 active sessions, collisions become frequent. With >100 sessions, the retry loop could exhaust all attempts and fail.
+**Impact:** Session creation failure or duplicate names at scale.
+**Fix:** Add a numeric suffix after retry exhaustion (e.g., "Quick Fox 2").
 
 ---
 
-## 4. Dead Code / Unused Code
+## 3. Runtime Edge Cases (Terminal Panel)
 
-| Item | Location | Evidence |
-|------|----------|----------|
-| `@xterm/xterm` dependency | `package.json:59` | Not imported anywhere in `src/` or `server/` |
-| `@xterm/addon-fit` dependency | `package.json:58` | Not imported anywhere in `src/` or `server/` |
-| `react-arborist` dependency | `package.json:64` | Not imported anywhere in `src/` or `server/` |
-| `react-resizable-panels` dependency | `package.json:67` | Not imported anywhere in `src/` or `server/` |
-| `autoprefixer` dependency | `package.json:60` | Not imported; no postcss.config file exists |
-| `postcss` dependency | `package.json:62` | Not imported; no postcss.config file exists (Tailwind 4 uses Vite plugin directly) |
-| `Playground.tsx` component | `src/components/Playground.tsx` | Development-only mock component (531 lines); contains hardcoded mock data |
-| `tool_progress` handler | `src/ws.ts:261-263` | Empty handler body, comment says "ignored for now" |
-| `tool_use_summary` handler | `src/ws.ts:266-268` | Empty handler body, comment says "Optional" |
-| `toolUseId` parameter | `src/components/ToolBlock.tsx` | Accepted via props/blocks but never rendered or used in logic |
+### QE-09: Terminal PTY Process Leak on Rapid Tab Switching
+**Location:** `web/src/components/TerminalPanel.tsx`
+**Scenario:** Each `useEffect` run creates a fresh terminal ID and WebSocket connection. If the user switches project tabs rapidly, React Strict Mode may fire the effect multiple times. The cleanup function closes the WebSocket, but the server-side PTY process may not receive the close signal in time before a new one is spawned.
+**Impact:** Orphaned PTY processes consuming resources.
+**Fix:** Add a cleanup delay or process tracking on the server side.
 
-**6 unused dependencies** (could save bundle size / install time).
+### QE-10: Terminal Direct Connect Bypasses Vite Proxy Auth
+**Location:** `web/src/components/TerminalPanel.tsx`
+**Scenario:** In dev mode, the terminal connects directly to the backend port (`__API_PORT__`) rather than through Vite's proxy. This means any future authentication added to the Vite proxy layer won't protect terminal connections.
+**Impact:** Terminal connections are always unauthenticated in dev mode.
+**Fix:** Route terminal WS through the same proxy path as other connections.
 
 ---
 
-## 5. Error Handling Issues
+## 4. Runtime Edge Cases (Error Handling)
 
-### Empty catch blocks (swallowed errors)
+### QE-11: No React ErrorBoundary
+**Location:** `web/src/App.tsx` (no ErrorBoundary wrapper)
+**Scenario:** An error in markdown rendering (`MessageBubble.tsx` via react-markdown), malformed tool input display (`ToolBlock.tsx`), or CodeMirror crash (`EditorPanel.tsx`) will crash the entire React tree. The user sees a white screen with no recovery option except refreshing.
+**Impact:** Complete application crash from a single rendering error.
+**Fix:** Wrap the App in an ErrorBoundary with a fallback UI and "Reload" button.
 
-| File | Line(s) | Context |
-|------|---------|---------|
-| `server/ws-bridge.ts` | ~192, ~198 | JSON parse failures silently swallowed |
-| `server/ws-bridge.ts` | ~406 | `execSync` git command failure swallowed |
-| `server/ws-bridge.ts` | ~476 | Permission cancel error swallowed |
-| `server/cli-launcher.ts` | ~160 | `which` binary resolution failure swallowed |
-| `server/cli-launcher.ts` | ~164 | CLI version detection failure swallowed |
-| `server/cli-launcher.ts` | ~476 | Process kill failure swallowed |
-| `src/components/Sidebar.tsx` | multiple | At least 4 `catch { /* best-effort */ }` blocks for API calls |
-| `src/utils/recent-dirs.ts` | 6 | localStorage parse failure silently returns `[]` |
+### QE-12: 40+ Empty Catch Blocks Across Codebase
+**Locations:** (categorized)
+- `cli-launcher.ts`: 10 empty catches (process kill, which, version, mkdirSync, unlinkSync, log management)
+- `ws-bridge.ts`: 8 empty catches (socket close, JSON parse, git exec, permission cancel)
+- `env-manager.ts`: 6 empty catches (file read, write, delete operations)
+- `claude-sessions.ts`: 7 empty catches (session file parsing, directory reads)
+- `ws.ts`: 1 empty catch (JSON parse on received message)
+- `store/initial-state.ts`: 3 empty catches (localStorage reads)
+- `git-utils.ts`: 1 empty catch
 
-### Inconsistent error handling patterns
+**Scenario:** Any of these swallowed errors can cause silent failures. The most dangerous are:
+- `ws.ts:62`: A malformed WebSocket message is silently dropped. If the server sends an invalid JSON frame, the client has no awareness.
+- `cli-launcher.ts:174,178`: Process kill failures during relaunch mean the old process may still be running alongside the new one.
+- `ws-bridge.ts:317`: NDJSON parse failure in CLI messages means protocol data is silently lost.
 
-| File | Issue |
-|------|-------|
-| `src/api.ts` | `get()` function does NOT parse error body, while `post/put/patch/del` all parse JSON error bodies and throw descriptive messages. This means GET failures produce generic "HTTP 500" errors instead of the server's error message. |
-| `server/routes.ts` | Some route handlers return `c.json({ error: ... }, 500)` while others throw or don't handle errors at all. |
-| `server/ws-bridge.ts` | WebSocket message parsing wraps in try/catch but the catch block is empty, so malformed messages disappear silently. |
+**Impact:** Silent data loss, phantom processes, invisible errors.
+**Fix:** At minimum, log errors to console. For critical paths (WS message parsing, process lifecycle), propagate errors or take recovery action.
 
-### Missing error handling
-
-| File | Issue |
-|------|-------|
-| `server/auto-namer.ts` | Spawns a CLI process but has no timeout -- if the CLI hangs, the namer process runs forever. |
-| `src/ws.ts` | `waitForConnection()` has a 10-second timeout, but callers (`sendToSession`) do not wait for connection and silently drop messages if WebSocket is not OPEN. |
-| `server/session-store.ts` | Debounced persist could lose data if the process exits during the debounce window. |
-
----
-
-## 6. Performance Concerns
-
-| File | Issue | Severity |
-|------|-------|----------|
-| `src/components/Sidebar.tsx:55` | Polls `api.listSessions()` every 5 seconds via `setInterval`. This runs regardless of whether there is any activity, creating unnecessary network traffic. Should use WebSocket push or event-driven updates. | MEDIUM |
-| `src/store.ts` (removeSession) | Creates 15+ new `Map` instances by copying every map in the store. For frequent session removal, this is O(n) per map per call. | LOW |
-| `src/components/MessageFeed.tsx` | `groupMessages()` runs on every render when messages change, iterating all messages to build a nested group structure. No memoization at the grouping level. | LOW |
-| `server/routes.ts` (buildTree) | Recursive directory tree builder has a depth limit (5) but no file count limit. A directory with thousands of files would produce an enormous response. | MEDIUM |
-| `server/git-utils.ts` | Uses `execSync` for ALL git operations, blocking the event loop. Multiple git commands (branch listing, worktree operations, fetch, pull) all block the Node.js thread. | HIGH |
-| `server/ws-bridge.ts:394-427` | Uses `execSync` for git branch detection during session init, blocking the event loop during connection setup. | MEDIUM |
-| `server/cli-launcher.ts:188` | Uses `execSync` to resolve the Claude binary path, blocking the event loop during session creation. | LOW |
-| `server/session-names.ts` | Uses `readFileSync`/`writeFileSync` for session name persistence, blocking I/O on every name change. | LOW |
-| `server/env-manager.ts` | Uses `readFileSync`/`writeFileSync`/`readdirSync` for environment management, blocking I/O. | LOW |
-| `server/worktree-tracker.ts` | Uses `readFileSync`/`writeFileSync` for worktree mapping persistence, blocking I/O. | LOW |
-| `server/session-store.ts` | Uses `readFileSync`/`writeFileSync`/`readdirSync` for session persistence, blocking I/O. | LOW |
-
-**Note on synchronous I/O:** The CLAUDE.md explicitly states "NEVER use synchronous I/O in the server." There are at least **7 server files** that use synchronous filesystem or process operations. While some (like startup-time reads) are acceptable, the `execSync` calls in `git-utils.ts` and `ws-bridge.ts` run during active request handling and block the event loop.
+### QE-13: No `unhandledRejection` Handler
+**Location:** `web/server/index.ts`
+**Scenario:** Server only handles `uncaughtException` (for `ERR_SOCKET_CLOSED`). An unhandled promise rejection (e.g., from an async file operation, a failed DNS lookup during git fetch, or a WebSocket send on a closing connection) will use Node/Bun's default behavior, which may terminate the process.
+**Impact:** Server crash from unhandled async errors.
+**Fix:** Add `process.on('unhandledRejection', handler)`.
 
 ---
 
-## 7. Naming Inconsistencies
+## 5. State Management Issues
 
-### Mixed case conventions in types/interfaces
+### QE-14: Sidebar Shows Hardcoded Stale Version "v0.8.10"
+**Location:** `web/src/components/Sidebar.tsx:292`
+**Scenario:** The version string is hardcoded as "v0.8.10" but the actual project version is 0.14.11. Users see incorrect version information.
+**Impact:** Misleading version display.
+**Fix:** Import version from package.json or a version constant.
 
-The protocol types in `server/session-types.ts` mix snake_case and camelCase:
+### QE-15: Dual Polling Loops (Sidebar + Auto-Resume)
+**Location:** `web/src/components/Sidebar.tsx` (5s interval) + `web/src/hooks/useAutoResumeSession.ts` (10s interval)
+**Scenario:** Both `useNativeSessionPoll` and `useAutoResumeSession` independently poll session data. This creates redundant API calls and potential race conditions where auto-resume switches sessions while the sidebar is mid-update.
+**Impact:** Unnecessary network traffic, potential session switching conflicts.
+**Fix:** Consolidate into a single polling mechanism or use WebSocket-based session updates.
 
-| Pattern | Examples |
-|---------|----------|
-| snake_case (from CLI protocol) | `session_id`, `tool_use_id`, `parent_tool_use_id`, `stop_reason`, `request_id`, `tool_name`, `is_error`, `total_cost_usd`, `num_turns` |
-| camelCase (internal) | `modelUsage`, `inputTokens`, `outputTokens`, `contextWindow`, `stopReason` |
-
-This is partially justified since the CLI protocol uses snake_case, but the boundary is not clean -- the same data sometimes appears in both conventions (e.g., `stop_reason` in the protocol vs `stopReason` in `ChatMessage`).
-
-### File naming
-
-All source files follow kebab-case convention correctly. Test files use `.test.ts` suffix consistently.
-
-### Component naming
-
-All React components use PascalCase correctly. All function exports use camelCase correctly.
-
----
-
-## 8. TODO / FIXME / HACK / XXX / TEMP Comments
-
-**No TODO, FIXME, HACK, XXX, or TEMP comments found in source code.**
-
-The only matches were in test mock data (`Playground.tsx` and test files) where "TODO" appears as literal search pattern examples, not as actual task markers.
+### QE-16: HMR State Restoration Can Lose In-Flight Data
+**Location:** `web/src/ws.ts` (window.__ws_state) + `web/src/store.ts` (window.__cc_store_state)
+**Scenario:** During HMR, the module is re-executed. If a WebSocket message arrives between the old module teardown and new module initialization, the message is lost. The snapshot/restore mechanism captures state at module eval time, but messages arriving during the transition window are not queued.
+**Impact:** Rare message loss during development HMR cycles.
+**Fix:** Accept as dev-only risk, or add a message queue that persists across HMR.
 
 ---
 
-## 9. Test Coverage Gaps
+## 6. File Size Violations (>200 lines)
 
-### Test results summary
+| File | Lines | Trend vs 2026-02-10 |
+|------|-------|---------------------|
+| `server/ws-bridge.ts` | 947 | UP from 744 (+203) |
+| `server/cli-launcher.ts` | 582 | UP from 491 (+91) |
+| `src/components/Playground.tsx` | 530 | Same (dev-only) |
+| `src/components/PermissionBanner.tsx` | 514 | Same |
+| `src/store.ts` | 488 | Same |
+| `src/components/EditorPanel.tsx` | 469 | DOWN from 491 (-22) |
+| `src/components/HomePage.tsx` | 416 | DOWN from 696 (-280) |
+| `src/components/MessageBubble.tsx` | 355 | UP from 335 (+20) |
+| `src/components/Composer.tsx` | 353 | DOWN from 460 (-107) |
+| `src/components/TaskPanel.tsx` | 349 | New |
+| `server/git-utils.ts` | 378 | Same |
+| `src/components/Sidebar.tsx` | 308 | DOWN from 488 (-180) |
+| `src/components/ProjectTabBar.tsx` | 295 | New |
+| `src/components/EnvManager.tsx` | 292 | Same |
+| `src/components/MessageFeed.tsx` | 289 | DOWN from 475 (-186) |
+| `src/ws.ts` | 224 | DOWN from 461 (-237) |
+| `src/components/TerminalPanel.tsx` | 207 | New |
 
-- **20 test files**, **522 tests total**
-- **517 pass**, **5 fail**
-- All 5 failures are in `server/git-utils.test.ts` due to Windows path separator issues (`\` vs `/`)
-
-### Files with test coverage
-
-| Source File | Test File | Tests |
-|-------------|-----------|-------|
-| `server/ws-bridge.ts` | `server/ws-bridge.test.ts` | Comprehensive |
-| `server/cli-launcher.ts` | `server/cli-launcher.test.ts` | Comprehensive |
-| `server/routes.ts` | `server/routes.test.ts` | Comprehensive |
-| `server/session-store.ts` | `server/session-store.test.ts` | Comprehensive |
-| `server/auto-namer.ts` | `server/auto-namer.test.ts` | Comprehensive |
-| `server/session-types.ts` | `server/session-types.test.ts` | Comprehensive |
-| `server/env-manager.ts` | `server/env-manager.test.ts` | Comprehensive |
-| `server/git-utils.ts` | `server/git-utils.test.ts` | Comprehensive (5 Windows failures) |
-| `server/session-names.ts` | `server/session-names.test.ts` | Comprehensive |
-| `server/worktree-tracker.ts` | `server/worktree-tracker.test.ts` | Comprehensive |
-| `src/utils/names.ts` | `src/utils/names.test.ts` | Comprehensive |
-| `src/components/MessageBubble.tsx` | `src/components/MessageBubble.test.tsx` | Comprehensive |
-| `src/components/PermissionBanner.tsx` | `src/components/PermissionBanner.test.tsx` | Comprehensive |
-| `src/components/ToolBlock.tsx` | `src/components/ToolBlock.test.tsx` | Comprehensive |
-| `src/components/TopBar.tsx` | `src/components/TopBar.test.tsx` | Comprehensive |
-| `src/components/TaskPanel.tsx` | `src/components/TaskPanel.test.tsx` | Comprehensive |
-
-### Files WITHOUT test coverage
-
-| Source File | Lines | Risk |
-|-------------|-------|------|
-| `server/index.ts` | 169 | MEDIUM -- server startup, WebSocket upgrade, watchdog |
-| `src/store.ts` | 485 | HIGH -- core state management, 30+ actions |
-| `src/ws.ts` | 461 | HIGH -- WebSocket client, all message handling |
-| `src/api.ts` | 203 | MEDIUM -- HTTP client wrapper |
-| `src/App.tsx` | 114 | LOW -- routing, layout |
-| `src/components/ChatView.tsx` | 63 | LOW -- composition only |
-| `src/components/Composer.tsx` | 460 | HIGH -- complex input logic, slash commands, images |
-| `src/components/Sidebar.tsx` | 488 | HIGH -- session management UI, polling, actions |
-| `src/components/HomePage.tsx` | 696 | HIGH -- session creation, form state, git integration |
-| `src/components/MessageFeed.tsx` | 475 | MEDIUM -- message grouping, sub-agent rendering |
-| `src/components/EditorPanel.tsx` | 491 | MEDIUM -- file editor, tree browser |
-| `src/components/EnvManager.tsx` | 293 | LOW -- CRUD modal |
-| `src/components/FolderPicker.tsx` | 190 | LOW -- directory browser |
-| `src/components/Playground.tsx` | 531 | NONE (dev-only) |
-| `src/utils/recent-dirs.ts` | 16 | LOW |
-| `dev.ts` | 69 | NONE (dev-only) |
-| `bin/cli.ts` | 13 | LOW |
-
-**14 source files have no tests.** The highest risk untested files are `store.ts` (485 lines, core state), `ws.ts` (461 lines, all WebSocket handling), `Composer.tsx` (460 lines, complex user input), and `HomePage.tsx` (696 lines, session creation).
-
-### Test quality issue: Windows compatibility
-
-The 5 failing tests in `git-utils.test.ts` all expect Unix-style forward-slash paths (`/fake/home/.companion/worktrees/repo/...`) but the production code uses `path.join()` which produces backslashes on Windows (`\fake\home\.companion\worktrees\repo\...`). The tests should normalize paths or use `path.join()` in expected values to be cross-platform.
+**20 files over 200 lines.** M8 decomposition reduced several files (ws.ts -237, HomePage -280, Sidebar -180, MessageFeed -186) but ws-bridge.ts grew by 203 lines. Net improvement in average file size, but ws-bridge.ts is now the clear outlier at 4.7x limit.
 
 ---
 
-## 10. Stale / Unused Dependencies
+## 7. eslint-disable Suppressions
 
-### Unused dependencies (not imported anywhere)
+| Location | Rule | Risk |
+|----------|------|------|
+| `FolderPicker.tsx:35` | react-hooks/exhaustive-deps | Missing deps in useEffect |
+| `HomePage.tsx:70` | react-hooks/exhaustive-deps | Missing deps in useEffect |
+| `TerminalPanel.tsx:112` | react-hooks/exhaustive-deps | Missing deps in useEffect for cwd |
+| `ProjectTabBar.tsx:172` | react-hooks/exhaustive-deps | Missing deps in useEffect |
+| `useAutoResumeSession.ts:136` | react-hooks/exhaustive-deps | Missing deps causing stale closures |
+| `useDraftPersistence.ts:41` | react-hooks/exhaustive-deps | Missing deps |
+| `useSlashMenu.ts:90` | react-hooks/exhaustive-deps | Missing deps |
 
-| Package | In `package.json` | Evidence |
-|---------|--------------------|----------|
-| `@xterm/xterm` | devDependencies | Zero imports in `src/` or `server/`. Likely a remnant from a removed terminal component. |
-| `@xterm/addon-fit` | devDependencies | Zero imports. Paired with `@xterm/xterm`. |
-| `react-arborist` | devDependencies | Zero imports. Likely replaced by custom tree in `EditorPanel.tsx`. |
-| `react-resizable-panels` | devDependencies | Zero imports. Likely replaced by custom layout. |
-| `autoprefixer` | devDependencies | Zero imports, no postcss.config file. Tailwind 4 uses `@tailwindcss/vite` plugin directly. |
-| `postcss` | devDependencies | Zero imports, no postcss.config file. Same reason as autoprefixer. |
-
-### Outdated dependencies (major version behind)
-
-| Package | Current | Latest | Notes |
-|---------|---------|--------|-------|
-| `@vitejs/plugin-react` | 4.7.0 | 5.1.4 | Major version behind (v4 -> v5) |
-| `vite` | 6.4.1 | 7.3.1 | Major version behind (v6 -> v7) |
-
-### Dependency count
-
-- **1 production dependency** (hono)
-- **25 dev dependencies** (6 unused)
+**7 exhaustive-deps suppressions.** Each one is a potential source of stale closure bugs where the effect captures an outdated value of a dependency. The most dangerous is `useAutoResumeSession.ts` which polls every 10s and may use stale `activeProjectCwd` or session data.
 
 ---
 
-## 11. Complexity Hotspots
+## 8. TODOs and FIXMEs
 
-### Cyclomatic complexity (estimated high complexity)
+Only 1 TODO found in source code:
+- `src/utils/stt-component-worker.ts:8` -- "TODO: Remove once @tekyzinc/stt-component ships the worker as a..."
 
-| File | Function | Issue |
-|------|----------|-------|
-| `src/ws.ts` | `handleMessage()` | 15-case switch statement spanning ~250 lines, with nested conditionals in each case. This is the single most complex function in the codebase. |
-| `server/ws-bridge.ts` | `handleCLIMessage()` | Multi-level switch on message type and subtype, with nested object construction and error handling. |
-| `server/ws-bridge.ts` | `handleSystemMessage()` | Heavy branching on `subtype` with multiple optional field accesses. |
-| `server/cli-launcher.ts` | `spawnCLI()` | 90+ lines with nested conditionals for worktree mode, environment setup, argument construction, and error handling. |
-| `server/routes.ts` | `POST /sessions/create` | 70+ lines of option extraction, validation, and conditional construction. |
-| `server/git-utils.ts` | `ensureWorktree()` | 80+ lines with multiple early returns, conditional branch creation, collision resolution, and error handling. |
-| `src/components/Composer.tsx` | Component body | 430+ lines mixing UI state, keyboard handlers, slash command matching, image processing, git status, and mode switching. |
-| `src/components/Sidebar.tsx` | Component body | 480+ lines mixing polling, session management, context menus, drag behavior, and rendering logic. |
-| `src/components/HomePage.tsx` | Component body | 430+ lines with form state, API calls, git integration, environment management, and complex conditional rendering. |
+---
 
-### Recommended decomposition targets
+## 9. Test Coverage Summary
 
-1. **`src/ws.ts` handleMessage()** -- Extract each case into its own handler function (e.g., `handleSessionInit()`, `handleAssistant()`, `handleStreamEvent()`, etc.)
-2. **`src/components/Composer.tsx`** -- Extract: slash command hook, image handling hook, git status component, mode toggle component
-3. **`src/components/Sidebar.tsx`** -- Extract: session list item component, session actions menu, polling hook
-4. **`src/components/HomePage.tsx`** -- Extract: session config form, git branch selector, environment selector, image attachment section
-5. **`server/ws-bridge.ts`** -- Extract handler functions into separate modules by message direction (CLI handlers, browser handlers)
-6. **`server/cli-launcher.ts` spawnCLI()** -- Extract argument builder, environment setup, and process lifecycle into separate functions
+| Category | Covered | Untested |
+|----------|---------|----------|
+| Server modules | ws-bridge, cli-launcher, routes, session-store, auto-namer, session-types, env-manager, git-utils, session-names, worktree-tracker, security-utils, rate-limiter, environment-routes | index.ts, terminal-ws.ts, auth.ts, security-headers.ts, claude-sessions.ts |
+| Client modules | store.ts, ws.ts, MessageBubble, PermissionBanner, ToolBlock, TopBar, TaskPanel, Composer, EditorPanel, MessageFeed | App.tsx, api.ts, ChatView, Sidebar, HomePage, FolderPicker, EnvManager, ProjectTabBar, TerminalPanel, Playground |
+| Hooks | use-voice-input | useAutoResumeSession, useDraftPersistence, useSlashMenu |
+| ws-handlers | (tested via ws.test.ts) | - |
+
+**M8 added tests for:** store.ts, ws.ts, Composer, EditorPanel, MessageFeed -- major improvement from 2026-02-10 scan.
+
+**Still untested high-risk:** Sidebar (308 lines, polling logic), HomePage (416 lines, session creation), terminal-ws.ts (PTY management), useAutoResumeSession (auto-resume logic).
 
 ---
 
 ## Summary
 
-| Category | Count | Severity |
-|----------|-------|----------|
-| File size violations (>200 lines) | 18 | HIGH |
-| Function size violations (>30 lines) | 27 | HIGH |
-| Code duplication clusters | 7 major, 4 minor | MEDIUM |
-| Unused dependencies | 6 | LOW |
-| Outdated dependencies (major version) | 2 | LOW |
-| Dead code items | 4 (beyond dependencies) | LOW |
-| Empty catch blocks | 8+ locations | MEDIUM |
-| Inconsistent error handling | 3 patterns | MEDIUM |
-| Missing error handling | 3 cases | MEDIUM |
-| Performance concerns | 11 items | MEDIUM |
-| Synchronous I/O in server | 7 files | HIGH (violates project standard) |
-| Naming inconsistencies | 1 pattern (protocol boundary) | LOW |
-| TODO/FIXME comments | 0 | NONE |
-| Untested source files | 14 | HIGH |
-| Failing tests | 5 (Windows path separators) | MEDIUM |
+| Category | Count |
+|----------|-------|
+| Runtime edge cases (WebSocket) | 5 (QE-01 through QE-05) |
+| Runtime edge cases (Sessions) | 3 (QE-06 through QE-08) |
+| Runtime edge cases (Terminal) | 2 (QE-09, QE-10) |
+| Runtime edge cases (Error handling) | 3 (QE-11 through QE-13) |
+| State management issues | 3 (QE-14 through QE-16) |
+| File size violations | 20 files |
+| eslint-disable suppressions | 7 |
+| Empty catch blocks | 40+ |
+| Untested high-risk files | 4 |
 
-### Top 5 Priority Items
+### Top 5 Runtime Risks
 
-1. **Synchronous I/O in server** -- 7 server files use `execSync`, `readFileSync`, or `writeFileSync` during request handling, violating the project's explicit "NEVER use synchronous I/O in the server" rule. `git-utils.ts` is the worst offender with every function blocking the event loop.
-
-2. **Monolithic components** -- Composer (460), Sidebar (488), HomePage (696), and EditorPanel (491) are each 2-3x over the 200-line limit and contain no separation of concerns. Extracting custom hooks and sub-components would improve maintainability significantly.
-
-3. **Code duplication between Composer and HomePage** -- ~130 lines of image handling, file reading, textarea resize, and slash command logic are duplicated between these two components. A shared `useImageAttachments` hook and `useSlashCommands` hook would eliminate this.
-
-4. **Test coverage gaps** -- `store.ts`, `ws.ts`, `Composer.tsx`, and `HomePage.tsx` together represent ~2,100 lines of untested, high-complexity code that forms the core user interaction path.
-
-5. **ws.ts handleMessage()** -- A single 250-line switch statement handling all 15 WebSocket message types. This is the most complex function in the codebase and has no test coverage.
+1. **QE-01: Silent message drops** -- User sends message during WS reconnection, message is lost with no feedback
+2. **QE-02: is_compacting stuck forever** -- CLI crash during compaction leaves permanent "Compacting..." UI
+3. **QE-11: No ErrorBoundary** -- Single component render error crashes entire app
+4. **QE-06: No flush-on-shutdown** -- Server crash loses last 150ms of session state
+5. **QE-12: 40+ empty catches** -- Silent failures across the entire codebase, making debugging impossible
