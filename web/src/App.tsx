@@ -1,4 +1,5 @@
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { Component, useEffect, useRef, useSyncExternalStore } from "react";
+import type { ErrorInfo, ReactNode } from "react";
 import { useStore } from "./store.js";
 import { connectSession } from "./ws.js";
 import { Sidebar } from "./components/Sidebar.js";
@@ -10,6 +11,53 @@ import { EditorPanel } from "./components/EditorPanel.js";
 import { Playground } from "./components/Playground.js";
 import { ProjectTabBar } from "./components/ProjectTabBar.js";
 import { TerminalPanel } from "./components/TerminalPanel.js";
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("[ErrorBoundary] Render crash:", error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-[100dvh] flex items-center justify-center bg-cc-bg text-cc-fg p-8">
+          <div className="max-w-md text-center space-y-4">
+            <h1 className="text-xl font-bold">Something went wrong</h1>
+            <p className="text-sm text-cc-fg/60">{this.state.error?.message}</p>
+            <button
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={() => {
+                // Clear session to avoid re-rendering the crashing component
+                useStore.getState().setCurrentSessionId(null);
+                this.setState({ hasError: false, error: null });
+              }}
+            >
+              Try Again
+            </button>
+            <button
+              className="px-4 py-2 ml-2 bg-cc-border text-cc-fg rounded hover:bg-cc-border/80"
+              onClick={() => window.location.reload()}
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function useHash() {
   return useSyncExternalStore(
@@ -50,6 +98,7 @@ export default function App() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="h-[100dvh] flex font-sans-ui bg-cc-bg text-cc-fg antialiased">
       {/* Mobile overlay backdrop */}
       {sidebarOpen && (
@@ -134,5 +183,6 @@ export default function App() {
         );
       })()}
     </div>
+    </ErrorBoundary>
   );
 }

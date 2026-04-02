@@ -334,6 +334,7 @@ export class WsBridge {
     }
     this.stopActivityWatchdog(session);
     session.awaitingResult = false;
+    session.state.is_compacting = false;
     console.log(`[ws-bridge] CLI disconnected for session ${sessionId}`);
     this.broadcastToBrowsers(session, { type: "cli_disconnected" });
 
@@ -593,6 +594,7 @@ export class WsBridge {
     const shouldRetry = session.pendingStallRetry && session.lastUserNdjson !== null;
     session.awaitingResult = false;
     session.pendingStallRetry = false;
+    session.state.is_compacting = false;
     this.stopActivityWatchdog(session);
 
     // Update session cost/turns
@@ -928,20 +930,25 @@ export class WsBridge {
 
   private broadcastToBrowsers(session: Session, msg: BrowserIncomingMessage) {
     const json = JSON.stringify(msg);
+    const closed: ServerWebSocket<SocketData>[] = [];
     for (const ws of session.browserSockets) {
       try {
         ws.send(json);
-      } catch {
-        session.browserSockets.delete(ws);
+      } catch (err) {
+        console.warn(`[ws-bridge] Failed to send ${msg.type} to browser, removing socket:`, err);
+        closed.push(ws);
       }
+    }
+    for (const ws of closed) {
+      session.browserSockets.delete(ws);
     }
   }
 
   private sendToBrowser(ws: ServerWebSocket<SocketData>, msg: BrowserIncomingMessage) {
     try {
       ws.send(JSON.stringify(msg));
-    } catch {
-      // Socket will be cleaned up on close
+    } catch (err) {
+      console.warn(`[ws-bridge] Failed to send ${msg.type} to browser:`, err);
     }
   }
 }

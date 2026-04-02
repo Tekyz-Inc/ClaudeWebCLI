@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.13.10] - 2026-04-02
+
+### Added
+- React ErrorBoundary with "Try Again" (clears session) and "Reload" recovery UI
+- `unhandledRejection` handler prevents silent server crashes from unhandled promises
+- 20 new functional E2E workflow tests covering session lifecycle, management, API health, tab switching, terminal, multi-session isolation, dark mode persistence, and server resilience
+
+### Fixed
+- `is_compacting` flag now resets on CLI disconnect and result completion (was stuck forever)
+- `sendToSession()` returns boolean and logs warnings when socket not OPEN (was silently dropping messages)
+- `broadcastToBrowsers()` logs send failures and cleanly removes dead sockets
+- Queued messages preserved on send failure instead of being permanently lost (result-handler.ts)
+- Client-side `is_compacting` cleared on CLI disconnect (control-handler.ts)
+
 ## [0.12.12] - 2026-04-01
 
 ### Changed

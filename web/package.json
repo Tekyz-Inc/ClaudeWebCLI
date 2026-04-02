@@ -1,6 +1,6 @@
 {
   "name": "the-vibe-companion",
-  "version": "0.12.12",
+  "version": "0.13.10",
   "type": "module",
   "description": "Web UI for launching and interacting with Claude Code agents",
   "license": "MIT",
@@ -43,7 +43,7 @@
     "highlight.js": "^11.11.1",
     "hono": "^4.7.0",
     "node-pty": "^1.1.0",
-    "zod": "^4.3.6"
+    "zod": "3"
   },
   "devDependencies": {
     "@codemirror/lang-css": "^6.3.1",

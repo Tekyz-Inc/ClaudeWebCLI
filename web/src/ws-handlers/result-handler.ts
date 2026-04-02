@@ -48,14 +48,19 @@ export function handleResult(
   // Fire any message queued while we were finishing
   const queued = store.queuedMessages.get(sessionId);
   if (queued) {
-    store.clearQueuedMessage(sessionId);
-    sendToSession(sessionId, {
+    const sent = sendToSession(sessionId, {
       type: "user_message",
       content: queued.content,
       session_id: sessionId,
       images: queued.images,
     });
-    store.setSessionStatus(sessionId, "submitted");
+    if (sent) {
+      store.clearQueuedMessage(sessionId);
+      store.setSessionStatus(sessionId, "submitted");
+    } else {
+      // Keep queued message — it will be retried on next result
+      console.warn(`[result-handler] Queued message not sent for ${sessionId}, keeping in queue`);
+    }
     if (/^\/(clear|compact)\b/i.test(queued.content)) {
       store.markClearOnNextResult(sessionId);
     }

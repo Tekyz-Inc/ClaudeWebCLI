@@ -201,11 +201,18 @@ export function waitForConnection(sessionId: string): Promise<void> {
   });
 }
 
-export function sendToSession(sessionId: string, msg: BrowserOutgoingMessage) {
+export function sendToSession(sessionId: string, msg: BrowserOutgoingMessage): boolean {
   const ws = sockets.get(sessionId);
-  if (ws?.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(msg));
+  if (!ws) {
+    console.warn(`[ws] No socket for session ${sessionId}, message dropped:`, msg.type);
+    return false;
   }
+  if (ws.readyState !== WebSocket.OPEN) {
+    console.warn(`[ws] Socket not OPEN (state=${ws.readyState}) for session ${sessionId}, message dropped:`, msg.type);
+    return false;
+  }
+  ws.send(JSON.stringify(msg));
+  return true;
 }
 
 // ─── HMR: re-attach message handlers to surviving WebSocket connections ──

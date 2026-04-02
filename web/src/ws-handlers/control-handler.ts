@@ -77,6 +77,7 @@ export function handleCliDisconnected(sessionId: string) {
   const store = useStore.getState();
   store.setCliConnected(sessionId, false);
   store.setSessionStatus(sessionId, null);
+  store.updateSession(sessionId, { is_compacting: false });
 }
 
 export function handleCliConnected(sessionId: string) {

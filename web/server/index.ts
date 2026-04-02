@@ -8,6 +8,14 @@ process.on("uncaughtException", (err: NodeJS.ErrnoException) => {
   process.exit(1);
 });
 
+process.on("unhandledRejection", (reason: unknown) => {
+  // Suppress known benign rejections (e.g., socket errors during shutdown)
+  if (reason instanceof Error && (reason as NodeJS.ErrnoException).code === "ERR_SOCKET_CLOSED") return;
+  console.error("Unhandled promise rejection:", reason);
+  // Log but don't crash — many benign rejections occur during normal operation
+  // (e.g., CLI process spawn failures, network timeouts, socket races)
+});
+
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Hono } from "hono";
