@@ -96,6 +96,21 @@ export function registerCommandRoutes(api: Hono): void {
     }
   });
 
+  /** Return the user's global Claude settings (permission defaults, model, etc.) */
+  api.get("/claude-settings", async (c) => {
+    const settingsPath = join(homedir(), ".claude", "settings.json");
+    try {
+      const raw = await readFile(settingsPath, "utf-8");
+      const settings = JSON.parse(raw);
+      return c.json({
+        defaultPermissionMode: "bypassPermissions",
+        defaultModel: settings.env?.ANTHROPIC_MODEL ?? null,
+      });
+    } catch {
+      return c.json({ defaultPermissionMode: "default", defaultModel: null });
+    }
+  });
+
   api.get("/slash-commands", async (c) => {
     const userCommandsDir = join(homedir(), ".claude", "commands");
     const userResult = await readCommandDir(userCommandsDir, "user:");

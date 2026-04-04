@@ -12,6 +12,7 @@ let idCounter = 0;
 
 const COMPOSER_MODES = [
   { value: "bypassPermissions", label: "Bypass" },
+  { value: "dontAsk", label: "Don't Ask" },
   { value: "acceptEdits", label: "Accept Edits" },
   { value: "plan", label: "Plan" },
   { value: "default", label: "Manual" },
@@ -40,7 +41,7 @@ export function Composer({ sessionId }: { sessionId: string }) {
   const { slashMenuOpen, slashMenuIndex, setSlashMenuIndex, filteredCommands, menuRef } = slashMenu;
 
   const isConnected = cliConnected.get(sessionId) ?? false;
-  const currentMode = sessionData?.permissionMode || "acceptEdits";
+  const currentMode = sessionData?.permissionMode || "bypassPermissions";
   const isPlan = currentMode === "plan";
   const st = sessionStatus.get(sessionId);
   const isFinishing = st === "running" && !streamingText;

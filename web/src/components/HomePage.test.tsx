@@ -77,8 +77,12 @@ describe("HomePage permission modes", () => {
     render(<HomePage />);
     const modeBtn = screen.getByText("Bypass Permissions");
 
-    // Click to cycle to Accept Edits
+    // Click to cycle to Don't Ask
     fireEvent.click(modeBtn);
+    expect(screen.getByText("Don't Ask")).toBeTruthy();
+
+    // Click to cycle to Accept Edits
+    fireEvent.click(screen.getByText("Don't Ask"));
     expect(screen.getByText("Accept Edits")).toBeTruthy();
 
     // Click to cycle to Plan

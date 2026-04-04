@@ -10,6 +10,9 @@ import { z } from "zod";
 import { CreateSessionBody, PatchSessionNameBody, ArchiveSessionBody } from "./schemas.js";
 import { cleanupWorktree } from "./worktree-helper.js";
 
+/** Default permission mode for new sessions when none is specified. */
+const DEFAULT_PERMISSION_MODE = "bypassPermissions";
+
 type Deps = {
   launcher: CliLauncher;
   wsBridge: WsBridge;
@@ -63,9 +66,11 @@ export function registerSessionRoutes(api: Hono, deps: Deps): void {
         }
       }
 
+      const permissionMode = body.permissionMode || DEFAULT_PERMISSION_MODE;
+
       const session = launcher.launch({
         model: body.model,
-        permissionMode: body.permissionMode,
+        permissionMode,
         cwd,
         claudeBinary: body.claudeBinary,
         allowedTools: body.allowedTools,
@@ -73,6 +78,9 @@ export function registerSessionRoutes(api: Hono, deps: Deps): void {
         worktreeInfo,
         resumeCliId: body.resumeCliId,
       });
+
+      // Pin the requested permission mode so CLI can't override it
+      wsBridge.setRequestedPermissionMode(session.sessionId, permissionMode);
 
       if (worktreeInfo) {
         worktreeTracker.addMapping({

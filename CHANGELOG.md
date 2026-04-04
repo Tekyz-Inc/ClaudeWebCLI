@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.14.10] - 2026-04-04
+
+### Added
+- "Don't Ask" permission mode option (uses allow/deny rules from settings)
+- Resizable terminal panel with drag handle
+- `/api/claude-settings` endpoint — loads default permission mode and model from `~/.claude/settings.json`
+- Idle session eviction: when process soft cap (50) is reached, oldest sessions with no browser are killed to make room
+- Permission mode sync: CLI permission changes now persist to launcher, surviving reconnects and relaunches
+- `requestedPermissionMode` enforcement — CLI can't silently override the mode set at session creation
+- `postinstall` script for `node-pty` spawn-helper chmod
+
+### Fixed
+- Process cap deadlock: changed from hard cap of 5 (blocked all spawns) to soft cap of 50 with idle eviction
+- Permission mode reverting to "edit" on session reconnect/relaunch
+- `PATH` env var now preserved for CLI subprocess (was being stripped, breaking node resolution)
+- Node binary resolution in terminal WS (NVM-aware `which node` lookup)
+- Init timer moved from CLI connect to first user message (CLI doesn't send init on connect)
+- Browser now receives `cli_connected` on join (was only sending `cli_disconnected`)
+
+### Changed
+- Default permission mode changed to `bypassPermissions` across server and UI
+- Terminal font size reduced (13→12) and line height tightened (1.4→1.1)
+- Task panel defaults to closed
+
 ## [0.13.10] - 2026-04-02
 
 ### Added

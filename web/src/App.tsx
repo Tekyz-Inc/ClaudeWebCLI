@@ -1,4 +1,4 @@
-import { Component, useEffect, useRef, useSyncExternalStore } from "react";
+import { Component, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { useStore } from "./store.js";
 import { connectSession } from "./ws.js";
@@ -39,7 +39,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               onClick={() => {
                 // Clear session to avoid re-rendering the crashing component
-                useStore.getState().setCurrentSessionId(null);
+                useStore.getState().setCurrentSession(null);
                 this.setState({ hasError: false, error: null });
               }}
             >
@@ -80,6 +80,24 @@ export default function App() {
   if (terminalOpen) terminalMountedRef.current = true;
   const sdkSessions = useStore((s) => s.sdkSessions);
   const hash = useHash();
+
+  // Resizable terminal panel
+  const [termWidth, setTermWidth] = useState(480);
+  const onTermDragStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = termWidth;
+    const onMove = (ev: MouseEvent) => {
+      const delta = startX - ev.clientX;
+      setTermWidth(Math.max(280, Math.min(startW + delta, 900)));
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, [termWidth]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
@@ -174,10 +192,18 @@ export default function App() {
           <div
             className={`
               fixed lg:relative z-40 lg:z-auto right-0 top-0
-              h-full shrink-0 transition-all duration-200
-              ${terminalOpen ? "w-[340px] translate-x-0 overflow-visible" : "w-0 translate-x-full lg:w-0 lg:translate-x-full overflow-hidden"}
+              h-full shrink-0
+              ${terminalOpen ? "translate-x-0 overflow-visible" : "w-0 translate-x-full lg:w-0 lg:translate-x-full overflow-hidden"}
             `}
+            style={terminalOpen ? { width: termWidth } : undefined}
           >
+            {/* Drag handle — left edge */}
+            {terminalOpen && (
+              <div
+                className="absolute left-0 top-0 h-full w-1 cursor-col-resize z-50 hover:bg-purple-500/40 active:bg-purple-500/60"
+                onMouseDown={onTermDragStart}
+              />
+            )}
             {terminalMountedRef.current && <TerminalPanel cwd={termCwd} isVisible={terminalOpen} />}
           </div>
         );

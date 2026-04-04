@@ -81,9 +81,9 @@ describe("filterEnvVars", () => {
     expect(result).not.toHaveProperty("PYTHONPATH");
   });
 
-  it("removes PATH", () => {
-    const result = filterEnvVars({ PATH: "/evil:/usr/bin" });
-    expect(result).not.toHaveProperty("PATH");
+  it("preserves PATH (needed for CLI subprocess to find node)", () => {
+    const result = filterEnvVars({ PATH: "/usr/bin:/usr/local/bin" });
+    expect(result).toHaveProperty("PATH", "/usr/bin:/usr/local/bin");
   });
 
   it("removes LD_LIBRARY_PATH", () => {

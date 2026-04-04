@@ -94,7 +94,6 @@ export class PathTraversalError extends Error {
 
 /** Dangerous environment variable keys that must be removed before CLI spawn. */
 const DANGEROUS_ENV_KEYS = new Set([
-  "PATH",
   "LD_PRELOAD",
   "LD_LIBRARY_PATH",
   "DYLD_INSERT_LIBRARIES",

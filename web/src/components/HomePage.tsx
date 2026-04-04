@@ -19,6 +19,7 @@ const MODELS = [
 
 const MODES = [
   { value: "bypassPermissions", label: "Bypass Permissions", desc: "Auto-approve all tool calls" },
+  { value: "dontAsk", label: "Don't Ask", desc: "Use allow/deny rules from settings" },
   { value: "acceptEdits", label: "Accept Edits", desc: "Approve file changes only" },
   { value: "plan", label: "Plan", desc: "Plan before making changes" },
   { value: "default", label: "Manual", desc: "Approve every tool call" },
@@ -30,6 +31,7 @@ export function HomePage() {
   const [text, setText] = useState("");
   const [model, setModel] = useState(MODELS[1].value);
   const [mode, setMode] = useState(MODES[0].value);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [cwd, setCwd] = useState(() => getRecentDirs()[0] || "");
   const [images, setImages] = useState<ImageAttachment[]>([]);
   const [sending, setSending] = useState(false);
@@ -61,12 +63,26 @@ export function HomePage() {
     textareaRef.current?.focus();
   }, []);
 
-  // Load server home/cwd on mount
+  // Load server home/cwd and global Claude settings on mount
   useEffect(() => {
     api.getHome().then(({ home, cwd: serverCwd }) => {
       if (!cwd) setCwd(serverCwd || home);
     }).catch(() => {});
     api.listEnvs().then(setEnvs).catch(() => {});
+    // Apply user's default permission mode and model from ~/.claude/settings.json
+    if (!settingsLoaded) {
+      fetch("/api/claude-settings").then((r) => r.json()).then((data) => {
+        if (data.defaultPermissionMode) {
+          const match = MODES.find((m) => m.value === data.defaultPermissionMode);
+          if (match) setMode(match.value);
+        }
+        if (data.defaultModel) {
+          const modelMatch = MODELS.find((m) => m.value === data.defaultModel);
+          if (modelMatch) setModel(modelMatch.value);
+        }
+        setSettingsLoaded(true);
+      }).catch(() => setSettingsLoaded(true));
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Detect project when cwd changes

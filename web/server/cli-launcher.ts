@@ -59,17 +59,24 @@ export interface LaunchOptions {
  */
 const LOG_DIR = resolve(process.cwd(), ".webcli-logs");
 const MAX_LOG_FILES = 50;
-/** Hard cap on concurrent CLI processes to prevent resource exhaustion / system crashes. */
-const MAX_CONCURRENT_PROCESSES = 5;
+/** Soft cap: when exceeded, idle (no-browser) processes are evicted before spawning new ones. */
+const SOFT_PROCESS_CAP = Number(process.env.MAX_CLI_PROCESSES) || 50;
 
 export class CliLauncher {
   private sessions = new Map<string, SdkSessionInfo>();
   private processes = new Map<string, Subprocess>();
   private port: number;
   private store: SessionStore | null = null;
+  /** Callback to check if any browser is connected to a session. */
+  private hasBrowserClients: ((sessionId: string) => boolean) | null = null;
 
   constructor(port: number) {
     this.port = port;
+  }
+
+  /** Register a callback so the launcher can check browser connectivity. */
+  setHasBrowserClients(cb: (sessionId: string) => boolean): void {
+    this.hasBrowserClients = cb;
   }
 
   /** Attach a persistent store for surviving server restarts. */
@@ -195,13 +202,42 @@ export class CliLauncher {
     return Array.from(this.sessions.values()).filter((s) => s.state === "starting");
   }
 
+  /**
+   * Evict idle processes (no browser clients) to free slots, oldest first.
+   * Returns the number of processes evicted.
+   */
+  private async evictIdleProcesses(needed: number): Promise<number> {
+    if (!this.hasBrowserClients) return 0;
+
+    // Build list of eviction candidates: running processes with no browser
+    const candidates: { sessionId: string; createdAt: number }[] = [];
+    for (const [sid] of this.processes) {
+      if (!this.hasBrowserClients(sid)) {
+        const s = this.sessions.get(sid);
+        candidates.push({ sessionId: sid, createdAt: s?.createdAt ?? 0 });
+      }
+    }
+    // Oldest first
+    candidates.sort((a, b) => a.createdAt - b.createdAt);
+
+    let evicted = 0;
+    for (const c of candidates) {
+      if (evicted >= needed) break;
+      console.log(`[cli-launcher] Evicting idle session ${c.sessionId} to free process slot`);
+      await this.kill(c.sessionId);
+      evicted++;
+    }
+    return evicted;
+  }
+
   private async spawnCLI(sessionId: string, info: SdkSessionInfo, options: LaunchOptions & { resumeSessionId?: string }): Promise<void> {
-    // Hard cap: refuse to spawn if too many CLI processes are already running
-    if (this.processes.size >= MAX_CONCURRENT_PROCESSES) {
-      console.error(`[cli-launcher] Process cap reached (${this.processes.size}/${MAX_CONCURRENT_PROCESSES}). Refusing to spawn session ${sessionId}`);
-      info.state = "exited";
-      info.exitCode = -1;
-      return;
+    // Soft cap: evict idle (no-browser) processes to keep resource usage reasonable
+    if (this.processes.size >= SOFT_PROCESS_CAP) {
+      const needed = this.processes.size - SOFT_PROCESS_CAP + 1;
+      const evicted = await this.evictIdleProcesses(needed);
+      if (evicted > 0) {
+        console.log(`[cli-launcher] Evicted ${evicted} idle process(es), now at ${this.processes.size}/${SOFT_PROCESS_CAP}`);
+      }
     }
 
     let binary = options.claudeBinary || "claude";
@@ -242,6 +278,9 @@ export class CliLauncher {
     }
     if (options.permissionMode) {
       args.push("--permission-mode", options.permissionMode);
+      if (options.permissionMode === "bypassPermissions") {
+        args.push("--dangerously-skip-permissions");
+      }
     }
     if (options.allowedTools) {
       for (const tool of options.allowedTools) {
@@ -474,6 +513,17 @@ ${MARKER_END}`;
   isAlive(sessionId: string): boolean {
     const session = this.sessions.get(sessionId);
     return !!session && session.state !== "exited";
+  }
+
+  /**
+   * Update the stored permission mode so relaunch uses the correct value.
+   */
+  setPermissionMode(sessionId: string, mode: string): void {
+    const info = this.sessions.get(sessionId);
+    if (info) {
+      info.permissionMode = mode;
+      this.persistState();
+    }
   }
 
   /**

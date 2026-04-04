@@ -1,6 +1,6 @@
 {
   "name": "the-vibe-companion",
-  "version": "0.13.10",
+  "version": "0.14.10",
   "type": "module",
   "description": "Web UI for launching and interacting with Claude Code agents",
   "license": "MIT",
@@ -35,7 +35,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "npx playwright test",
-    "test:e2e:headed": "npx playwright test --headed"
+    "test:e2e:headed": "npx playwright test --headed",
+    "postinstall": "node -e \"const fs=require('fs'),p=require('path');const h=p.join('node_modules','node-pty','prebuilds',process.platform+'-'+process.arch,'spawn-helper');try{fs.chmodSync(h,0o755)}catch{}\""
   },
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",

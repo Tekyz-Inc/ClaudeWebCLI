@@ -59,8 +59,8 @@ export function TerminalPanel({ cwd, isVisible }: Props) {
       rows: 24,
       cursorBlink: true,
       fontFamily: 'Consolas, "Courier New", monospace',
-      fontSize: 13,
-      lineHeight: 1.4,
+      fontSize: 12,
+      lineHeight: 1.1,
       theme: DARK_THEME,
       scrollback: 5000,
     });

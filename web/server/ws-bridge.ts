@@ -69,6 +69,8 @@ interface Session {
   pendingStallRetry: boolean;
   /** The last NDJSON user message sent to CLI (for auto-retry) */
   lastUserNdjson: string | null;
+  /** The permission mode explicitly requested at session creation (to enforce on CLI) */
+  requestedPermissionMode: string | null;
 }
 
 function makeDefaultState(sessionId: string): SessionState {
@@ -77,7 +79,7 @@ function makeDefaultState(sessionId: string): SessionState {
     model: "",
     cwd: "",
     tools: [],
-    permissionMode: "default",
+    permissionMode: "bypassPermissions",
     claude_code_version: "",
     mcp_servers: [],
     agents: [],
@@ -107,6 +109,7 @@ export class WsBridge {
   private onFirstTurnCompleted: ((sessionId: string, firstUserMessage: string) => void) | null = null;
   private onInterrupt: ((sessionId: string) => void) | null = null;
   private onInitTimeout: ((sessionId: string) => void) | null = null;
+  private onPermissionModeChanged: ((sessionId: string, mode: string) => void) | null = null;
   private autoNamingAttempted = new Set<string>();
 
   private static INIT_TIMEOUT_MS = 90_000;
@@ -139,6 +142,11 @@ export class WsBridge {
     this.onInitTimeout = cb;
   }
 
+  /** Register a callback for when the permission mode changes (from CLI init or browser request). */
+  onPermissionModeChangedCallback(cb: (sessionId: string, mode: string) => void): void {
+    this.onPermissionModeChanged = cb;
+  }
+
   /** Attach a persistent store. Call restoreFromDisk() after. */
   setStore(store: SessionStore): void {
     this.store = store;
@@ -167,6 +175,7 @@ export class WsBridge {
         stallRetryCount: 0,
         pendingStallRetry: false,
         lastUserNdjson: null,
+        requestedPermissionMode: p.state.permissionMode || null,
       };
       this.sessions.set(p.id, session);
       // Restored sessions with completed turns don't need auto-naming re-triggered
@@ -214,6 +223,7 @@ export class WsBridge {
         stallRetryCount: 0,
         pendingStallRetry: false,
         lastUserNdjson: null,
+        requestedPermissionMode: null,
       };
       this.sessions.set(sessionId, session);
     }
@@ -234,6 +244,24 @@ export class WsBridge {
 
   isInitReceived(sessionId: string): boolean {
     return this.sessions.get(sessionId)?.initReceived ?? false;
+  }
+
+  /**
+   * Set the permission mode that was explicitly requested at session creation.
+   * If the CLI reports a different mode, a set_permission_mode control request
+   * will be sent to force it back.
+   */
+  setRequestedPermissionMode(sessionId: string, mode: string): void {
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      session.requestedPermissionMode = mode;
+    }
+  }
+
+  /** Check if any browser is connected to this session. */
+  hasBrowserClients(sessionId: string): boolean {
+    const session = this.sessions.get(sessionId);
+    return !!session && session.browserSockets.size > 0;
   }
 
   removeSession(sessionId: string) {
@@ -282,15 +310,10 @@ export class WsBridge {
     console.log(`[ws-bridge] CLI connected for session ${sessionId}`);
     this.broadcastToBrowsers(session, { type: "cli_connected" });
 
-    // Init watchdog: if system/init isn't received within the timeout, fire callback
-    if (session.initTimer) clearTimeout(session.initTimer);
-    session.initTimer = setTimeout(() => {
-      if (!session.initReceived) {
-        console.warn(`[ws-bridge] Init timeout for session ${sessionId} — no system/init received after ${WsBridge.INIT_TIMEOUT_MS / 1000}s`);
-        this.broadcastToBrowsers(session, { type: "init_timeout" });
-        this.onInitTimeout?.(sessionId);
-      }
-    }, WsBridge.INIT_TIMEOUT_MS);
+    // NOTE: The CLI does NOT send system/init proactively. It sends it as the
+    // first yield when processing the first user message. So we don't start
+    // the init timer here — it's started in handleUserMessage after the first
+    // message is sent to the CLI.
 
     // Flush any messages that were queued while waiting for CLI to connect
     if (session.pendingMessages.length > 0) {
@@ -374,8 +397,10 @@ export class WsBridge {
       this.sendToBrowser(ws, { type: "permission_request", request: perm });
     }
 
-    // Notify if CLI is not connected and request relaunch
-    if (!session.cliSocket) {
+    // Notify browser of current CLI connection status
+    if (session.cliSocket) {
+      this.sendToBrowser(ws, { type: "cli_connected" });
+    } else {
       this.sendToBrowser(ws, { type: "cli_disconnected" });
       if (this.onCLIRelaunchNeeded) {
         this.onCLIRelaunchNeeded(sessionId);
@@ -495,8 +520,22 @@ export class WsBridge {
       session.state.model = msg.model;
       session.state.cwd = msg.cwd;
       session.state.tools = msg.tools;
-      session.state.permissionMode = msg.permissionMode;
       session.state.claude_code_version = msg.claude_code_version;
+
+      // Enforce the requested permission mode: if the CLI reports a different
+      // mode than what was explicitly requested at session creation, send a
+      // control request to force it back.
+      if (
+        session.requestedPermissionMode &&
+        msg.permissionMode !== session.requestedPermissionMode
+      ) {
+        console.log(`[ws-bridge] CLI reported permissionMode "${msg.permissionMode}" but session requested "${session.requestedPermissionMode}" — forcing`);
+        session.state.permissionMode = session.requestedPermissionMode;
+        this.handleSetPermissionMode(session, session.requestedPermissionMode);
+      } else {
+        session.state.permissionMode = msg.permissionMode;
+      }
+      this.onPermissionModeChanged?.(session.id, session.state.permissionMode);
       session.state.mcp_servers = msg.mcp_servers;
       session.state.agents = msg.agents ?? [];
       session.state.slash_commands = msg.slash_commands ?? [];
@@ -516,7 +555,17 @@ export class WsBridge {
       session.state.is_compacting = msg.status === "compacting";
 
       if (msg.permissionMode) {
-        session.state.permissionMode = msg.permissionMode;
+        // If the user explicitly set a permission mode at session creation,
+        // don't let CLI status messages override it
+        if (
+          session.requestedPermissionMode &&
+          msg.permissionMode !== session.requestedPermissionMode
+        ) {
+          console.log(`[ws-bridge] CLI status reported permissionMode "${msg.permissionMode}" but session requested "${session.requestedPermissionMode}" — ignoring`);
+        } else {
+          session.state.permissionMode = msg.permissionMode;
+          this.onPermissionModeChanged?.(session.id, msg.permissionMode);
+        }
       }
 
       this.broadcastToBrowsers(session, {
@@ -779,6 +828,19 @@ export class WsBridge {
     });
     this.sendToCLI(session, ndjson);
 
+    // Start init watchdog on first user message: the CLI sends system/init as
+    // part of processing the first user message, not on connect. If we never
+    // get it back, the CLI is stuck and needs relaunch.
+    if (!session.initReceived && !session.initTimer) {
+      session.initTimer = setTimeout(() => {
+        if (!session.initReceived) {
+          console.warn(`[ws-bridge] Init timeout for session ${session.id} — no system/init received after ${WsBridge.INIT_TIMEOUT_MS / 1000}s`);
+          this.broadcastToBrowsers(session, { type: "init_timeout" });
+          this.onInitTimeout?.(session.id);
+        }
+      }, WsBridge.INIT_TIMEOUT_MS);
+    }
+
     // Start streaming activity watchdog
     session.awaitingResult = true;
     session.lastCliActivityAt = Date.now();
@@ -858,6 +920,10 @@ export class WsBridge {
       request: { subtype: "set_permission_mode", mode },
     });
     this.sendToCLI(session, ndjson);
+    // Update the pinned mode so future CLI status messages don't revert it
+    session.requestedPermissionMode = mode;
+    session.state.permissionMode = mode;
+    this.onPermissionModeChanged?.(session.id, mode);
   }
 
   // ── Activity watchdog (mid-turn stall detection) ────────────────────────

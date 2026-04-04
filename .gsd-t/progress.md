@@ -1,7 +1,7 @@
 # GSD-T Progress
 
 ## Project: ClaudeWebCLI
-## Version: 0.13.10
+## Version: 0.14.10
 ## Current Milestone
 | # | Milestone | Status | Domains |
 |---|-----------|--------|---------|

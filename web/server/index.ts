@@ -47,6 +47,7 @@ const worktreeTracker = new WorktreeTracker();
 // ── Restore persisted sessions from disk ────────────────────────────────────
 wsBridge.setStore(sessionStore);
 launcher.setStore(sessionStore);
+launcher.setHasBrowserClients((sid) => wsBridge.hasBrowserClients(sid));
 void launcher.restoreFromDisk();
 void wsBridge.restoreFromDisk();
 
@@ -59,6 +60,10 @@ wsBridge.onCLISessionIdReceived((sessionId, cliSessionId) => {
 
 wsBridge.onInterruptCallback((sessionId) => {
   launcher.sendInterrupt(sessionId);
+});
+
+wsBridge.onPermissionModeChangedCallback((sessionId, mode) => {
+  launcher.setPermissionMode(sessionId, mode);
 });
 
 // Watchdog: if CLI connects but never sends system/init, kill and relaunch.

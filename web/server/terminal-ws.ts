@@ -1,8 +1,16 @@
 import { spawn } from "bun";
 import { resolve } from "node:path";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import type { ServerWebSocket } from "bun";
 import type { SocketData } from "./ws-bridge.js";
+
+/** Resolve full path to node binary (NVM-aware). */
+let nodeBin = "node";
+try {
+  const cmd = process.platform === "win32" ? "where" : "which";
+  nodeBin = execFileSync(cmd, ["node"], { encoding: "utf-8" }).trim().split("\n")[0];
+} catch { /* fallback to bare "node" */ }
 
 type TermWS = ServerWebSocket<SocketData>;
 
@@ -36,7 +44,7 @@ export function handleTerminalOpen(ws: TermWS): void {
 
   let proc: ReturnType<typeof spawn>;
   try {
-    proc = spawn(["node", ...args], {
+    proc = spawn([nodeBin, ...args], {
       stdin: "pipe",
       stdout: "pipe",
       stderr: "pipe",

@@ -43,7 +43,7 @@ export const useStore = create<AppState>((set) => ({
   recentlyRenamed: WIN_STORE.__cc_store_state?.recentlyRenamed ?? new Set(),
   darkMode: WIN_STORE.__cc_store_state?.darkMode ?? getInitialDarkMode(),
   sidebarOpen: WIN_STORE.__cc_store_state?.sidebarOpen ?? false,
-  taskPanelOpen: WIN_STORE.__cc_store_state?.taskPanelOpen ?? true,
+  taskPanelOpen: WIN_STORE.__cc_store_state?.taskPanelOpen ?? false,
   chatExpanded: WIN_STORE.__cc_store_state?.chatExpanded ?? true,
   chatExpandTick: WIN_STORE.__cc_store_state?.chatExpandTick ?? 0,
   homeResetKey: WIN_STORE.__cc_store_state?.homeResetKey ?? 0,
