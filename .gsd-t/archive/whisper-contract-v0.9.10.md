@@ -1,3 +1,5 @@
+> **DEPRECATED** — Voice mode was removed at v0.9.10 (2026-03-04). Preserved for historical reference.
+
 # Contract: Whisper Engine ↔ Correction Orchestration
 
 ## useWhisper Hook Interface (Milestone 4 — Extended)

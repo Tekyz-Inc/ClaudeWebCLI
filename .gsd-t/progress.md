@@ -1,11 +1,24 @@
 # GSD-T Progress
 
 ## Project: ClaudeWebCLI
-## Version: 0.14.20
+## Version: 0.14.21
 ## Current Milestone
-_(none active — M11 complete; M12 Contract Refresh queued)_
+_(none — M12 complete, next milestone not yet defined)_
 
 ## Previous Milestone
+| # | Milestone | Status | Domains |
+|---|-----------|--------|---------|
+| 12 | Contract Refresh | COMPLETE | contracts-docs |
+
+**Goal:** Bring `.gsd-t/contracts/` back into alignment with reality so it stops actively misleading future work. Every HTTP and WebSocket endpoint documented, store contract reflects current slices, WS NDJSON protocol has a first-class contract, stale voice contracts archived, Swagger waiver documented.
+
+**Scope:**
+- IN: TD-039 (api-contract rewrite, 36 endpoints), TD-040 (store-contract rewrite), TD-041 (new ws-protocol-contract.md), TD-042 (archive voice/whisper contracts), TD-043 (Swagger waiver in project CLAUDE.md)
+- OUT: Code changes (pure documentation milestone)
+
+**Outcome:** All 5 TD items resolved. New/rewritten contracts: `api-contract.md` (33 HTTP + 3 WS endpoints), `store-contract.md` (full slice + action listing), `ws-protocol-contract.md` (both legs + terminal bridge). Voice/whisper contracts archived with deprecation notice. Swagger waiver added to project CLAUDE.md. Zero code changes. Version 0.14.20 → 0.14.21.
+
+### Older Previous Milestone
 | # | Milestone | Status | Domains |
 |---|-----------|--------|---------|
 | 11 | Quality Pass | COMPLETE | hot-path-triage, polling-consolidation, persistence-flush, stall-guard, terminal-race, fs-errors |
@@ -47,6 +60,7 @@ _(none active — M11 complete; M12 Contract Refresh queued)_
 ## Completed Milestones
 | # | Milestone | Version | Completed | Tag |
 |---|-----------|---------|-----------|-----|
+| 12 | Contract Refresh | 0.14.21 | 2026-04-10 | v0.14.21 |
 | 11 | Quality Pass | 0.14.20 | 2026-04-10 | v0.14.20 |
 | 10 | Stability & E2E Testing | 0.13.10 | 2026-04-01 | v0.13.10 |
 | 2.1 | Fix Windows Path Test Failures | 0.14.11 | 2026-03-23 | v0.14.11 |
@@ -61,11 +75,10 @@ _(none active — M11 complete; M12 Contract Refresh queued)_
 | 1 | Foundation — Daily Workflow + Voice + Files | 0.2.0 | 2026-02-11 | v0.2.0 |
 
 ## Upcoming
-| # | Milestone | Status | Priority |
-|---|-----------|--------|----------|
-| 12 | Contract Refresh (TD-039/040/041/042/043) | DEFINED | MEDIUM |
+_(none queued)_
 
 ## Decision Log
+- 2026-04-10 14:30: [complete-milestone] **M12 Contract Refresh COMPLETE** — v0.14.20 → v0.14.21. Pure documentation pass. 5 TD items resolved: TD-039 (api-contract.md rewritten — 33 HTTP endpoints across sessions/filesystem/git/envs/claude-sessions/slash-commands route groups + 3 WS endpoints, all verified via grep of `.get`/`.post`/`.put`/`.delete`/`.patch` registrations and `/ws/` paths), TD-040 (store-contract.md rewritten from current `web/src/store.ts` + `web/src/store/types.ts` — single-slice Zustand store with ~50 actions grouped by concern, state-shape table per concern, persistence key table), TD-041 (new ws-protocol-contract.md covering both CLI↔server NDJSON leg and server↔browser JSON leg + terminal-ws leg, cross-referenced to session-types.ts and ws-bridge.ts dispatch points), TD-042 (voice-mode-contract.md and whisper-contract.md moved via `git mv` to `.gsd-t/archive/*-v0.9.10.md` with deprecation header), TD-043 (Swagger waiver section added to project CLAUDE.md before Reference Projects, cites local-only deployment + api-contract.md as authoritative source). No code touched (verified — only .md + package.json version + README version + CLAUDE.md). No tests run (docs-only change). Tagged v0.14.21.
 - 2026-04-10 12:00: [complete-milestone] **M11 Quality Pass COMPLETE** — v0.14.10 → v0.14.20. All 7 TD items resolved: TD-013 (hot-path empty catches annotated/logged in cli-launcher, ws-bridge, session-store, claude-sessions, env-manager, terminal-ws, filesystem-routes, Sidebar, ws.ts), TD-014 (Sidebar version now sourced from `__APP_VERSION__` Vite define), TD-016 (new `usePollingTick` shared-timer hook consolidates useNativeSessionPoll + useAutoResumeSession onto one 5s tick), TD-023 (session-store `flushAll` + SIGTERM/SIGINT handlers in server/index.ts), TD-033 (stall-retry guard in ws-bridge checks readyState===1 and triggers relaunch on closed socket), TD-044 (terminal-ws spawn-lock Map serializes respawn via promise chain + awaits prior exit), TD-045 (filesystem-routes `handleRouteError` helper unifies `{error, details?}` shape). Unit tests: 605/631 pass (baseline match — 26 pre-existing Composer/routes/ws-bridge failures unrelated to M11). Typecheck: clean. Tagged v0.14.20.
 - 2026-04-10: [promote-debt] Promoted 12 tech debt items from scan #4 into 2 milestones. **M11 Quality Pass** (TD-013 empty catches, TD-014 stale version, TD-016 triple polling, TD-023 no shutdown flush, TD-033 stall-watchdog socket check, TD-044 terminal WS race, TD-045 filesystem error shapes) — clears M10 quality fallout before next feature work. **M12 Contract Refresh** (TD-039 API contract 6%, TD-040 store contract 10%, TD-041 new WS protocol contract, TD-042 archive voice contracts, TD-043 Swagger waiver) — documentation-only pass to stop contracts from actively misleading future work. Both MEDIUM priority, scheduled before next feature milestone. Roadmap updated; techdebt.md items marked promoted.
 - 2026-04-10: [scan] Scan #4 completed — 14,389 LOC across 84 files. 15 open tech debt items (0 critical, 0 high, 8 medium, 7 low). 4 M10 items confirmed resolved (TD-012/030/031/037). 5 new items (TD-041–045). ws-bridge.ts grew to 1068 lines. Contract drift at ~94%. Previous register archived to techdebt_2026-04-01.md.

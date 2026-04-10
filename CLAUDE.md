@@ -255,6 +255,17 @@ Before any of these actions, STOP and ask the user:
 - NEVER write tests that depend on specific data states — use fixtures.
 - NEVER modify the NDJSON protocol format without documenting the change in architecture.md.
 
+## API Documentation Waiver
+
+The global CLAUDE.md API Documentation Guard requires Swagger/OpenAPI for every endpoint. ClaudeWebCLI waives this requirement because:
+
+- **Local-only deployment**: server binds 127.0.0.1, CORS localhost-only, single-user
+- **No external consumers**: only the bundled React client calls these endpoints
+- **Authoritative source**: `.gsd-t/contracts/api-contract.md` is maintained as the complete endpoint reference (see TD-039, resolved in M12 Contract Refresh)
+- **Zod schemas**: request validation lives in `web/server/routes/schemas.ts` — if we ever need `/api-docs`, `@hono/zod-openapi` can generate from these schemas directly
+
+Revisit this waiver if ClaudeWebCLI ever exposes a public API or ships to remote deployments.
+
 ## Reference Projects
 
 - [The Vibe Companion](https://github.com/The-Vibe-Company/companion) — Full reverse-engineered `--sdk-url` protocol spec

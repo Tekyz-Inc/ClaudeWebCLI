@@ -1,3 +1,5 @@
+> **DEPRECATED** — Voice mode was removed at v0.9.10 (2026-03-04). Preserved for historical reference.
+
 # Voice Mode Contract
 
 ## Voice Mode Type

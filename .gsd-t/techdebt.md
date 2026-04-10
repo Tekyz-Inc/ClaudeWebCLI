@@ -14,9 +14,9 @@
 |--------|-------|
 | RESOLVED by M10 | TD-012 (no ErrorBoundary), TD-030 (silent message drops), TD-031 (is_compacting stuck), TD-037 (no unhandledRejection) |
 | DOWNGRADED | TD-027 HIGH→MEDIUM, TD-028 HIGH→WONTFIX (intentional per index.ts:194 comment), TD-029 HIGH→MEDIUM — risk is confined to local-only threat model |
-| STILL OPEN | TD-019, TD-022, TD-026, TD-027, TD-029, TD-032, TD-034, TD-035, TD-036, TD-038, TD-039, TD-040 |
-| NEW | TD-041, TD-042, TD-043 |
+| STILL OPEN | TD-019, TD-022, TD-026, TD-027, TD-029, TD-032, TD-034, TD-035, TD-036, TD-038 |
 | RESOLVED (M11) | TD-013, TD-014, TD-016, TD-023, TD-033, TD-044, TD-045 |
+| RESOLVED (M12) | TD-039, TD-040, TD-041, TD-042, TD-043 |
 | WONTFIX per feedback memory | Security hardening items (CSP nonce, rate limiter IP, bearer token enforcement) — local-only app |
 
 ---
@@ -98,7 +98,7 @@ Items to plan for; address during next maintenance milestone.
 ### TD-039: API Contract at 6% Coverage
 - **Category**: documentation
 - **Severity**: MEDIUM
-- **Status**: OPEN (grew — now 36 total endpoints, 2 documented)
+- **Status**: [RESOLVED] — M12 Contract Refresh (full rewrite: 33 HTTP + 3 WS endpoints, per-route-group tables, Zod schema refs, auth notes)
 - **Location**: `.gsd-t/contracts/api-contract.md`
 - **Description**: Covers 2 of 33 HTTP endpoints + 3 WebSocket endpoints (36 total). Violates CLAUDE.md Pre-Commit Gate ("Did I create or change an API endpoint?").
 - **Remediation**: Rewrite as a complete endpoint reference — table with method, path, request schema (from Zod), response shape, auth, owner. One pass.
@@ -109,7 +109,7 @@ Items to plan for; address during next maintenance milestone.
 ### TD-040: Store Contract at ~10% Coverage
 - **Category**: documentation
 - **Severity**: MEDIUM
-- **Status**: OPEN
+- **Status**: [RESOLVED] — M12 Contract Refresh (rewritten from `web/src/store.ts` + `store/types.ts`, full state shape + action tables grouped by concern)
 - **Location**: `.gsd-t/contracts/store-contract.md`
 - **Description**: Covers 2 slices of ~25 actions in current store. ~90% drift.
 - **Remediation**: Rewrite from current `store.ts` and `store/types.ts`.
@@ -199,7 +199,7 @@ Nice-to-haves and cleanup.
 ### TD-041: No WebSocket Protocol Contract
 - **Category**: documentation
 - **Severity**: MEDIUM
-- **Status**: NEW (scan #4)
+- **Status**: [RESOLVED] — M12 Contract Refresh (new `ws-protocol-contract.md` covering CLI↔server NDJSON, server↔browser JSON, and terminal-ws legs)
 - **Location**: `.gsd-t/contracts/` (missing file)
 - **Description**: No formal contract for CLI↔server NDJSON protocol or server↔browser JSON protocol. M10 stability work touched both without contract updates. Reference material exists in `WEBSOCKET_PROTOCOL_REVERSED.md` (project root) and `session-types.ts` but nothing in the contracts dir.
 - **Remediation**: Create `ws-protocol-contract.md` consolidating both legs. Include init/user/result/control_request/stream_event and permission flow.
@@ -210,7 +210,7 @@ Nice-to-haves and cleanup.
 ### TD-042: Voice/Whisper Contracts Stale
 - **Category**: documentation
 - **Severity**: LOW
-- **Status**: NEW (scan #4)
+- **Status**: [RESOLVED] — M12 Contract Refresh (moved via `git mv` to `.gsd-t/archive/voice-mode-contract-v0.9.10.md` and `whisper-contract-v0.9.10.md` with deprecation header)
 - **Location**: `.gsd-t/contracts/voice-mode-contract.md`, `.gsd-t/contracts/whisper-contract.md`
 - **Description**: Voice mode was removed at v0.9.10 (2026-03-04). Contracts still present in live contracts dir.
 - **Remediation**: Move to `.gsd-t/archive/` or mark `[DEPRECATED]`.
@@ -220,7 +220,7 @@ Nice-to-haves and cleanup.
 ### TD-043: No Swagger/OpenAPI — Violates Global CLAUDE.md
 - **Category**: documentation
 - **Severity**: LOW (local-only app, enforcement is soft)
-- **Status**: NEW (scan #4)
+- **Status**: [RESOLVED] — M12 Contract Refresh (waiver section added to project CLAUDE.md citing local-only deployment + api-contract.md as authoritative source)
 - **Location**: server-wide
 - **Description**: Global CLAUDE.md API Documentation Guard requires Swagger/OpenAPI for every endpoint. None exists. Hono + Zod schemas already in `routes/schemas.ts` could drive `@hono/zod-openapi` for auto-generated docs.
 - **Remediation**: Either adopt `@hono/zod-openapi` and expose `/api-docs`, or add an exemption note in project CLAUDE.md justifying the waiver for local-only mode.
