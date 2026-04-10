@@ -66,6 +66,7 @@ export async function readClaudeSessionsFromDir(
     const entries = await readdir(baseDir);
     files = entries.filter((f) => f.endsWith(".jsonl"));
   } catch {
+    // expected: ~/.claude/projects/<slug> may not exist for this cwd
     return [];
   }
 
@@ -95,12 +96,14 @@ export async function readClaudeSessionsFromDir(
             break;
           }
         } catch {
+          // expected: partial/malformed JSONL line — probe next
           continue;
         }
       }
 
       sessions.push({ id, cwd: sessionCwd, firstMessage, createdAt, lastActiveAt, isNative: true });
     } catch {
+      // expected: individual session file may be unreadable
       continue;
     }
   }
@@ -147,6 +150,7 @@ export async function readClaudeSessionActivity(
   try {
     contents = await readFile(filePath, "utf-8");
   } catch {
+    // expected: session file may not exist (archived, deleted, never written)
     return { filesRead: [], changedFiles: [], commands: [] };
   }
   const filesRead = new Set<string>();
@@ -163,7 +167,10 @@ export async function readClaudeSessionActivity(
         if ((b.name === "Edit" || b.name === "Write") && typeof b.input?.file_path === "string") changedFiles.add(b.input.file_path);
         if (b.name === "Bash" && typeof b.input?.command === "string") commands.push(b.input.command);
       }
-    } catch { continue; }
+    } catch {
+      // expected: malformed JSONL line — probe next
+      continue;
+    }
   }
   return { filesRead: Array.from(filesRead), changedFiles: Array.from(changedFiles), commands: commands.slice(-20).reverse() };
 }
@@ -178,6 +185,7 @@ export async function readClaudeSessionMessages(
   try {
     contents = await readFile(filePath, "utf-8");
   } catch {
+    // expected: session file may not exist (archived, deleted, never written)
     return [];
   }
   const messages: SessionHistoryMessage[] = [];
@@ -217,6 +225,7 @@ export async function readClaudeSessionMessages(
         }
       }
     } catch {
+      // expected: malformed JSONL line — probe next
       continue;
     }
   }

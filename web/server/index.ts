@@ -75,7 +75,9 @@ wsBridge.onInitTimeoutCallback(async (sessionId) => {
   const count = (initTimeoutCounts.get(sessionId) || 0) + 1;
   initTimeoutCounts.set(sessionId, count);
   if (count > MAX_INIT_RETRIES) {
-    console.error(`[server] Init timeout for session ${sessionId} — gave up after ${MAX_INIT_RETRIES} retries (cwd: ${info.cwd})`);
+    console.error(`[server] Init timeout for session ${sessionId} — gave up after ${MAX_INIT_RETRIES} retries (cwd: ${info.cwd}). Marking exited.`);
+    info.state = "exited";
+    info.exitCode = -1;
     return;
   }
   // After the first failed attempt, clear the resume ID so the next relaunch
@@ -93,13 +95,37 @@ wsBridge.onInitTimeoutCallback(async (sessionId) => {
 const relaunchingSet = new Set<string>();
 wsBridge.onCLIRelaunchNeededCallback(async (sessionId) => {
   if (relaunchingSet.has(sessionId)) return;
-  const info = launcher.getSession(sessionId);
+  let info = launcher.getSession(sessionId);
   if (info?.archived) return;
   // Already starting up — CLI just hasn't connected its WS yet, do nothing
   if (info?.state === "starting") return;
+
+  // If the launcher doesn't know about this session (e.g., server restarted
+  // and only recovered a subset of sessions), reconstruct from ws-bridge state.
+  if (!info) {
+    const bridgeSession = wsBridge.getSession(sessionId);
+    const bridgeState = bridgeSession?.state;
+    if (bridgeState?.cwd) {
+      console.log(`[server] Recovering launcher entry for session ${sessionId} (cwd: ${bridgeState.cwd})`);
+      info = {
+        sessionId,
+        state: "exited" as const,
+        cwd: bridgeState.cwd,
+        model: bridgeState.model,
+        permissionMode: bridgeState.permissionMode,
+        createdAt: Date.now(),
+      };
+      launcher.registerSession(info);
+    }
+  }
+
   if (info) {
     relaunchingSet.add(sessionId);
     console.log(`[server] Auto-relaunching CLI for session ${sessionId}`);
+    // Preserve permission mode enforcement across relaunch
+    if (info.permissionMode) {
+      wsBridge.setRequestedPermissionMode(sessionId, info.permissionMode);
+    }
     try {
       await launcher.relaunch(sessionId);
     } finally {
@@ -125,6 +151,23 @@ wsBridge.onFirstTurnCompletedCallback(async (sessionId, firstUserMessage) => {
 });
 
 console.log(`[server] Session persistence: ${sessionStore.directory}`);
+
+// ── Shutdown flush — guarantee debounced writes land on disk on SIGTERM/SIGINT ─
+let shuttingDown = false;
+async function flushOnShutdown(signal: string): Promise<void> {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`[server] ${signal} received — flushing pending session writes...`);
+  try {
+    await sessionStore.flushAll();
+    console.log("[server] Flush complete, exiting.");
+  } catch (err) {
+    console.error("[server] Flush failed on shutdown:", err);
+  }
+  process.exit(0);
+}
+process.on("SIGTERM", () => { void flushOnShutdown("SIGTERM"); });
+process.on("SIGINT", () => { void flushOnShutdown("SIGINT"); });
 
 const app = new Hono();
 

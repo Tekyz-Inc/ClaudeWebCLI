@@ -59,7 +59,9 @@ function handleMessage(sessionId: string, event: MessageEvent) {
   let data: BrowserIncomingMessage;
   try {
     data = JSON.parse(event.data);
-  } catch {
+  } catch (err) {
+    const preview = typeof event.data === "string" ? event.data.slice(0, 200) : "<non-string>";
+    console.warn(`[ws] Failed to parse browser-side message for ${sessionId}:`, err, "payload:", preview);
     return;
   }
 
@@ -162,7 +164,9 @@ function scheduleReconnect(sessionId: string) {
   reconnectDelays.set(sessionId, delay);
   const timer = setTimeout(() => {
     reconnectTimers.delete(sessionId);
-    if (useStore.getState().currentSessionId === sessionId) {
+    // Reconnect any session that still exists in the store (not just the current one)
+    const store = useStore.getState();
+    if (store.sessions.has(sessionId) || store.sdkSessions.some((s) => s.sessionId === sessionId)) {
       connectSession(sessionId);
     }
   }, delay);

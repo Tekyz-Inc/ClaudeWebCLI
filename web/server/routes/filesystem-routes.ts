@@ -1,4 +1,5 @@
-import type { Hono } from "hono";
+import type { Hono, Context } from "hono";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { readdir, readFile, writeFile, stat } from "node:fs/promises";
@@ -14,6 +15,23 @@ interface TreeNode {
   path: string;
   type: "file" | "directory";
   children?: TreeNode[];
+}
+
+/**
+ * Unified error response helper for filesystem routes.
+ * Returns `{ error, details? }` with a status code derived from the error type.
+ */
+function handleRouteError(
+  c: Context,
+  err: unknown,
+  fallbackMessage: string,
+  fallbackStatus: ContentfulStatusCode = 500,
+) {
+  if (err instanceof PathTraversalError) {
+    return c.json({ error: "Access denied", details: err.message }, 403);
+  }
+  const details = err instanceof Error ? err.message : String(err);
+  return c.json({ error: fallbackMessage, details }, fallbackStatus);
 }
 
 async function buildTree(dir: string, depth: number): Promise<TreeNode[]> {
@@ -36,7 +54,8 @@ async function buildTree(dir: string, depth: number): Promise<TreeNode[]> {
       return a.name.localeCompare(b.name);
     });
     return nodes;
-  } catch {
+  } catch (err) {
+    console.warn(`[fs-routes] buildTree failed for ${dir}:`, err);
     return [];
   }
 }
@@ -48,8 +67,7 @@ export function registerFilesystemRoutes(api: Hono): void {
     try {
       basePath = validatePath(rawPath, process.cwd());
     } catch (e) {
-      if (e instanceof PathTraversalError) return c.json({ error: "Access denied" }, 403);
-      return c.json({ error: "Invalid path" }, 400);
+      return handleRouteError(c, e, "Invalid path", 400);
     }
     try {
       const entries = await readdir(basePath, { withFileTypes: true });
@@ -61,8 +79,9 @@ export function registerFilesystemRoutes(api: Hono): void {
       }
       dirs.sort((a, b) => a.name.localeCompare(b.name));
       return c.json({ path: basePath, dirs, home: homedir() });
-    } catch {
-      return c.json({ error: "Cannot read directory", path: basePath, dirs: [], home: homedir() }, 400);
+    } catch (e) {
+      const details = e instanceof Error ? e.message : String(e);
+      return c.json({ error: "Cannot read directory", details, path: basePath, dirs: [], home: homedir() }, 400);
     }
   });
 
@@ -77,8 +96,7 @@ export function registerFilesystemRoutes(api: Hono): void {
     try {
       basePath = validatePath(rawPath, process.cwd());
     } catch (e) {
-      if (e instanceof PathTraversalError) return c.json({ error: "Access denied" }, 403);
-      return c.json({ error: "Invalid path" }, 400);
+      return handleRouteError(c, e, "Invalid path", 400);
     }
     const tree = await buildTree(basePath, 0);
     return c.json({ path: basePath, tree });
@@ -91,8 +109,7 @@ export function registerFilesystemRoutes(api: Hono): void {
     try {
       absPath = validatePath(filePath, process.cwd());
     } catch (e) {
-      if (e instanceof PathTraversalError) return c.json({ error: "Access denied" }, 403);
-      return c.json({ error: "Invalid path" }, 400);
+      return handleRouteError(c, e, "Invalid path", 400);
     }
     try {
       const info = await stat(absPath);
@@ -101,8 +118,8 @@ export function registerFilesystemRoutes(api: Hono): void {
       }
       const content = await readFile(absPath, "utf-8");
       return c.json({ path: absPath, content });
-    } catch (e: unknown) {
-      return c.json({ error: e instanceof Error ? e.message : "Cannot read file" }, 404);
+    } catch (e) {
+      return handleRouteError(c, e, "Cannot read file", 404);
     }
   });
 
@@ -110,20 +127,19 @@ export function registerFilesystemRoutes(api: Hono): void {
     const raw = await c.req.json().catch(() => ({}));
     const parsed = WriteFileBody.safeParse(raw);
     if (!parsed.success) {
-      return c.json({ error: "path and content required" }, 400);
+      return c.json({ error: "path and content required", details: parsed.error.message }, 400);
     }
     let absPath: string;
     try {
       absPath = validatePath(parsed.data.path, process.cwd());
     } catch (e) {
-      if (e instanceof PathTraversalError) return c.json({ error: "Access denied" }, 403);
-      return c.json({ error: "Invalid path" }, 400);
+      return handleRouteError(c, e, "Invalid path", 400);
     }
     try {
       await writeFile(absPath, parsed.data.content, "utf-8");
       return c.json({ ok: true, path: absPath });
-    } catch (e: unknown) {
-      return c.json({ error: e instanceof Error ? e.message : "Cannot write file" }, 500);
+    } catch (e) {
+      return handleRouteError(c, e, "Cannot write file", 500);
     }
   });
 
@@ -134,8 +150,7 @@ export function registerFilesystemRoutes(api: Hono): void {
     try {
       absPath = validatePath(filePath, process.cwd());
     } catch (e) {
-      if (e instanceof PathTraversalError) return c.json({ error: "Access denied" }, 403);
-      return c.json({ error: "Invalid path" }, 400);
+      return handleRouteError(c, e, "Invalid path", 400);
     }
     try {
       const { stdout } = await execFileAsync(
@@ -144,6 +159,8 @@ export function registerFilesystemRoutes(api: Hono): void {
       );
       return c.json({ path: absPath, diff: stdout });
     } catch {
+      // expected: git may not be available or file may not be tracked —
+      // diff endpoint is best-effort and returns empty diff in that case.
       return c.json({ path: absPath, diff: "" });
     }
   });

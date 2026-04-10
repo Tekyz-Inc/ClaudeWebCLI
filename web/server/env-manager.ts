@@ -58,14 +58,15 @@ export async function listEnvs(): Promise<CompanionEnv[]> {
         try {
           const raw = await readFile(join(ENVS_DIR, file), "utf-8");
           envs.push(JSON.parse(raw));
-        } catch {
-          // Skip corrupt files
+        } catch (err) {
+          console.warn(`[env-manager] Skipping corrupt env file ${file}:`, err);
         }
       }),
     );
     envs.sort((a, b) => a.name.localeCompare(b.name));
     return envs;
   } catch {
+    // expected: ENVS_DIR may not exist on first boot
     return [];
   }
 }
@@ -76,6 +77,7 @@ export async function getEnv(slug: string): Promise<CompanionEnv | null> {
     const raw = await readFile(filePath(slug), "utf-8");
     return JSON.parse(raw) as CompanionEnv;
   } catch {
+    // expected: env file may not exist
     return null;
   }
 }
@@ -132,7 +134,9 @@ export async function updateEnv(
 
   // If slug changed, delete old file
   if (newSlug !== slug) {
-    try { await unlink(filePath(slug)); } catch { /* ok */ }
+    try { await unlink(filePath(slug)); } catch {
+      // expected: old file may already be gone
+    }
   }
 
   await writeFile(filePath(newSlug), JSON.stringify(env, null, 2), "utf-8");
@@ -145,7 +149,8 @@ export async function deleteEnv(slug: string): Promise<boolean> {
   try {
     await unlink(filePath(slug));
     return true;
-  } catch {
+  } catch (err) {
+    console.warn(`[env-manager] unlink failed for ${slug}:`, err);
     return false;
   }
 }

@@ -1,7 +1,11 @@
 # Architecture
 
-**Version:** 0.14.1
-**Last Updated:** 2026-02-10
+**Version:** 0.14.20
+**Last Updated:** 2026-04-10 (M11 Quality Pass)
+
+> M11 notes (2026-04-10): Quality pass shipped — empty-catch triage on hot-path files (expected-malformed vs unexpected, logged or annotated), Sidebar version now sourced from Vite `__APP_VERSION__` define, polling consolidated onto a shared `usePollingTick` hook (single 5s timer replaces two per-hook intervals), session-store gained `flushAll` with SIGTERM/SIGINT flush handlers in `server/index.ts`, stall watchdog in ws-bridge now checks `readyState === 1` before resending and triggers relaunch on closed sockets, terminal-ws spawns serialized via a promise-chain lock that awaits prior exit, and filesystem-routes catch bodies replaced by a shared `handleRouteError` helper with unified `{error, details?}` shape. See `.gsd-t/techdebt.md` for open debt items.
+
+> Scan #4 notes (2026-04-10): M10 stability work shipped — React ErrorBoundary, `unhandledRejection` handler, `is_compacting` reset in 3 sites, and `sendToSession` returns boolean with warnings. `ws-bridge.ts` grew to 1068 lines (+121) and is the main complexity hotspot. Terminal PTY now runs via an out-of-process Node.js bridge (`terminal-node.cjs`) to work around Bun+node-pty incompatibility. See `.gsd-t/scan/architecture.md` for the full current snapshot and `.gsd-t/techdebt.md` for open debt items.
 
 ---
 

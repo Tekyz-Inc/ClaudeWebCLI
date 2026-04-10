@@ -20,6 +20,8 @@ interface TermEntry {
 }
 
 const processes = new Map<string, TermEntry>();
+/** Pending spawn promises keyed by terminalId — serializes rapid reconnects. */
+const spawnLocks = new Map<string, Promise<void>>();
 
 const bridgeScript = resolve(
   fileURLToPath(import.meta.url),
@@ -32,11 +34,39 @@ export function handleTerminalOpen(ws: TermWS): void {
   if (data.kind !== "terminal") return;
   const { terminalId, cwd } = data;
 
-  // Kill any existing process for this terminal ID
+  // Serialize spawns per terminalId so a rapid reconnect (tab switch, HMR)
+  // waits for the previous process to actually exit before starting a new one.
+  // This avoids the race where the new process writes to stdout while the old
+  // process's exit event is still propagating, causing a "disconnected" flicker.
+  const prior = spawnLocks.get(terminalId) ?? Promise.resolve();
+  const next = prior.then(() => spawnTerminal(ws, terminalId, cwd)).catch((err) => {
+    console.error(`[terminal] spawn chain error for ${terminalId}:`, err);
+  });
+  spawnLocks.set(terminalId, next);
+  void next.finally(() => {
+    if (spawnLocks.get(terminalId) === next) spawnLocks.delete(terminalId);
+  });
+}
+
+async function spawnTerminal(ws: TermWS, terminalId: string, cwd: string | undefined): Promise<void> {
+  // Kill any existing process and wait for it to exit before spawning a new one.
   const existing = processes.get(terminalId);
   if (existing) {
-    existing.proc.kill();
+    try { existing.proc.kill(); } catch { /* expected: process may already be exiting */ }
     processes.delete(terminalId);
+    try {
+      await Promise.race([
+        existing.proc.exited,
+        new Promise((r) => setTimeout(r, 500)),
+      ]);
+    } catch (err) {
+      console.warn(`[terminal] error awaiting prior exit for ${terminalId}:`, err);
+    }
+  }
+
+  // If the websocket closed while we were waiting, abort the spawn.
+  if (ws.readyState !== 1) {
+    return;
   }
 
   const args = ["--no-warnings", bridgeScript];
@@ -51,7 +81,12 @@ export function handleTerminalOpen(ws: TermWS): void {
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    try { ws.send(JSON.stringify({ type: "error", data: `Failed to start terminal: ${msg}` })); } catch {}
+    console.error(`[terminal] spawn failed for ${terminalId}:`, err);
+    try {
+      ws.send(JSON.stringify({ type: "error", data: `Failed to start terminal: ${msg}` }));
+    } catch {
+      // expected: ws may have closed during spawn failure
+    }
     return;
   }
 
@@ -74,14 +109,18 @@ export function handleTerminalOpen(ws: TermWS): void {
         buffer = lines.pop() || "";
         for (const line of lines) {
           if (!line.trim()) continue;
-          try { ws.send(line); } catch {}
+          try { ws.send(line); } catch {
+            // expected: ws may close mid-stream; loop ends when reader sees done
+          }
         }
       }
     } catch (err) {
       console.error(`[terminal] stdout read error for ${terminalId}:`, err);
     }
     processes.delete(terminalId);
-    try { ws.send(JSON.stringify({ type: "exit", code: proc.exitCode ?? 1 })); } catch {}
+    try { ws.send(JSON.stringify({ type: "exit", code: proc.exitCode ?? 1 })); } catch {
+      // expected: ws already closed when process exits
+    }
   })();
 
   // Log stderr
@@ -94,7 +133,9 @@ export function handleTerminalOpen(ws: TermWS): void {
         if (done) break;
         console.error(`[terminal] stderr ${terminalId}:`, decoder.decode(value));
       }
-    } catch {}
+    } catch {
+      // expected: stderr stream closes when process exits
+    }
   })();
 }
 

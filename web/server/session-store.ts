@@ -49,6 +49,8 @@ async function migrateFromLegacy(legacyDir: string, newDir: string): Promise<voi
 export class SessionStore {
   private dir: string;
   private debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  /** Pending sessions keyed by id — kept alongside the debounce timer for shutdown flush. */
+  private pendingSaves = new Map<string, PersistedSession>();
 
   constructor(dir?: string) {
     this.dir = dir || DEFAULT_DIR;
@@ -56,7 +58,7 @@ export class SessionStore {
     try {
       chmodSync(this.dir, 0o700);
     } catch {
-      // chmod not supported on all platforms (e.g., Windows — ignore)
+      // expected: chmod not supported on all platforms (e.g., Windows)
     }
     // Migrate from legacy TMPDIR location on first startup
     if (!dir) {
@@ -73,13 +75,29 @@ export class SessionStore {
     const existing = this.debounceTimers.get(session.id);
     if (existing) clearTimeout(existing);
 
+    this.pendingSaves.set(session.id, session);
     const timer = setTimeout(() => {
       this.debounceTimers.delete(session.id);
+      this.pendingSaves.delete(session.id);
       this.saveAsync(session).catch((err) => {
         console.error(`[session-store] Failed to save session ${session.id}:`, err);
       });
     }, 150);
     this.debounceTimers.set(session.id, timer);
+  }
+
+  /**
+   * Flush all pending debounced writes synchronously. Used by SIGTERM/SIGINT
+   * handlers to guarantee durability on shutdown.
+   */
+  async flushAll(): Promise<void> {
+    const pending = Array.from(this.pendingSaves.values());
+    for (const [id, timer] of this.debounceTimers) {
+      clearTimeout(timer);
+      this.debounceTimers.delete(id);
+    }
+    this.pendingSaves.clear();
+    await Promise.all(pending.map((s) => this.saveAsync(s)));
   }
 
   /** Async write — use for critical state changes. */
@@ -104,6 +122,7 @@ export class SessionStore {
       const raw = await readFile(this.filePath(sessionId), "utf-8");
       return JSON.parse(raw) as PersistedSession;
     } catch {
+      // expected: missing or corrupt session file — caller treats null as absent
       return null;
     }
   }
@@ -120,13 +139,13 @@ export class SessionStore {
           try {
             const raw = await readFile(join(this.dir, file), "utf-8");
             sessions.push(JSON.parse(raw));
-          } catch {
-            // Skip corrupt files
+          } catch (err) {
+            console.warn(`[session-store] Skipping corrupt session file ${file}:`, err);
           }
         }),
       );
     } catch {
-      // Dir doesn't exist yet
+      // expected: session dir doesn't exist yet on first boot
     }
     return sessions;
   }
@@ -147,8 +166,9 @@ export class SessionStore {
       clearTimeout(timer);
       this.debounceTimers.delete(sessionId);
     }
+    this.pendingSaves.delete(sessionId);
     unlink(this.filePath(sessionId)).catch(() => {
-      // File may not exist
+      // expected: file may not exist (remove-then-save race, or already cleaned)
     });
   }
 
@@ -167,6 +187,7 @@ export class SessionStore {
       const raw = await readFile(join(this.dir, "launcher.json"), "utf-8");
       return JSON.parse(raw) as T;
     } catch {
+      // expected: launcher.json may not exist on first boot
       return null;
     }
   }

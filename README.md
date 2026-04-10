@@ -1,6 +1,6 @@
 # ClaudeWebCLI
 
-**Version:** 0.8.10
+**Version:** 0.14.20
 **Forked from:** [The Vibe Companion](https://github.com/The-Vibe-Company/companion) v0.14.1
 
 Claude Code in your browser. We reverse-engineered the undocumented WebSocket protocol hidden inside the CLI and built a web UI on top of it. No API key needed — it runs on your existing Claude Code subscription.

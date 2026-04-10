@@ -71,6 +71,10 @@ interface Session {
   lastUserNdjson: string | null;
   /** The permission mode explicitly requested at session creation (to enforce on CLI) */
   requestedPermissionMode: string | null;
+  /** Number of times hook_response has reset the init timer (capped to prevent infinite loops) */
+  initTimerResets: number;
+  /** Timers for permission response timeouts (auto-deny after grace period) */
+  permissionTimers: Map<string, ReturnType<typeof setTimeout>>;
 }
 
 function makeDefaultState(sessionId: string): SessionState {
@@ -116,6 +120,10 @@ export class WsBridge {
   private static STALL_TIMEOUT_MS = 60_000;
   private static STALL_CHECK_INTERVAL_MS = 15_000;
   private static MAX_STALL_RETRIES = 2;
+  /** Max times hook_response can reset the init timer before we force timeout */
+  private static MAX_INIT_TIMER_RESETS = 3;
+  /** Auto-deny permission requests after this grace period (ms) */
+  private static PERMISSION_TIMEOUT_MS = 120_000;
 
   /** Register a callback for when we learn the CLI's internal session ID. */
   onCLISessionIdReceived(cb: (sessionId: string, cliSessionId: string) => void): void {
@@ -174,6 +182,8 @@ export class WsBridge {
         activityWatchdog: null,
         stallRetryCount: 0,
         pendingStallRetry: false,
+        initTimerResets: 0,
+        permissionTimers: new Map(),
         lastUserNdjson: null,
         requestedPermissionMode: p.state.permissionMode || null,
       };
@@ -224,6 +234,8 @@ export class WsBridge {
         pendingStallRetry: false,
         lastUserNdjson: null,
         requestedPermissionMode: null,
+        initTimerResets: 0,
+        permissionTimers: new Map(),
       };
       this.sessions.set(sessionId, session);
     }
@@ -282,17 +294,23 @@ export class WsBridge {
       clearTimeout(session.initTimer);
       session.initTimer = null;
     }
+    for (const pt of session.permissionTimers.values()) clearTimeout(pt);
+    session.permissionTimers.clear();
     this.stopActivityWatchdog(session);
 
     // Close CLI socket
     if (session.cliSocket) {
-      try { session.cliSocket.close(); } catch {}
+      try { session.cliSocket.close(); } catch {
+        // expected: socket may already be closed by the CLI end
+      }
       session.cliSocket = null;
     }
 
     // Close all browser sockets
     for (const ws of session.browserSockets) {
-      try { ws.close(); } catch {}
+      try { ws.close(); } catch {
+        // expected: socket may already be closed on the browser end
+      }
     }
     session.browserSockets.clear();
 
@@ -307,6 +325,7 @@ export class WsBridge {
     const session = this.getOrCreateSession(sessionId);
     session.cliSocket = ws;
     session.initReceived = false;
+    session.initTimerResets = 0;
     console.log(`[ws-bridge] CLI connected for session ${sessionId}`);
     this.broadcastToBrowsers(session, { type: "cli_connected" });
 
@@ -361,10 +380,13 @@ export class WsBridge {
     console.log(`[ws-bridge] CLI disconnected for session ${sessionId}`);
     this.broadcastToBrowsers(session, { type: "cli_disconnected" });
 
-    // Cancel any pending permission requests
+    // Cancel any pending permission requests and their timeouts
     for (const [reqId] of session.pendingPermissions) {
       this.broadcastToBrowsers(session, { type: "permission_cancelled", request_id: reqId });
+      const pt = session.permissionTimers.get(reqId);
+      if (pt) clearTimeout(pt);
     }
+    session.permissionTimers.clear();
     session.pendingPermissions.clear();
   }
 
@@ -487,8 +509,14 @@ export class WsBridge {
   private handleSystemMessage(session: Session, msg: CLISystemInitMessage | CLISystemStatusMessage | any) {
     // hook_response messages prove the CLI is alive and initializing — restart
     // the init timer so slow plugin installations don't trigger a false timeout.
+    // Cap resets to prevent infinite loops from chatty hooks.
     if (msg.subtype === "hook_response" && !session.initReceived && session.initTimer) {
-      console.log(`[ws-bridge] Session ${session.id}: hook_response received (pre-init), resetting init timer`);
+      if (session.initTimerResets >= WsBridge.MAX_INIT_TIMER_RESETS) {
+        console.warn(`[ws-bridge] Session ${session.id}: hook_response ignored — already reset ${session.initTimerResets} times, letting init timer expire`);
+        return;
+      }
+      session.initTimerResets++;
+      console.log(`[ws-bridge] Session ${session.id}: hook_response received (pre-init), resetting init timer (${session.initTimerResets}/${WsBridge.MAX_INIT_TIMER_RESETS})`);
       clearTimeout(session.initTimer);
       session.initTimer = setTimeout(() => {
         if (!session.initReceived) {
@@ -503,6 +531,7 @@ export class WsBridge {
     if (msg.subtype === "init") {
       // Clear the init watchdog — CLI is alive and communicating
       session.initReceived = true;
+      session.initTimerResets = 0;
       if (session.initTimer) {
         clearTimeout(session.initTimer);
         session.initTimer = null;
@@ -615,6 +644,7 @@ export class WsBridge {
         session.state.git_ahead = ahead || 0;
         session.state.git_behind = behind || 0;
       } catch {
+        // expected: no upstream tracking branch configured
         session.state.git_ahead = 0;
         session.state.git_behind = 0;
       }
@@ -623,7 +653,7 @@ export class WsBridge {
       this.broadcastToBrowsers(session, { type: "session_init", session: session.state });
       this.persistSession(session);
     } catch {
-      // Not a git repo or git not available
+      // expected: not a git repo or git binary not available
     }
   }
 
@@ -702,7 +732,21 @@ export class WsBridge {
         message: `Retrying your message... (attempt ${session.stallRetryCount}/${WsBridge.MAX_STALL_RETRIES})`,
       });
       setTimeout(() => {
-        if (!session.cliSocket) return;
+        // Guard: only resend if CLI socket is still OPEN. If it's missing or
+        // closing, a relaunch is needed instead of a silent no-op.
+        // readyState: 0=CONNECTING 1=OPEN 2=CLOSING 3=CLOSED
+        const sock = session.cliSocket;
+        const isOpen = sock && sock.readyState === 1;
+        if (!isOpen) {
+          console.warn(`[ws-bridge] Stall retry for session ${session.id} skipped — CLI socket not OPEN (readyState=${sock?.readyState ?? "null"}). Requesting relaunch.`);
+          session.awaitingResult = false;
+          this.broadcastToBrowsers(session, {
+            type: "error",
+            message: "Connection to Claude Code was lost. Reconnecting...",
+          });
+          this.onCLIRelaunchNeeded?.(session.id);
+          return;
+        }
         session.awaitingResult = true;
         session.lastCliActivityAt = Date.now();
         this.sendToCLI(session, session.lastUserNdjson!);
@@ -732,6 +776,27 @@ export class WsBridge {
         timestamp: Date.now(),
       };
       session.pendingPermissions.set(msg.request_id, perm);
+
+      // Auto-deny if browser doesn't respond within the grace period
+      const reqId = msg.request_id;
+      const permTimer = setTimeout(() => {
+        if (!session.pendingPermissions.has(reqId)) return;
+        console.warn(`[ws-bridge] Permission timeout for ${msg.request.tool_name} in session ${session.id} — auto-denying after ${WsBridge.PERMISSION_TIMEOUT_MS / 1000}s`);
+        session.pendingPermissions.delete(reqId);
+        session.permissionTimers.delete(reqId);
+        const deny = JSON.stringify({
+          type: "control_response",
+          response: {
+            subtype: "success",
+            request_id: reqId,
+            response: { behavior: "deny", message: "Permission timed out — no response from browser within 2 minutes" },
+          },
+        });
+        this.sendToCLI(session, deny);
+        this.broadcastToBrowsers(session, { type: "permission_cancelled", request_id: reqId });
+        this.persistSession(session);
+      }, WsBridge.PERMISSION_TIMEOUT_MS);
+      session.permissionTimers.set(reqId, permTimer);
 
       this.broadcastToBrowsers(session, {
         type: "permission_request",
@@ -856,9 +921,11 @@ export class WsBridge {
     session: Session,
     msg: { type: "permission_response"; request_id: string; behavior: "allow" | "deny"; updated_input?: Record<string, unknown>; updated_permissions?: unknown[]; message?: string }
   ) {
-    // Remove from pending
+    // Remove from pending and cancel timeout
     const pending = session.pendingPermissions.get(msg.request_id);
     session.pendingPermissions.delete(msg.request_id);
+    const permTimer = session.permissionTimers.get(msg.request_id);
+    if (permTimer) { clearTimeout(permTimer); session.permissionTimers.delete(msg.request_id); }
 
     if (msg.behavior === "allow") {
       const response: Record<string, unknown> = {

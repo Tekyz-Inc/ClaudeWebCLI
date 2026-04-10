@@ -1,6 +1,11 @@
 import { defineConfig } from "vitest/config";
+import pkg from "./package.json" with { type: "json" };
 
 export default defineConfig({
+  define: {
+    __API_PORT__: JSON.stringify(3456),
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   test: {
     globals: true,
     environment: "node",

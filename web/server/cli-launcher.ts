@@ -109,6 +109,10 @@ export class CliLauncher {
         try {
           process.kill(info.pid, 0); // signal 0 = just check if alive
           info.state = "starting"; // WS not yet re-established, wait for CLI to reconnect
+          // Clear the resume ID — the CLI session from a previous server instance
+          // often causes --resume to hang (hooks run but system/init never arrives).
+          // A fresh start is more reliable than attempting to resume stale state.
+          info.cliSessionId = undefined;
           this.sessions.set(info.sessionId, info);
           recovered++;
         } catch {
@@ -178,11 +182,21 @@ export class CliLauncher {
           oldProc.exited,
           new Promise((r) => setTimeout(r, 2000)),
         ]);
-      } catch {}
+      } catch (err) {
+        console.warn(`[cli-launcher] Error killing old process for session ${sessionId}:`, err);
+      }
       this.processes.delete(sessionId);
     } else if (info.pid) {
       // Process from a previous server instance — kill by PID
-      try { process.kill(info.pid, "SIGTERM"); } catch {}
+      try {
+        process.kill(info.pid, "SIGTERM");
+      } catch (err) {
+        // expected: PID may already be gone after a crash or prior shutdown
+        const code = (err as NodeJS.ErrnoException).code;
+        if (code !== "ESRCH") {
+          console.warn(`[cli-launcher] Failed to SIGTERM old pid ${info.pid} for session ${sessionId}:`, err);
+        }
+      }
     }
 
     info.state = "starting";
@@ -259,7 +273,7 @@ export class CliLauncher {
           binary = lines[0] || binary;
         }
       } catch {
-        // fall through, hope it's in PATH
+        // expected: which/where may fail — fall through, hope it's in PATH
       }
     }
 
@@ -458,8 +472,9 @@ ${MARKER_END}`;
     if (!proc) return;
     try {
       proc.kill("SIGINT");
-    } catch {
-      // Process may already be exiting
+    } catch (err) {
+      // expected: process may already be exiting, but worth a warn for diagnostics
+      console.warn(`[cli-launcher] SIGINT failed for session ${sessionId}:`, err);
     }
   }
 
@@ -505,6 +520,15 @@ ${MARKER_END}`;
    */
   getSession(sessionId: string): SdkSessionInfo | undefined {
     return this.sessions.get(sessionId);
+  }
+
+  /**
+   * Register an externally-constructed session entry (e.g., recovered from
+   * ws-bridge state after a server restart where the launcher lost it).
+   */
+  registerSession(info: SdkSessionInfo): void {
+    this.sessions.set(info.sessionId, info);
+    this.persistState();
   }
 
   /**
@@ -581,9 +605,13 @@ ${MARKER_END}`;
         .sort((a, b) => a.mtime - b.mtime);
       while (files.length > MAX_LOG_FILES) {
         const oldest = files.shift()!;
-        try { unlinkSync(oldest.path); } catch {}
+        try { unlinkSync(oldest.path); } catch {
+          // expected: log file may be in use on Windows; will retry on next prune
+        }
       }
-    } catch {}
+    } catch {
+      // expected: LOG_DIR may not exist yet on first run
+    }
   }
 
   private async pipeStream(
@@ -606,17 +634,21 @@ ${MARKER_END}`;
           if (logPath) {
             try {
               appendFileSync(logPath, `[${new Date().toISOString()}][${label}] ${text.trimEnd()}\n`);
-            } catch {}
+            } catch {
+              // expected: log file I/O error — continue piping to console
+            }
           }
         }
       }
     } catch {
-      // stream closed
+      // expected: stream closes when process exits
     }
   }
 
   private pipeOutput(sessionId: string, proc: Subprocess): void {
-    try { mkdirSync(LOG_DIR, { recursive: true }); } catch {}
+    try { mkdirSync(LOG_DIR, { recursive: true }); } catch {
+      // expected: LOG_DIR may already exist
+    }
     const logPath = join(LOG_DIR, `${sessionId}.log`);
     this.pruneLogFiles();
 

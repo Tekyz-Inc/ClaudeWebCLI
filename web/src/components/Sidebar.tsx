@@ -36,14 +36,15 @@ export function Sidebar() {
 
   function handleSelectSession(sessionId: string) {
     if (currentSessionId === sessionId) return;
-    if (currentSessionId) disconnectSession(currentSessionId);
+    // Don't disconnect the old session — keep its WebSocket alive so the CLI
+    // continues running in the background. Just switch the view.
     setCurrentSession(sessionId);
     connectSession(sessionId);
     if (window.innerWidth < 768) useStore.getState().setSidebarOpen(false);
   }
 
   function handleNewSession() {
-    if (currentSessionId) disconnectSession(currentSessionId);
+    // Don't disconnect — old session keeps running in the background
     useStore.getState().newSession();
     if (window.innerWidth < 768) useStore.getState().setSidebarOpen(false);
   }
@@ -74,8 +75,8 @@ export function Sidebar() {
     try {
       disconnectSession(sessionId);
       await api.deleteSession(sessionId);
-    } catch {
-      // best-effort
+    } catch (err) {
+      console.warn(`[Sidebar] delete session ${sessionId} failed:`, err);
     }
     removeSession(sessionId);
   }, [removeSession]);
@@ -93,8 +94,8 @@ export function Sidebar() {
     try {
       disconnectSession(sessionId);
       await api.archiveSession(sessionId, force ? { force: true } : undefined);
-    } catch {
-      // best-effort
+    } catch (err) {
+      console.warn(`[Sidebar] archive session ${sessionId} failed:`, err);
     }
     if (useStore.getState().currentSessionId === sessionId) {
       useStore.getState().newSession();
@@ -102,8 +103,8 @@ export function Sidebar() {
     try {
       const list = await api.listSessions();
       useStore.getState().setSdkSessions(list);
-    } catch {
-      // best-effort
+    } catch (err) {
+      console.warn("[Sidebar] listSessions after archive failed:", err);
     }
   }, []);
 
@@ -193,19 +194,11 @@ export function Sidebar() {
 
       <div className="flex-1 overflow-y-auto px-2 pb-2">
         {(() => {
-          // Active bridge sessions for the current project (running or recently exited)
-          const pNorm = (activeProjectCwd || "").replace(/\\/g, "/");
-          const activeBridgeSessions = pNorm
-            ? sdkSessions.filter((s) => {
-                if (s.archived || s.state === "exited") return false;
-                const sCwd = (s.cwd || "").replace(/\\/g, "/");
-                return sCwd === pNorm || sCwd.startsWith(pNorm + "/");
-              })
-            : [];
-
-          // IDs already shown via native sessions so we don't duplicate
-          const nativeIds = new Set(nativeSessions.map((s) => s.id));
-          const bridgeOnlyIds = activeBridgeSessions.filter((s) => !nativeIds.has(s.sessionId));
+          // Only show the current session as the active session (not all bridge sessions)
+          const currentBridgeSession = currentSessionId
+            ? sdkSessions.find((s) => s.sessionId === currentSessionId && !s.archived && s.state !== "exited")
+            : undefined;
+          const bridgeOnlyIds = currentBridgeSession ? [currentBridgeSession] : [];
 
           const hasAnySessions = nativeSessions.length > 0 || bridgeOnlyIds.length > 0;
 
@@ -222,7 +215,7 @@ export function Sidebar() {
               {bridgeOnlyIds.length > 0 && (
                 <>
                   <div className="px-2 py-0.5">
-                    <span className="text-[9px] font-semibold text-cc-muted uppercase tracking-widest">Active Sessions</span>
+                    <span className="text-[9px] font-semibold text-cc-muted uppercase tracking-widest">Current Session</span>
                   </div>
                   <div>
                     {bridgeOnlyIds.map((s) => {
@@ -289,7 +282,7 @@ export function Sidebar() {
             )}
           </button>
         </div>
-        <p className="text-[10px] text-cc-muted/40">v0.8.10</p>
+        <p className="text-[10px] text-cc-muted/40">v{__APP_VERSION__}</p>
       </div>
 
       {showEnvManager && <EnvManager onClose={() => setShowEnvManager(false)} />}
