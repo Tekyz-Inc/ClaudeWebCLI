@@ -3,13 +3,14 @@
 ## Branch Guard
 **Expected branch**: main
 
+## Autonomy Level
+> Overrides global: pins Level 3 explicitly (instead of falling through to the default).
+
+**Level 3 — Full Auto** (only pause for blockers or completion)
+
 ## Project Overview
 
 A web-based CLI interface for Claude Code that leverages the hidden `--sdk-url` flag. Instead of running Claude Code in a terminal, users interact through a browser-based terminal UI that communicates with Claude Code over WebSocket using the NDJSON protocol.
-
-## Autonomy Level
-**Level 3 — Full Auto** (only pause for blockers or completion)
-Only pause for blockers or project completion. Execute phases continuously.
 
 ### Architecture (Three-Tier WebSocket Bridge)
 
@@ -114,33 +115,6 @@ Token sources (priority order):
 - Workflows: docs/workflows.md
 - Infrastructure: docs/infrastructure.md
 
-## GSD Workflow Preferences
-
-### Execution
-- ALWAYS self-verify work by running verification commands.
-- NEVER pause to show verification steps — execute them.
-- ONLY stop if verification fails and you can't automatically fix it.
-- Upon completing a phase, automatically run /clear and start the next phase.
-- ONLY run Discussion phase if truly required.
-
-### Research Policy
-
-Before planning a phase, evaluate whether research is needed:
-
-Run research when:
-- Phase involves unfamiliar libraries, APIs, or services
-- Architectural decisions are required
-- Integrating external systems
-- Phase scope is ambiguous or complex
-
-Skip research when:
-- Patterns are already established from earlier phases
-- Straightforward CRUD, UI, or config work
-- Domain is well understood
-- Phase builds directly on existing code patterns
-
-If in doubt, skip research and proceed — we can research if execution reveals gaps.
-
 ## Testing
 
 ### Framework
@@ -171,20 +145,16 @@ If in doubt, skip research and proceed — we can research if execution reveals 
     npx playwright test --headed  # E2E with visible browser
 
 ### Test Requirements
+> Overrides global: adds project-specific port cleanup (3458, 5174) and fixture-only data rule.
+
 - REQUIRED: Every new feature must include tests before marking complete.
 - ALWAYS run related tests after code changes and fix any failures.
 - ALWAYS include detailed assertions with meaningful error messages.
 - ALWAYS update test scripts whenever functionality changes.
 - ALWAYS kill all test sessions and free test ports (3458, 5174) when testing is complete. Do not leave orphaned processes.
 
-## Code Patterns to Follow
-
-- REQUIRED: Type hints / TypeScript strict mode on all code.
-- REQUIRED: Async/await for all I/O operations.
-- LIMIT: Functions to no more than 30 lines — split up functions that are longer.
-- LIMIT: Files to no more than 200 lines — break up files when they grow larger.
-
 ### Naming Conventions
+> Overrides global: TypeScript project uses kebab-case files and camelCase functions (global defaults to snake_case).
 
     files:      kebab-case        (session-manager.ts)
     classes:    PascalCase        (SessionManager)
@@ -232,9 +202,8 @@ Then open http://localhost:5174 (Vite frontend — proxies API to :3456)
 
 > **Session policy:** The user will always start production sessions manually. Never auto-start or auto-launch production server processes.
 
-## Destructive Action Guard (MANDATORY)
-
-**NEVER perform destructive or structural changes without explicit user approval.** This applies at ALL autonomy levels.
+## Destructive Action Guard
+> Overrides global: adds project-specific items (WebSocket protocol format, NDJSON compatibility).
 
 Before any of these actions, STOP and ask the user:
 - Removing or replacing existing files/modules that contain working functionality
@@ -243,19 +212,18 @@ Before any of these actions, STOP and ask the user:
 - Changing the WebSocket protocol message format (breaks CLI compatibility)
 - Any change that would require other parts of the system to be rewritten
 
-**Rule: "Adapt new code to existing structures, not the other way around."**
-
 ## Don't Do These Things
+> Overrides global: project-specific NEVER rules (TypeScript, async I/O, NDJSON protocol, test discipline).
 
 - NEVER skip TypeScript strict mode or type annotations.
 - NEVER use synchronous I/O in the server.
 - NEVER store credentials in code — use .env.
-- NEVER make changes that touch more than 3 files without pausing to confirm approach.
 - NEVER mark a feature complete without tests.
 - NEVER write tests that depend on specific data states — use fixtures.
 - NEVER modify the NDJSON protocol format without documenting the change in architecture.md.
 
 ## API Documentation Waiver
+> Overrides global: waives the API Documentation Guard for this local-only project.
 
 The global CLAUDE.md API Documentation Guard requires Swagger/OpenAPI for every endpoint. ClaudeWebCLI waives this requirement because:
 
@@ -271,15 +239,3 @@ Revisit this waiver if ClaudeWebCLI ever exposes a public API or ships to remote
 - [The Vibe Companion](https://github.com/The-Vibe-Company/companion) — Full reverse-engineered `--sdk-url` protocol spec
 - [claude-code-web](https://github.com/vultuk/claude-code-web) — PTY bridge approach
 - [claude-relay](https://github.com/chadbyte/claude-relay) — Agent SDK bridge approach
-
-## GSD-T Workflow
-This project uses contract-driven development.
-- State: .gsd-t/progress.md
-- Contracts: .gsd-t/contracts/
-- Domains: .gsd-t/domains/
-
-**Model assignments:**
-- `model: haiku` — mechanical tasks: run tests, count pass/fail, validate structure, check file existence, report status
-- `model: sonnet` — mid-tier reasoning: routine code changes, standard refactors, test writing, straightforward synthesis
-- `model: opus` — high-stakes reasoning: architecture decisions, security analysis, complex debugging, cross-module refactors, quality judgment on critical paths
-
